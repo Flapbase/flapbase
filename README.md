@@ -53,7 +53,7 @@ npx skills add Flapbase/flapbase
 
 ## Flapbase Cloud との関係
 
-[Flapbase Cloud](https://flapbase.com) は、サイト・デザイン・発信をひとつの場所で運用するサービスです。この点検は Flapbase Cloud の無料診断と同じ規則で動き、同じ HTML なら同じ結果になることを試験で確かめています。
+[Flapbase Cloud](https://flapbase.com) は、事業を伸ばすためのワークスペースです。この点検は Flapbase Cloud の無料診断と同じ規則で動き、同じ HTML なら同じ結果になることを試験で確かめています。
 
 この道具は手元だけで動き、Flapbase の API やデータは使いません。続けての見張りや、AI の回答に実際に出るかの確認は、Flapbase Cloud で使えます。
 
@@ -72,4 +72,4 @@ Apache-2.0。著作権と由来は [LICENSE](LICENSE) と [NOTICE](NOTICE) に�
 
 ## English
 
-Flapbase is a set of tools to build, check, publish and run websites and marketing for small businesses. This repository opens those tools so developers and AI agents (Claude Code, Codex and others) can use them locally; the same tools run in [Flapbase Cloud](https://flapbase.com) with the same results. The first tool checks how search engines and AI read a site: `node bin/flap.js check <URL|file|folder>` (add `--json` for structured output). Node.js 22+, no dependencies, no account. Install the agent skill with `npx skills add Flapbase/flapbase`. Apache-2.0.
+Flapbase is a set of tools to build, check, publish and run websites and marketing for small businesses. This repository opens those tools so developers and AI agents (Claude Code, Codex and others) can use them locally; the same tools run in [Flapbase Cloud](https://flapbase.com), a workspace for growing your business, with the same results. The first tool checks how search engines and AI read a site: `node bin/flap.js check <URL|file|folder>` (add `--json` for structured output). Node.js 22+, no dependencies, no account. Install the agent skill with `npx skills add Flapbase/flapbase`. Apache-2.0.
