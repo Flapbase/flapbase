@@ -50,7 +50,7 @@ export function check(input: string, options?: CheckOptions): Promise<Report | C
 export function checkFile(path: string, options?: CheckOptions & { root?: string; rootIsSite?: boolean }): Promise<Report>
 export function inspectChecks(html: string, url: string): Check[]
 export function buildReport(fetched: Fetched, options: { source: Source; coverage: Coverage; profiles?: LanguageProfile[]; now?: Date }): Report
-export function formatReport(report: Report | Collection): string
+export function formatReport(report: Report | Collection, options?: { lang?: 'en' | 'ja' }): string
 export function compareBaseline(current: Report | Collection, baseline: Report | Collection): Difference
 export const RESULT_VERSION: 'flapbase.site-check/v1'
 export const WEBSITE_SEO_RULE_SET_VERSION: 'web-publication-seo/v1'

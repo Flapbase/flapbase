@@ -1,0 +1,190 @@
+Problems to fix before publishing: 7
+1. The publish folder contains .env (1 page: .env). Fix: Remove .env from the publish folder.
+2. An HTTPS page loads an HTTP resource (1 page: index.html). Fix: Use HTTPS for the resource URL.
+3. A public page has noindex (3 pages: en/index.html, index.html, rates.html). Fix: Remove noindex from the shared head.
+4. A booking, contact or purchase link is broken (1 page: index.html). Fix: Point the link or form to an existing public page.
+5. Address details do not match (4 pages: booking.html, en/index.html, index.html, rates.html). Fix: Use the same details in page text, translations and JSON-LD.
+6. Price details do not match (3 pages: booking.html, en/index.html, index.html). Fix: Use the same details in page text, translations and JSON-LD.
+7. The initial HTML has no price (1 page: rates.html). Fix: Add the price to the page text or JSON-LD.
+
+Evidence
+1. .env:1 file [file] .env
+2. index.html:9 script [html] http://cdn.example.com/menu.js
+3. en/index.html:7 meta [html] A public page has noindex
+3. index.html:7 meta [html] A public page has noindex
+3. rates.html:7 meta [html] A public page has noindex
+4. index.html:17 a [html] お問い合わせ: old-contact.html (file is missing)
+5. booking.html:14 p [html] 東京都港区海岸1-2-3
+5. booking.html:8 script [jsonld] 東京都港区海岸1-2-3
+5. en/index.html:14 p [html] 東京都港区海岸1-2-3
+5. en/index.html:8 script [jsonld] 東京都港区海岸1-2-3
+5. index.html:14 p [html] 東京都港区海岸9-9-9
+5. index.html:8 script [jsonld] 東京都港区海岸1-2-3
+5. rates.html:14 p [html] 東京都港区海岸1-2-3
+5. rates.html:8 script [jsonld] 東京都港区海岸1-2-3
+6. booking.html:11 p [html] 12,000
+6. en/index.html:11 p [html] 13,500
+6. index.html:11 p [html] 12,000
+7. rates.html:1 html [html] missing
+
+Page: booking.html
+Price: html p:11 12,000
+Service area: html p:12 対応地域: 東京都港区 / html p:14 住所: 東京都港区海岸1-2-3 / jsonld script:8 東京都港区海岸1-2-3
+Booking method: html h1:10 海辺の旅の予約方法 / html p:16 予約方法: 下のフォームから宿泊希望日を送信してください。 / html form:17 メール 予約を申し込む (booking.html) / html button:17 予約を申し込む (booking.html)
+Link from booking.html:17 form “メール 予約を申し込む”, target booking.html, final https://example.com/booking.html, checked
+Link from booking.html:17 button “予約を申し込む”, target booking.html, final https://example.com/booking.html, checked
+11 basic checks
+HTML5 doctype: checked
+Page language: checked
+Character encoding: checked
+Mobile viewport: checked
+Page title: checked
+Page description: checked
+canonical URL: checked
+Main heading H1: checked
+Structured data JSON-LD: checked
+Initial HTML content: checked
+Search exclusion noindex: checked
+robots.txt: allows all paths
+Search exclusion: none
+Title, description and heading: complete
+Language, encoding and mobile viewport: complete
+sitemap.xml: present
+Our fetch: allowed
+Search crawlers: not blocked
+Training crawlers: not blocked
+Content by reader: unchecked
+Initial HTML text: text present
+Organization structured data: present
+Googlebot(search): allowed
+Bingbot(search): allowed
+OAI-SearchBot(search): allowed
+Claude-SearchBot(search): allowed
+PerplexityBot(search): allowed
+ChatGPT-User(answers): allowed
+Claude-User(answers): allowed
+Perplexity-User(answers): allowed
+GPTBot(training): allowed
+ClaudeBot(training): allowed
+Google-Extended(training): allowed
+
+Page: en/index.html
+Price: html p:11 13,500
+Service area: html p:12 Service area: Minato, Tokyo / html p:14 Address: 東京都港区海岸1-2-3 / jsonld script:8 東京都港区海岸1-2-3
+Booking method: html a:16 Book your trip (../booking.html)
+Link from en/index.html:16 a “Book your trip”, target ../booking.html, final https://example.com/booking.html, checked
+11 basic checks
+HTML5 doctype: checked
+Page language: checked
+Character encoding: checked
+Mobile viewport: checked
+Page title: checked
+Page description: checked
+canonical URL: checked
+Main heading H1: checked
+Structured data JSON-LD: checked
+Initial HTML content: checked
+Search exclusion noindex: needs a fix
+robots.txt: allows all paths
+Search exclusion: present
+Title, description and heading: complete
+Language, encoding and mobile viewport: complete
+sitemap.xml: present
+Our fetch: allowed
+Search crawlers: not blocked
+Training crawlers: not blocked
+Content by reader: unchecked
+Initial HTML text: text present
+Organization structured data: present
+Googlebot(search): allowed
+Bingbot(search): allowed
+OAI-SearchBot(search): allowed
+Claude-SearchBot(search): allowed
+PerplexityBot(search): allowed
+ChatGPT-User(answers): allowed
+Claude-User(answers): allowed
+Perplexity-User(answers): allowed
+GPTBot(training): allowed
+ClaudeBot(training): allowed
+Google-Extended(training): allowed
+
+Page: index.html
+Price: html p:11 12,000
+Service area: html p:12 対応地域: 東京都港区 / html p:14 住所: 東京都港区海岸9-9-9 / jsonld script:8 東京都港区海岸1-2-3
+Booking method: html a:16 予約・お問い合わせ (booking.html)
+Link from index.html:16 a “予約・お問い合わせ”, target booking.html, final https://example.com/booking.html, checked
+Link from index.html:17 a “お問い合わせ”, target old-contact.html, final https://example.com/old-contact.html, needs a fix (file is missing)
+11 basic checks
+HTML5 doctype: checked
+Page language: checked
+Character encoding: checked
+Mobile viewport: checked
+Page title: checked
+Page description: checked
+canonical URL: checked
+Main heading H1: checked
+Structured data JSON-LD: checked
+Initial HTML content: checked
+Search exclusion noindex: needs a fix
+robots.txt: allows all paths
+Search exclusion: present
+Title, description and heading: complete
+Language, encoding and mobile viewport: complete
+sitemap.xml: present
+Our fetch: allowed
+Search crawlers: not blocked
+Training crawlers: not blocked
+Content by reader: unchecked
+Initial HTML text: text present
+Organization structured data: present
+Googlebot(search): allowed
+Bingbot(search): allowed
+OAI-SearchBot(search): allowed
+Claude-SearchBot(search): allowed
+PerplexityBot(search): allowed
+ChatGPT-User(answers): allowed
+Claude-User(answers): allowed
+Perplexity-User(answers): allowed
+GPTBot(training): allowed
+ClaudeBot(training): allowed
+Google-Extended(training): allowed
+
+Page: rates.html
+Price: missing from the initial HTML
+Service area: html p:12 対応地域: 東京都港区 / html p:14 住所: 東京都港区海岸1-2-3 / jsonld script:8 東京都港区海岸1-2-3
+Booking method: html a:16 予約する (booking.html)
+Link from rates.html:16 a “予約する”, target booking.html, final https://example.com/booking.html, checked
+11 basic checks
+HTML5 doctype: checked
+Page language: checked
+Character encoding: checked
+Mobile viewport: checked
+Page title: checked
+Page description: checked
+canonical URL: checked
+Main heading H1: checked
+Structured data JSON-LD: checked
+Initial HTML content: checked
+Search exclusion noindex: needs a fix
+robots.txt: allows all paths
+Search exclusion: present
+Title, description and heading: complete
+Language, encoding and mobile viewport: complete
+sitemap.xml: present
+Our fetch: allowed
+Search crawlers: not blocked
+Training crawlers: not blocked
+Content by reader: unchecked
+Initial HTML text: text present
+Organization structured data: present
+Googlebot(search): allowed
+Bingbot(search): allowed
+OAI-SearchBot(search): allowed
+Claude-SearchBot(search): allowed
+PerplexityBot(search): allowed
+ChatGPT-User(answers): allowed
+Claude-User(answers): allowed
+Perplexity-User(answers): allowed
+GPTBot(training): allowed
+ClaudeBot(training): allowed
+Google-Extended(training): allowed

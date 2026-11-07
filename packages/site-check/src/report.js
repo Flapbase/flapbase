@@ -1,3 +1,4 @@
+import { localizeReport, translate } from './language.js'
 import { runPublicDiagnosis, organizationNames, DIAGNOSIS_CRAWLERS, CRAWLERS_VERSION } from './public-read.js'
 import { parseRobotsTxt, robotsAllows } from './robots.js'
 import { readInitialHtml } from './initial-html.js'
@@ -63,38 +64,45 @@ export function buildReport(fetched, { source, coverage, profiles = [], now = ne
 
 // Escape terminal controls in all remote values; JSON keeps the original evidence.
 const safe = value => String(value).replace(/[\u0000-\u001f\u007f-\u009f\u202a-\u202e\u2066-\u2069]/gu, '')
-export function formatReport(report) {
-  const findings = report.findings ?? groupFindings(legacyFindings(report))
-  const lines = [`公開前に直すべき問題が ${findings.length} 件`]
-  const summary = item => `${item.title}（${item.pageCount}頁: ${item.pages.join('、')}）。直す所: ${item.fix}`
+export function formatReport(report, { lang = 'ja' } = {}) {
+  report = localizeReport({ ...report, findings: report.findings ?? groupFindings(legacyFindings(report)) }, lang)
+  const en = lang === 'en'
+  const t = text => en ? translate(text) : text
+  const findings = report.findings
+  const lines = [en ? `Problems to fix before publishing: ${findings.length}` : `公開前に直すべき問題が ${findings.length} 件`]
+  const summary = item => en ? `${item.title} (${item.pageCount} ${item.pageCount === 1 ? 'page' : 'pages'}: ${item.pages.join(', ')}). Fix: ${item.fix}` : `${item.title}（${item.pageCount}頁: ${item.pages.join('、')}）。直す所: ${item.fix}`
   for (const item of findings) lines.push(`${item.priority}. ${summary(item)}`)
   if (report.difference) {
-    lines.push('', '再点検の差分')
+    lines.push('', en ? 'Changes since the last check' : '再点検の差分')
     for (const [key, label] of [['fixed', '直った所'], ['introduced', '新しく壊れた所'], ['continuing', '続いている所']]) {
-      lines.push(`${label}: ${report.difference[key].length} 件`)
+      lines.push(en ? `${({ fixed: 'Fixed', introduced: 'New', continuing: 'Still present' })[key]}: ${report.difference[key].length}` : `${label}: ${report.difference[key].length} 件`)
       for (const item of report.difference[key]) lines.push(`  ${summary(item)}`)
     }
   }
-  lines.push('', '問題の根拠')
+  lines.push('', en ? 'Evidence' : '問題の根拠')
   for (const item of findings) for (const evidence of item.evidence) {
     lines.push(`${item.priority}. ${evidence.page}:${evidence.line} ${evidence.selector}${evidence.profile ? ` [${evidence.profile}]` : ''} [${evidence.source}] ${evidence.value}`)
   }
   const reports = report.reports ?? [report]
   for (const page of reports) {
-    lines.push('', `頁: ${page.pagePath ?? page.url}`)
+    lines.push('', `${en ? 'Page' : '頁'}: ${page.pagePath ?? page.url}`)
     for (const publication of page.publication ? [page.publication, ...(page.publication.variants ?? [])] : []) {
-      if (publication.profile) lines.push(`言語の指定: ${publication.profile}`)
+      if (publication.profile) lines.push(`${en ? 'Requested language' : '言語の指定'}: ${publication.profile}`)
       for (const fact of publication.facts) {
-        lines.push(`${fact.label}: ${fact.found ? fact.evidence.map(evidence => `${evidence.source} ${evidence.selector}:${evidence.line} ${evidence.value}`).join(' / ') : '初めの HTML に欠けている'}`)
+        lines.push(`${fact.label}: ${fact.found ? fact.evidence.map(evidence => `${evidence.source} ${evidence.selector}:${evidence.line} ${evidence.value}`).join(' / ') : en ? 'missing from the initial HTML' : '初めの HTML に欠けている'}`)
       }
-      for (const link of publication.links) lines.push(`リンク元 ${link.page}:${link.line} ${link.selector}「${link.label}」、宛先 ${link.target ?? 'なし'}、最終 ${link.finalUrl ?? '未確認'}、${({ ok: '確認済み', broken: '要修正', unchecked: '未確認' })[link.status]}${link.reason ? ` (${link.reason})` : ''}`)
+      for (const link of publication.links) {
+        const status = t(({ ok: '確認済み', broken: '要修正', unchecked: '未確認' })[link.status])
+        lines.push(en ? `Link from ${link.page}:${link.line} ${link.selector} “${link.label}”, target ${link.target ?? 'none'}, final ${link.finalUrl ?? 'unchecked'}, ${status}${link.reason ? ` (${link.reason})` : ''}`
+          : `リンク元 ${link.page}:${link.line} ${link.selector}「${link.label}」、宛先 ${link.target ?? 'なし'}、最終 ${link.finalUrl ?? '未確認'}、${status}${link.reason ? ` (${link.reason})` : ''}`)
+      }
     }
-    lines.push('基本の11項目')
-    for (const check of page.checks) lines.push(`${check.label}: ${check.pass ? '確認済み' : '要修正'}`)
-    if (!page.checks.length) lines.push('未確認')
+    lines.push(en ? '11 basic checks' : '基本の11項目')
+    for (const check of page.checks) lines.push(`${check.label}: ${t(check.pass ? '確認済み' : '要修正')}`)
+    if (!page.checks.length) lines.push(t('未確認'))
     for (const row of page.rows) lines.push(`${row.label}: ${row.value}`)
-    const kind = { search: '検索用', user: '質問への回答用', training: '学習用' }
-    for (const crawler of page.crawlers) lines.push(`${crawler.name}（${kind[crawler.kind]}）: ${crawler.allowed === null ? '未確認' : crawler.allowed ? '許可' : '拒否'}`)
+    const kind = en ? { search: 'search', user: 'answers', training: 'training' } : { search: '検索用', user: '質問への回答用', training: '学習用' }
+    for (const crawler of page.crawlers) lines.push(`${crawler.name}${en ? '(' : '（'}${kind[crawler.kind]}${en ? ')' : '）'}: ${en ? crawler.allowed === null ? 'unchecked' : crawler.allowed ? 'allowed' : 'blocked' : crawler.allowed === null ? '未確認' : crawler.allowed ? '許可' : '拒否'}`)
   }
   return lines.map(safe).join('\n') + '\n'
 }

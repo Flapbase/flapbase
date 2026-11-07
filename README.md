@@ -3,9 +3,9 @@
 Check your site before you publish: what search engines and AI can't read, and what stops people from booking or contacting you — with what to fix first.
 
 ```text
-公開前に直すべき問題が 7 件
-1. 公開用フォルダに .env が混ざっています（1頁: .env）。直す所: .env を公開用フォルダから外します。
-2. HTTPS の頁が HTTP の資源を読んでいます（1頁: index.html）。直す所: 資源の URL を HTTPS に直します。
+Problems to fix before publishing: 7
+1. The publish folder contains .env (1 page: .env). Fix: Remove .env from the publish folder.
+2. An HTTPS page loads an HTTP resource (1 page: index.html). Fix: Use HTTPS for the resource URL.
 ```
 
 [日本語](#日本語)
