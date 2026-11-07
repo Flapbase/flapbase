@@ -17,6 +17,7 @@ const roots = new Set(['bin', 'src', 'packages', 'scripts', 'tests', 'skills', '
 const topFiles = new Set(['.gitignore', 'README.md', 'LICENSE', 'NOTICE', 'package.json', 'pnpm-workspace.yaml', 'pnpm-lock.yaml'])
 const ignored = new Set(['.git', 'node_modules', '.DS_Store'])
 const extensions = /\.(?:js|mjs|json|md|html|txt|xml|yaml|ts)$/u
+const exampleEnv = 'examples/travel-broken/.env'
 
 export async function scanRelease(root) {
   const problems = [], files = [], packages = []
@@ -29,6 +30,10 @@ export async function scanRelease(root) {
       if (entry.isDirectory()) {
         if (!roots.has(path.split('/')[0])) { problems.push({ path, rule: '公開対象外のフォルダ' }); continue }
         await walk(full); continue
+      }
+      // Only this exact non-secret teaching fixture is distributed.
+      if (path === exampleEnv && entry.isFile() && (await lstat(full)).size === 26 && await readFile(full, 'utf8') === 'EXAMPLE_ONLY=not-a-secret\n') {
+        files.push({ path, sha256: createHash('sha256').update('EXAMPLE_ONLY=not-a-secret\n').digest('hex') }); continue
       }
       if ((!path.includes('/') && !topFiles.has(path)) || (path.includes('/') && !extensions.test(path) && !['LICENSE', 'NOTICE'].includes(entry.name))) {
         problems.push({ path, rule: '公開対象外のファイル' }); continue
@@ -67,7 +72,7 @@ export async function scanRelease(root) {
   await walk(root)
   return { version: 'flapbase.release-scan/v1', status: problems.length ? 'fail' : 'pass',
     scannedFiles: files.length, excluded: ['.git', 'node_modules', '.DS_Store'], unhashed: ['docs/release-scan.json'],
-    acceptedFixtures: [{ path: 'tests/fetch.test.js', rule: '内部のホスト', reason: '危険な URL の拒否を確かめる固定の入力' }, { path: 'skills/flapbase-join/SKILL.md', rule: '内部の名前', reason: '公開しているクリエイターのページの住所だけを許す' }],
+    acceptedFixtures: [{ path: exampleEnv, rule: '公開対象外のファイル', reason: 'EXAMPLE_ONLY の固定の1行だけを持つ点検用の例' }, { path: 'tests/fetch.test.js', rule: '内部のホスト', reason: '危険な URL の拒否を確かめる固定の入力' }, { path: 'skills/flapbase-join/SKILL.md', rule: '内部の名前', reason: '公開しているクリエイターのページの住所だけを許す' }],
     packages, problems, files }
 }
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

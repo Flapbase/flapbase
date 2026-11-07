@@ -1,12 +1,12 @@
 # Flapbase
 
-Flapbase is a set of tools to build, check, publish and run websites and marketing for small businesses. This repository opens those tools so anyone can use them locally.
+Check your site before you publish: what search engines and AI can't read, and what stops people from booking or contacting you — with what to fix first.
 
-- Developers can use them directly in their own projects.
-- AI agents such as Claude Code and Codex (ChatGPT) can use them in a few steps.
-- Prefer a visual interface? Use the same tools in [Flapbase Cloud](https://flapbase.com), a workspace for growing your business. The results are the same.
-
-New tools are added every month. The first one is the site check.
+```text
+公開前に直すべき問題が 7 件
+1. 公開用フォルダに .env が混ざっています（1頁: .env）。直す所: .env を公開用フォルダから外します。
+2. HTTPS の頁が HTTP の資源を読んでいます（1頁: index.html）。直す所: 資源の URL を HTTPS に直します。
+```
 
 [日本語](#日本語)
 
@@ -17,7 +17,7 @@ Check locally how search engines and AI read a site. Pass a public URL, a saved 
 ```sh
 git clone https://github.com/Flapbase/flapbase.git
 cd flapbase
-node bin/flap.js check examples/cosmetics/index.html
+node bin/flap.js check examples/travel-broken
 ```
 
 The npm package is `@flapbase/cli` and the command is `flap`. Once published to npm:
@@ -31,6 +31,11 @@ npx --yes @flapbase/cli@0.1.0 check ./site --json
 
 - The 11 basics: doctype, language, charset, mobile viewport, title, description, canonical URL, main heading, structured data (JSON-LD), content in the initial HTML, noindex.
 - How AI reads the site: robots.txt, search, answer and training crawlers, organization structured data, responses per language, sitemap.
+- Facts in the initial HTML: price, service area and booking method, from text, headings and JSON-LD. Choose them with `--facts price,area,booking`.
+- Booking, contact and purchase links and forms, including mobile menus: source, label and final destination. URL checks follow redirects; folder checks resolve local files.
+- Prices in yen, opening days, addresses and phone numbers across pages, languages and JSON-LD.
+- Publication accidents: `.env`, `.git`, private key files and HTTP resources on HTTPS pages.
+- Problems grouped by rule and cause, with affected pages, evidence and where to fix them. `--baseline` separates fixed, new and continuing problems.
 - `--json` returns the same result as JSON. The text output is built from it.
 
 ```sh
@@ -39,9 +44,27 @@ node bin/flap.js check examples/apparel/index.html
 node bin/flap.js check examples/travel --base-url https://example.com/travel/
 ```
 
+Save a result, make changes and check again:
+
+```sh
+node bin/flap.js check ./site --json > /tmp/site-before.json
+node bin/flap.js check ./site --baseline /tmp/site-before.json
+node bin/flap.js check ./site --facts price,booking --json
+```
+
 For a file, robots.txt and the sitemap are read from the same folder; for a folder, from its root. No URL is fetched in that case. Anything that could not be read is reported as "unchecked". The exit code is 0 even when fixes are found, and 1 when the input or a fetch fails.
 
 URL fetching is limited to public HTTPS sites; private networks and local devices are refused. Limits: HTML 1 MiB and 10 s, robots.txt 64 KiB, sitemap 256 KiB, 3 redirects. Folders: up to 100 HTML files, 8 MiB in total, depth 8.
+
+## Flapbase
+
+Flapbase is a set of tools to build, check, publish and run websites and marketing for small businesses. This repository opens those tools so anyone can use them locally.
+
+- Developers can use them directly in their own projects.
+- AI agents such as Claude Code and Codex (ChatGPT) can use them in a few steps.
+- Prefer a visual interface? Use the same tools in [Flapbase Cloud](https://flapbase.com), a workspace for growing your business. The results are the same.
+
+New tools are added every month. The first one is the site check.
 
 ## Use from AI agents
 
@@ -87,13 +110,13 @@ Apache-2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
 
 ## 日本語
 
-Flapbase は、事業のサイトと発信を作り、点検し、公開し、運用するための道具です。このリポジトリは、その道具を誰でも手元で使えるように公開したものです。
+公開前のサイトを点検して、検索や AI が読めない所と、予約や問い合わせにつながらない所を、直す順番つきで出します。
 
-- 開発者は、自分のプロジェクトにそのまま組み込めます。
-- AI エージェント（Claude Code、Codex（ChatGPT）など）から、少ない手数で使えます。
-- 画面から使いたい方は、事業を伸ばすためのワークスペース [Flapbase Cloud](https://flapbase.com) で、同じ道具を使えます。結果は同じです。
-
-道具は、毎月まとまった単位で足していきます。最初は「サイトの点検」です。
+```text
+公開前に直すべき問題が 7 件
+1. 公開用フォルダに .env が混ざっています（1頁: .env）。直す所: .env を公開用フォルダから外します。
+2. HTTPS の頁が HTTP の資源を読んでいます（1頁: index.html）。直す所: 資源の URL を HTTPS に直します。
+```
 
 ### サイトの点検
 
@@ -104,7 +127,17 @@ node bin/flap.js check examples/cosmetics/index.html
 node bin/flap.js check https://flapbase.com --json
 ```
 
-点検するのは、基本の11項目と、AI からの読まれ方（robots.txt、検索用・回答用・学習用のクローラーの区別、運営者の構造化データ、言語ごとの応答、サイトマップ）です。URL の取得は、公開されている HTTPS のサイトに限ります。
+基本の11項目と AI からの読まれ方に加え、料金・対応地域・予約方法が初めの HTML のどこにあるか、予約・問い合わせ・購入のリンクの宛先、頁・言語・構造化データの食い違い、公開用ファイルへの .env・.git・秘密鍵の混入と HTTP 資源を調べます。同じ原因は頁の数と一覧を付けて1件にまとめます。`--baseline` に前回の JSON を渡すと、直った所・新しく壊れた所・続いている所を表示します。URL の取得は、公開されている HTTPS のサイトに限ります。
+
+### Flapbase
+
+Flapbase は、事業のサイトと発信を作り、点検し、公開し、運用するための道具です。このリポジトリは、その道具を誰でも手元で使えるように公開したものです。
+
+- 開発者は、自分のプロジェクトにそのまま組み込めます。
+- AI エージェント（Claude Code、Codex（ChatGPT）など）から、少ない手数で使えます。
+- 画面から使いたい方は、事業を伸ばすためのワークスペース [Flapbase Cloud](https://flapbase.com) で、同じ道具を使えます。結果は同じです。
+
+道具は、毎月まとまった単位で足していきます。最初は「サイトの点検」です。
 
 ### AI エージェントから使う
 

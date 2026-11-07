@@ -1,4 +1,4 @@
-import { check, checkFile, inspectChecks, buildReport, formatReport, RESULT_VERSION, WEBSITE_SEO_RULES, WEBSITE_SEO_RULE_SET_VERSION, LIMITS } from '../packages/site-check/src/index.js'
+import { check, checkFile, inspectChecks, buildReport, formatReport, RESULT_VERSION, WEBSITE_SEO_RULES, WEBSITE_SEO_RULE_SET_VERSION, LIMITS, compareBaseline } from '../packages/site-check/src/index.js'
 import type { Report, Collection, Fetched, Coverage } from '../packages/site-check/src/index.js'
 const result: Report | Collection = await check('site', { baseUrl: 'https://example.com/', now: new Date() })
 if ('reports' in result) result.reports.forEach(report => formatReport(report))
@@ -13,3 +13,9 @@ const rulesVersion: 'web-publication-seo/v1' = WEBSITE_SEO_RULE_SET_VERSION
 WEBSITE_SEO_RULES.map(rule => rule.semanticRef)
 const max: number = LIMITS.html
 void [version, rulesVersion, max]
+
+const baseline = await check('site', { facts: ['price', 'booking'], baseline: result })
+const delta = compareBaseline(baseline, result)
+delta.fixed.forEach(item => item.evidence.forEach(evidence => { const line: number = evidence.line; void line }))
+if ('reports' in baseline) baseline.findings.forEach(item => { const count: number = item.pageCount; void count })
+formatReport(baseline)

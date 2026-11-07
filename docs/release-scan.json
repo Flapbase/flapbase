@@ -1,7 +1,7 @@
 {
   "version": "flapbase.release-scan/v1",
   "status": "pass",
-  "scannedFiles": 52,
+  "scannedFiles": 74,
   "excluded": [
     ".git",
     "node_modules",
@@ -12,9 +12,19 @@
   ],
   "acceptedFixtures": [
     {
+      "path": "examples/travel-broken/.env",
+      "rule": "公開対象外のファイル",
+      "reason": "EXAMPLE_ONLY の固定の1行だけを持つ点検用の例"
+    },
+    {
       "path": "tests/fetch.test.js",
       "rule": "内部のホスト",
       "reason": "危険な URL の拒否を確かめる固定の入力"
+    },
+    {
+      "path": "skills/flapbase-join/SKILL.md",
+      "rule": "内部の名前",
+      "reason": "公開しているクリエイターのページの住所だけを許す"
     }
   ],
   "packages": [
@@ -37,7 +47,7 @@
     },
     {
       "path": "bin/flap.js",
-      "sha256": "cab60bf2ae4ff87ea09a3627e42eeca561c5368497a32beb36dff0789b6e512f"
+      "sha256": "c53917c160afd31ed0a0c574481d96541a7ba8a2615ffd31119850328540559e"
     },
     {
       "path": "docs/provenance.md",
@@ -45,7 +55,7 @@
     },
     {
       "path": "docs/result.md",
-      "sha256": "53b9d4b54fc9a8b3ebc37f4e0167198c33cca2bc7088c6d4da56668405f44cda"
+      "sha256": "25583530f5ece16cfd1c27a33c4ef094e2b0ff21cdabb693a8b874fc011075bb"
     },
     {
       "path": "examples/apparel/index.html",
@@ -81,7 +91,7 @@
     },
     {
       "path": "examples/README.md",
-      "sha256": "44176af01084f1ca5dc117372a578859260e489752b069d0e7a2d56da31e6abf"
+      "sha256": "9b6c4b4819a8adefb95154091cbd3c4a516cc4010ae591d205f23ef04b7c4a91"
     },
     {
       "path": "examples/travel/index.html",
@@ -94,6 +104,34 @@
     {
       "path": "examples/travel/sitemap.xml",
       "sha256": "b3bc043bc3e723e2477f57678bb349bb20ca600da1af0b9b61148df5057c2fff"
+    },
+    {
+      "path": "examples/travel-broken/.env",
+      "sha256": "346a345f24683b9f077b513b72201d732c1730e48b3ccc43853b588adf162a75"
+    },
+    {
+      "path": "examples/travel-broken/booking.html",
+      "sha256": "d460311e5614179b002c0e77077bbb5fd4c12c60c5f3f58fd4337e1a606e464e"
+    },
+    {
+      "path": "examples/travel-broken/en/index.html",
+      "sha256": "d76c88c12f07cd957a4401dfb1d998398e8c36e77d1d195ebd6a61dbb3df5216"
+    },
+    {
+      "path": "examples/travel-broken/index.html",
+      "sha256": "d7888696efe36d5b82d81d5820dbd3c0189aac866af786fb40510f5795bfe530"
+    },
+    {
+      "path": "examples/travel-broken/rates.html",
+      "sha256": "4b6caa4b14cdf2cbf30ea3edf3b18b749da2fd3e5592dadb5895a6b56b050b31"
+    },
+    {
+      "path": "examples/travel-broken/robots.txt",
+      "sha256": "316d29a60270c66b7555f0e80fcb9a039458be20c576cfe3c6cd73b5d68a67a2"
+    },
+    {
+      "path": "examples/travel-broken/sitemap.xml",
+      "sha256": "1f6ef942de35922cd2dee300c60b20859e029acbc5b3fd374372bb5d9540ad9b"
     },
     {
       "path": "LICENSE",
@@ -124,6 +162,10 @@
       "sha256": "08a85df88d7cd49025ca85f7ed309a5091b06a75b1d51c9086ba0ae5d9597081"
     },
     {
+      "path": "packages/site-check/src/baseline.js",
+      "sha256": "daf59374b0f9071d599a970811193127190dcb4036866ca97caee71b89b44db7"
+    },
+    {
       "path": "packages/site-check/src/checks.js",
       "sha256": "77c893637a18afaa23ec0d2f7394f975c3c56511b13deceeae455ba2ad817def"
     },
@@ -132,12 +174,16 @@
       "sha256": "b7817d70309da1677a1be1013f15aa467c55c76bf730a05dd6db2fe1a763310f"
     },
     {
+      "path": "packages/site-check/src/html.js",
+      "sha256": "91b10dc5fe08f4a591612fb5ff4a1ba7c1b318e56effb8d81e8f6572e2ead3ca"
+    },
+    {
       "path": "packages/site-check/src/index.d.ts",
-      "sha256": "31976c83ba01ea61b2813f1692b12774154ef6431aa6a7244e5a4dc393ebd1f5"
+      "sha256": "c1f9aa7e2118f6aa05c14d97f365b8b889fa59128666fe8290ff68a3b6ea537a"
     },
     {
       "path": "packages/site-check/src/index.js",
-      "sha256": "ea90e201066ceb8122e2e680a6340e134027b8d6bf392c71c6bbe869f80f585c"
+      "sha256": "7331f2ad531f36172fae998505a4541b2fda83fd03a877e2075f4c1951472a63"
     },
     {
       "path": "packages/site-check/src/initial-html.js",
@@ -145,7 +191,11 @@
     },
     {
       "path": "packages/site-check/src/input.js",
-      "sha256": "ba814d3b56307141f66fb0d5d4f613c267bd50c6184a15cbc950f14e9abe293a"
+      "sha256": "6ed1e300bf79d7a5f52a11dbbcfdd05d18cb4e98fab1d5af6fa5eb5c8929eb1a"
+    },
+    {
+      "path": "packages/site-check/src/links.js",
+      "sha256": "f67bc52b42bdde6af6202d1eff881ca9c40269976721ffbd9c018017624d9c0f"
     },
     {
       "path": "packages/site-check/src/public-read.js",
@@ -156,8 +206,12 @@
       "sha256": "9818ead10f3daa8d9f04fef65edd76f763d195450e52e88ce461c5aa077d47b0"
     },
     {
+      "path": "packages/site-check/src/publication.js",
+      "sha256": "234f3ea5a74621a6aa8a5803d2a6853034cb004e0bedb755dd6296962d2c6a0d"
+    },
+    {
       "path": "packages/site-check/src/report.js",
-      "sha256": "560f88548f8688a75c67e6c5dc754bd15b3e0e2506606a42816cac2754645827"
+      "sha256": "246f0ae466e43040e952b63f8b35d66e90d0fde49f567b1da70bb3d8f0b9ed19"
     },
     {
       "path": "packages/site-check/src/robots.js",
@@ -181,7 +235,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "85a988de1b32ec01c95e6f663535cbe1b9eb3bde7b936818bcf6475b4f668709"
+      "sha256": "b4fca0a13b5b6a4422a307b4247548a5667de9e2e52cc13aa6365e3be2b550bf"
     },
     {
       "path": "scripts/check-pack.mjs",
@@ -189,15 +243,51 @@
     },
     {
       "path": "scripts/check-release.mjs",
-      "sha256": "cc4505d88411efebb489b369a8e9f9da9f95f77ecd3253bfc494d602b216a7d6"
+      "sha256": "efa28cb16d24907cafbe1f19690256c2cb909de2984b1900e08eaa1db0ab24b2"
     },
     {
       "path": "scripts/compare-cloud.mjs",
       "sha256": "78e0ccb6cfa246715b1c695e2661a638ced087d1e6b614b6c473556c437658ca"
     },
     {
+      "path": "skills/flapbase-connect-mcp/SKILL.md",
+      "sha256": "2f5ce6f1cfb106a65494f5a0774bd38f84bc6d6d9e3b0cc7f19cea7a2aaa1a9c"
+    },
+    {
+      "path": "skills/flapbase-guardrails/SKILL.md",
+      "sha256": "01f63e92cf676123fe5be6067c604b5345246564e6ff4c8c80769e312aa250b6"
+    },
+    {
+      "path": "skills/flapbase-handoff/SKILL.md",
+      "sha256": "6132f284d27ef16b90be81f71a9505c6135987b0cee90a4515c19571e699a0d3"
+    },
+    {
+      "path": "skills/flapbase-join/SKILL.md",
+      "sha256": "efb08713bb4fb8af1f2c3c9466da6c98c4ce5fcf9eada7e6d4b2ab12fd87a55a"
+    },
+    {
+      "path": "skills/flapbase-projects-tasks/SKILL.md",
+      "sha256": "78e02a2a87282134a26739a85674eca00390c545c94c525af90b88fd8498a8c7"
+    },
+    {
+      "path": "skills/flapbase-publish-work/SKILL.md",
+      "sha256": "8c27f86450e4a604d127e82b5d962c7135504db55f0f4829efb1515ee9c3e394"
+    },
+    {
       "path": "skills/flapbase-site-check/SKILL.md",
-      "sha256": "d1fa7d5a7c152c2704c82fb1036e901df7be30912be09f0fbe62956cb55eca29"
+      "sha256": "a19ca0f61837fe29dcc2e3826a8e2d6e03cb0963ba0407da30c9f6b0d8eede3f"
+    },
+    {
+      "path": "skills/flapbase-site-diagnosis/SKILL.md",
+      "sha256": "ecc26fd2641b266ff9dea501eac5dadc3ae806dfe90a5475b2f35b91c8637b85"
+    },
+    {
+      "path": "skills/flapbase-site-migrate/SKILL.md",
+      "sha256": "7764a83205569cb35166819fd52c4297a8c04da6769c67e78ffa71c9d64e6cf2"
+    },
+    {
+      "path": "skills/flapbase-workflow/SKILL.md",
+      "sha256": "f7bc70f0de9846335922b1449abc0f9ea1c1d46335ba2fdc52d96554454b1b68"
     },
     {
       "path": "tests/cloud-fixtures.test.js",
@@ -205,11 +295,15 @@
     },
     {
       "path": "tests/fetch.test.js",
-      "sha256": "ed797a8f4d55ba989237fe5e85bf7a57e4cf2cfb8479efc6895cf2a51a367623"
+      "sha256": "8cde470695bbcc1fb9b585c7bd0d66394804751a86f66e2fa00231793df25ec6"
     },
     {
       "path": "tests/fixtures/cloud-reference.json",
       "sha256": "419e7b14d96559fd8fbf79f03665f59865a7e0f5a15b2ae6e9f1a871a06bbf68"
+    },
+    {
+      "path": "tests/fixtures/travel-broken-output.txt",
+      "sha256": "09caaf2cdaa1504c5b9127fec14b1ee3c6c9857ac34f0140044f31f1da8ef97c"
     },
     {
       "path": "tests/helpers.js",
@@ -218,6 +312,10 @@
     {
       "path": "tests/input.test.js",
       "sha256": "ac4644862295873b7dae9a180374cb2968f622310c9d5c87b69b69f367aac06f"
+    },
+    {
+      "path": "tests/publication.test.js",
+      "sha256": "654bc46c8e7a1bfa939c08c22c34a6b751609dbc8461be6607b13219672fb1a8"
     },
     {
       "path": "tests/release.test.js",
@@ -237,7 +335,7 @@
     },
     {
       "path": "tests/types.ts",
-      "sha256": "e7d0290cc5d0cf2e85576c47bc7d5ab469c0873669ce8669a56252e56f756e15"
+      "sha256": "e720b563a3e0c8c66cd70d5c40fb918b793bdc9dc16dbfa1f9abfbc8fd270fb4"
     }
   ]
 }

@@ -11,3 +11,15 @@ node bin/flap.js check examples/travel --json
 `flapbase.com-20261107.json` は公開 URL をこの CLI で点検した実測の結果です。基本11項目が通り、言語指定なしと日本語指定で日本語、英語指定で英語が返りました。運営の構造化データとサイトマップを確認しています。点検の日時と本文の文字数は JSON に記録しています。
 
 `flapbase.com-before-20261107.json` は改善前の記事記録から選んだ事実です。基本11項目は通っていましたが、言語指定なしでは英語の短い本文が返り、構造化データは WebSite だけでした。このファイルは当時の要約で、現在の CLI が改善前のサイトを再取得した結果とは区別しています。
+
+## 問題を入れた旅の予約サイト
+
+`travel-broken` は4頁です。共通の head の noindex、JavaScript にしかない料金、スマホメニューだけの古い問い合わせ URL、日英の料金の差、本文と JSON-LD の住所の差、HTTP script、固定の例示用 .env を含みます。
+
+```sh
+node bin/flap.js check examples/travel-broken
+node bin/flap.js check examples/travel-broken --json > /tmp/travel-before.json
+node bin/flap.js check examples/travel-broken --baseline /tmp/travel-before.json
+```
+
+実際の出力の全文は `tests/fixtures/travel-broken-output.txt` に固定しています。

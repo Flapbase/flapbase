@@ -3,6 +3,8 @@ import assert from 'node:assert/strict'
 import { EventEmitter } from 'node:events'
 import { createPublicReader, isBlockedDestination } from '../packages/site-check/src/fetch.js'
 import { parsePublicHttpsUrl, isNonPublicAddress } from '../packages/site-check/src/public-url.js'
+import { checkBusinessLinks } from '../packages/site-check/src/links.js'
+import { inspectPublication } from '../packages/site-check/src/publication.js'
 
 const publicIp = { address: '8.8.8.8', family: 4 }
 function setup(responses, lookup = async () => [publicIp]) {
@@ -86,6 +88,16 @@ test('公開の転送と各 hop の許可を確認する', async () => {
   const result = await read('https://example.com', { beforeRequest: url => visited.push(url.href) })
   assert.equal(result.redirected, true)
   assert.deepEqual(visited, ['https://example.com/', 'https://example.com/next'])
+})
+test('予約リンクの転送を実際の reader で追い、最終 URL と各 hop の許可を返す', async () => {
+  const publication = inspectPublication('<a href="/booking">予約する</a>', 'https://example.com/')
+  const visited = []
+  const { read, calls } = setup([{ status: 302, headers: { location: '/booking-final' } }, {}])
+  await checkBusinessLinks([publication], { read, permission: target => visited.push(target.href) })
+  assert.equal(publication.links[0].status, 'ok')
+  assert.equal(publication.links[0].finalUrl, 'https://example.com/booking-final')
+  assert.equal(calls.length, 2)
+  assert.deepEqual(visited, ['https://example.com/booking', 'https://example.com/booking-final'])
 })
 test('HTTP への転送は拒否する', async () => {
   const { read } = setup([{ status: 302, headers: { location: 'http://example.com/' } }])

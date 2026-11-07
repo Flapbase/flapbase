@@ -1,6 +1,7 @@
 import { runPublicDiagnosis, organizationNames, DIAGNOSIS_CRAWLERS, CRAWLERS_VERSION } from './public-read.js'
 import { parseRobotsTxt, robotsAllows } from './robots.js'
 import { readInitialHtml } from './initial-html.js'
+import { groupFindings, legacyFindings } from './publication.js'
 
 export const RESULT_VERSION = 'flapbase.site-check/v1'
 const langOf = html => /<html\b[^>]*\slang\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/iu.exec(html)?.slice(1).find(Boolean)?.toLowerCase() ?? null
@@ -63,20 +64,37 @@ export function buildReport(fetched, { source, coverage, profiles = [], now = ne
 // Escape terminal controls in all remote values; JSON keeps the original evidence.
 const safe = value => String(value).replace(/[\u0000-\u001f\u007f-\u009f\u202a-\u202e\u2066-\u2069]/gu, '')
 export function formatReport(report) {
-  const lines = [`サイトの点検: ${safe(report.url)}`, `点検日時: ${report.checkedAt}`, '', '基本の11項目']
-  for (const check of report.checks) lines.push(`${check.pass ? '確認済み' : '要修正'}  ${check.label}`)
-  if (!report.checks.length) lines.push('未確認')
-  lines.push('', 'AI からの読まれ方')
-  for (const row of report.rows) lines.push(`${safe(row.label)}: ${safe(row.value)}`)
-  lines.push('', 'クローラーの設定')
-  const kind = { search: '検索用', user: '質問への回答用', training: '学習用' }
-  for (const item of report.crawlers) lines.push(`${item.name}（${kind[item.kind]}）: ${item.allowed === null ? '未確認' : item.allowed ? '許可' : '拒否'}`)
-  if (report.profiles.length) {
-    lines.push('', '言語ごとの応答')
-    for (const item of report.profiles) lines.push(`${safe(profileLabel(item.profile))}: ${safe(languageLabel(item.language))}、本文 ${item.visibleTextLength ?? '未確認'} 字`)
+  const findings = report.findings ?? groupFindings(legacyFindings(report))
+  const lines = [`公開前に直すべき問題が ${findings.length} 件`]
+  const summary = item => `${item.title}（${item.pageCount}頁: ${item.pages.join('、')}）。直す所: ${item.fix}`
+  for (const item of findings) lines.push(`${item.priority}. ${summary(item)}`)
+  if (report.difference) {
+    lines.push('', '再点検の差分')
+    for (const [key, label] of [['fixed', '直った所'], ['introduced', '新しく壊れた所'], ['continuing', '続いている所']]) {
+      lines.push(`${label}: ${report.difference[key].length} 件`)
+      for (const item of report.difference[key]) lines.push(`  ${summary(item)}`)
+    }
   }
-  lines.push('', '直す順番')
-  for (const issue of report.issues) lines.push(`${issue.priority}. ${safe(issue.title)}`, `   ${safe(issue.why)}`, `   ${safe(issue.fix)}`)
-  if (!report.issues.length) lines.push('確認した範囲に修正項目はありません。')
-  return lines.join('\n') + '\n'
+  lines.push('', '問題の根拠')
+  for (const item of findings) for (const evidence of item.evidence) {
+    lines.push(`${item.priority}. ${evidence.page}:${evidence.line} ${evidence.selector}${evidence.profile ? ` [${evidence.profile}]` : ''} [${evidence.source}] ${evidence.value}`)
+  }
+  const reports = report.reports ?? [report]
+  for (const page of reports) {
+    lines.push('', `頁: ${page.pagePath ?? page.url}`)
+    for (const publication of page.publication ? [page.publication, ...(page.publication.variants ?? [])] : []) {
+      if (publication.profile) lines.push(`言語の指定: ${publication.profile}`)
+      for (const fact of publication.facts) {
+        lines.push(`${fact.label}: ${fact.found ? fact.evidence.map(evidence => `${evidence.source} ${evidence.selector}:${evidence.line} ${evidence.value}`).join(' / ') : '初めの HTML に欠けている'}`)
+      }
+      for (const link of publication.links) lines.push(`リンク元 ${link.page}:${link.line} ${link.selector}「${link.label}」、宛先 ${link.target ?? 'なし'}、最終 ${link.finalUrl ?? '未確認'}、${({ ok: '確認済み', broken: '要修正', unchecked: '未確認' })[link.status]}${link.reason ? ` (${link.reason})` : ''}`)
+    }
+    lines.push('基本の11項目')
+    for (const check of page.checks) lines.push(`${check.label}: ${check.pass ? '確認済み' : '要修正'}`)
+    if (!page.checks.length) lines.push('未確認')
+    for (const row of page.rows) lines.push(`${row.label}: ${row.value}`)
+    const kind = { search: '検索用', user: '質問への回答用', training: '学習用' }
+    for (const crawler of page.crawlers) lines.push(`${crawler.name}（${kind[crawler.kind]}）: ${crawler.allowed === null ? '未確認' : crawler.allowed ? '許可' : '拒否'}`)
+  }
+  return lines.map(safe).join('\n') + '\n'
 }
