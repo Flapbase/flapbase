@@ -1,0 +1,297 @@
+{
+  "version": "flapbase.site-check/v1",
+  "ruleSetVersion": "web-publication-seo/v1",
+  "crawlersVersion": "2026-11-07",
+  "source": {
+    "kind": "url",
+    "input": "https://flapbase.com/"
+  },
+  "url": "https://flapbase.com/",
+  "checkedAt": "2026-11-07T11:17:22.105Z",
+  "coverage": {
+    "html": true,
+    "robots": true,
+    "sitemap": true,
+    "languageProfiles": true
+  },
+  "checks": [
+    {
+      "key": "doctype",
+      "semanticRef": "website.seo.doctype",
+      "ruleRef": "web-publication-seo/doctype/v1",
+      "label": "HTML5 doctype",
+      "pass": true,
+      "findings": []
+    },
+    {
+      "key": "html",
+      "semanticRef": "website.seo.html",
+      "ruleRef": "web-publication-seo/html/v1",
+      "label": "ページの言語設定",
+      "pass": true,
+      "findings": []
+    },
+    {
+      "key": "charset",
+      "semanticRef": "website.seo.charset",
+      "ruleRef": "web-publication-seo/charset/v1",
+      "label": "文字コード設定",
+      "pass": true,
+      "findings": []
+    },
+    {
+      "key": "viewport",
+      "semanticRef": "website.seo.viewport",
+      "ruleRef": "web-publication-seo/viewport/v1",
+      "label": "モバイル表示設定",
+      "pass": true,
+      "findings": []
+    },
+    {
+      "key": "title",
+      "semanticRef": "website.seo.title",
+      "ruleRef": "web-publication-seo/title/v1",
+      "label": "ページタイトル",
+      "pass": true,
+      "findings": []
+    },
+    {
+      "key": "description",
+      "semanticRef": "website.seo.description",
+      "ruleRef": "web-publication-seo/description/v1",
+      "label": "ページ説明文",
+      "pass": true,
+      "findings": []
+    },
+    {
+      "key": "canonical",
+      "semanticRef": "website.seo.canonical",
+      "ruleRef": "web-publication-seo/canonical/v1",
+      "label": "canonical URL",
+      "pass": true,
+      "findings": []
+    },
+    {
+      "key": "h1",
+      "semanticRef": "website.seo.h1",
+      "ruleRef": "web-publication-seo/h1/v1",
+      "label": "主見出し H1",
+      "pass": true,
+      "findings": []
+    },
+    {
+      "key": "jsonld",
+      "semanticRef": "website.seo.jsonld",
+      "ruleRef": "web-publication-seo/jsonld/v1",
+      "label": "構造化データ JSON-LD",
+      "pass": true,
+      "findings": []
+    },
+    {
+      "key": "initial-html",
+      "semanticRef": "website.seo.initial-html",
+      "ruleRef": "web-publication-seo/initial-html/v1",
+      "label": "初めのHTMLの中身",
+      "pass": true,
+      "findings": []
+    },
+    {
+      "key": "robots",
+      "semanticRef": "website.seo.robots",
+      "ruleRef": "web-publication-seo/robots/v1",
+      "label": "検索除外設定 noindex",
+      "pass": true,
+      "findings": []
+    }
+  ],
+  "issues": [],
+  "rows": [
+    {
+      "key": "robots",
+      "stage": "read",
+      "part": "site",
+      "label": "robots.txt",
+      "value": "全体を許している",
+      "tone": "ok"
+    },
+    {
+      "key": "noindex",
+      "stage": "read",
+      "part": "site",
+      "label": "検索から外す指示",
+      "value": "なし",
+      "tone": "ok"
+    },
+    {
+      "key": "basics",
+      "stage": "read",
+      "part": "site",
+      "label": "題・説明・見出し",
+      "value": "そろっている",
+      "tone": "ok"
+    },
+    {
+      "key": "technical",
+      "stage": "read",
+      "part": "site",
+      "label": "言語・文字コード・スマホの表示",
+      "value": "そろっている",
+      "tone": "ok"
+    },
+    {
+      "key": "sitemap",
+      "stage": "read",
+      "part": "site",
+      "label": "sitemap.xml",
+      "value": "ある",
+      "tone": "ok"
+    },
+    {
+      "key": "reader",
+      "stage": "read",
+      "part": "ai",
+      "label": "こちらからの読み取り",
+      "value": "止められなかった",
+      "tone": "ok"
+    },
+    {
+      "key": "search-crawlers",
+      "stage": "read",
+      "part": "ai",
+      "label": "検索用のクローラー",
+      "value": "止めていない",
+      "tone": "ok"
+    },
+    {
+      "key": "training-crawlers",
+      "stage": "read",
+      "part": "ai",
+      "label": "学習用のクローラー",
+      "value": "止めていない",
+      "tone": "ok"
+    },
+    {
+      "key": "language",
+      "stage": "read",
+      "part": "ai",
+      "label": "読む相手で中身が変わらないか",
+      "value": "言語の指定で変わる",
+      "tone": "mid"
+    },
+    {
+      "key": "initial-html",
+      "stage": "read",
+      "part": "ai",
+      "label": "初めの HTML の中身",
+      "value": "文がある",
+      "tone": "ok"
+    },
+    {
+      "key": "cloudflare",
+      "stage": "read",
+      "part": "ai",
+      "label": "Cloudflare",
+      "value": "管理画面で AI のクローラーを止める設定も確かめる",
+      "tone": "na"
+    },
+    {
+      "key": "organization",
+      "stage": "read",
+      "part": "ai",
+      "label": "運営の構造化データ",
+      "value": "ある",
+      "tone": "ok"
+    }
+  ],
+  "crawlers": [
+    {
+      "name": "Googlebot",
+      "owner": "Google",
+      "kind": "search",
+      "allowed": true
+    },
+    {
+      "name": "Bingbot",
+      "owner": "Microsoft",
+      "kind": "search",
+      "allowed": true
+    },
+    {
+      "name": "OAI-SearchBot",
+      "owner": "OpenAI",
+      "kind": "search",
+      "allowed": true
+    },
+    {
+      "name": "Claude-SearchBot",
+      "owner": "Anthropic",
+      "kind": "search",
+      "allowed": true
+    },
+    {
+      "name": "PerplexityBot",
+      "owner": "Perplexity",
+      "kind": "search",
+      "allowed": true
+    },
+    {
+      "name": "ChatGPT-User",
+      "owner": "OpenAI",
+      "kind": "user",
+      "allowed": true
+    },
+    {
+      "name": "Claude-User",
+      "owner": "Anthropic",
+      "kind": "user",
+      "allowed": true
+    },
+    {
+      "name": "Perplexity-User",
+      "owner": "Perplexity",
+      "kind": "user",
+      "allowed": true
+    },
+    {
+      "name": "GPTBot",
+      "owner": "OpenAI",
+      "kind": "training",
+      "allowed": true
+    },
+    {
+      "name": "ClaudeBot",
+      "owner": "Anthropic",
+      "kind": "training",
+      "allowed": true
+    },
+    {
+      "name": "Google-Extended",
+      "owner": "Google",
+      "kind": "training",
+      "allowed": true
+    }
+  ],
+  "profiles": [
+    {
+      "profile": "default",
+      "url": "https://flapbase.com/",
+      "status": 200,
+      "language": "ja",
+      "visibleTextLength": 3097
+    },
+    {
+      "profile": "ja",
+      "url": "https://flapbase.com/",
+      "status": 200,
+      "language": "ja",
+      "visibleTextLength": 3097
+    },
+    {
+      "profile": "en",
+      "url": "https://flapbase.com/en",
+      "status": 200,
+      "language": "en",
+      "visibleTextLength": 666
+    }
+  ]
+}

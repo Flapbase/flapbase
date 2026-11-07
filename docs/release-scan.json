@@ -1,0 +1,243 @@
+{
+  "version": "flapbase.release-scan/v1",
+  "status": "pass",
+  "scannedFiles": 52,
+  "excluded": [
+    ".git",
+    "node_modules",
+    ".DS_Store"
+  ],
+  "unhashed": [
+    "docs/release-scan.json"
+  ],
+  "acceptedFixtures": [
+    {
+      "path": "tests/fetch.test.js",
+      "rule": "内部のホスト",
+      "reason": "危険な URL の拒否を確かめる固定の入力"
+    }
+  ],
+  "packages": [
+    {
+      "path": "package.json",
+      "name": "@flapbase/cli",
+      "dependencies": 0
+    },
+    {
+      "path": "packages/site-check/package.json",
+      "name": "@flapbase/site-check",
+      "dependencies": 0
+    }
+  ],
+  "problems": [],
+  "files": [
+    {
+      "path": ".gitignore",
+      "sha256": "63edb613f4ad0e8fb35ecf08a37c63012efbaafa08012d85b1aa608964606016"
+    },
+    {
+      "path": "bin/flap.js",
+      "sha256": "cab60bf2ae4ff87ea09a3627e42eeca561c5368497a32beb36dff0789b6e512f"
+    },
+    {
+      "path": "docs/provenance.md",
+      "sha256": "ff5d7e0a0a9cf3cba30f4c53de5d89f4172dd1b6a2e5551b7321dca539d7fd3e"
+    },
+    {
+      "path": "docs/result.md",
+      "sha256": "53b9d4b54fc9a8b3ebc37f4e0167198c33cca2bc7088c6d4da56668405f44cda"
+    },
+    {
+      "path": "examples/apparel/index.html",
+      "sha256": "6362d72ab120ef429cd2090e94a20ef9ad6605d79b62ddfaa68a61e1729356d8"
+    },
+    {
+      "path": "examples/apparel/robots.txt",
+      "sha256": "2cb9b7c3926384e4665a7cb2e6e2749f74aa0a69aed7faafc09d1a67dc757499"
+    },
+    {
+      "path": "examples/apparel/sitemap.xml",
+      "sha256": "a8e7b93c34f265f7d694c0103206221b5b70fd87795c33e2d136773ba3e06abd"
+    },
+    {
+      "path": "examples/cosmetics/index.html",
+      "sha256": "d2b2b78a151ef9421489aab37491feadafa22f00b436d42baa85fab8c640abff"
+    },
+    {
+      "path": "examples/cosmetics/robots.txt",
+      "sha256": "2cb9b7c3926384e4665a7cb2e6e2749f74aa0a69aed7faafc09d1a67dc757499"
+    },
+    {
+      "path": "examples/cosmetics/sitemap.xml",
+      "sha256": "33142c2e88eecd91dacb6bb342fa7b77a5828b873459fd61e155e4fb70038246"
+    },
+    {
+      "path": "examples/flapbase.com-20261107.json",
+      "sha256": "d0945603e39c534aca8ed678b2e0ca90b17befda62559d2bbacf9b9cda9ce600"
+    },
+    {
+      "path": "examples/flapbase.com-before-20261107.json",
+      "sha256": "e406449cbd0a20f970ce9eb9ec41526a7f308f3dbca41440b71d30d09027548e"
+    },
+    {
+      "path": "examples/README.md",
+      "sha256": "44176af01084f1ca5dc117372a578859260e489752b069d0e7a2d56da31e6abf"
+    },
+    {
+      "path": "examples/travel/index.html",
+      "sha256": "dad1c84a3608f66aa71eaffb73469f0e6060e49ffe242357b08598f9a8423a05"
+    },
+    {
+      "path": "examples/travel/robots.txt",
+      "sha256": "2cb9b7c3926384e4665a7cb2e6e2749f74aa0a69aed7faafc09d1a67dc757499"
+    },
+    {
+      "path": "examples/travel/sitemap.xml",
+      "sha256": "b3bc043bc3e723e2477f57678bb349bb20ca600da1af0b9b61148df5057c2fff"
+    },
+    {
+      "path": "LICENSE",
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+    },
+    {
+      "path": "NOTICE",
+      "sha256": "06c8ed5dc6afad79afdc646f6c92b0d71dcb51a9c32d1130cab6a238ec29afb9"
+    },
+    {
+      "path": "package.json",
+      "sha256": "47af2047718ab9085e69946f2c86b2d749f023435788a4bd11baa8cd489fdda1"
+    },
+    {
+      "path": "packages/site-check/LICENSE",
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+    },
+    {
+      "path": "packages/site-check/NOTICE",
+      "sha256": "06c8ed5dc6afad79afdc646f6c92b0d71dcb51a9c32d1130cab6a238ec29afb9"
+    },
+    {
+      "path": "packages/site-check/package.json",
+      "sha256": "d4f559dad86597b37e3ed132251c94712c43e829136c294a52dd47636100122b"
+    },
+    {
+      "path": "packages/site-check/README.md",
+      "sha256": "08a85df88d7cd49025ca85f7ed309a5091b06a75b1d51c9086ba0ae5d9597081"
+    },
+    {
+      "path": "packages/site-check/src/checks.js",
+      "sha256": "77c893637a18afaa23ec0d2f7394f975c3c56511b13deceeae455ba2ad817def"
+    },
+    {
+      "path": "packages/site-check/src/fetch.js",
+      "sha256": "b7817d70309da1677a1be1013f15aa467c55c76bf730a05dd6db2fe1a763310f"
+    },
+    {
+      "path": "packages/site-check/src/index.d.ts",
+      "sha256": "31976c83ba01ea61b2813f1692b12774154ef6431aa6a7244e5a4dc393ebd1f5"
+    },
+    {
+      "path": "packages/site-check/src/index.js",
+      "sha256": "ea90e201066ceb8122e2e680a6340e134027b8d6bf392c71c6bbe869f80f585c"
+    },
+    {
+      "path": "packages/site-check/src/initial-html.js",
+      "sha256": "1f929d954464dcd198aaa49d6dac65c96f48f91ca35977fc49802c21e8d12df4"
+    },
+    {
+      "path": "packages/site-check/src/input.js",
+      "sha256": "ba814d3b56307141f66fb0d5d4f613c267bd50c6184a15cbc950f14e9abe293a"
+    },
+    {
+      "path": "packages/site-check/src/public-read.js",
+      "sha256": "b5004194c85b7d57ef1595406ac0dd5552d32a64ffe5167bc99231b0cb57285c"
+    },
+    {
+      "path": "packages/site-check/src/public-url.js",
+      "sha256": "9818ead10f3daa8d9f04fef65edd76f763d195450e52e88ce461c5aa077d47b0"
+    },
+    {
+      "path": "packages/site-check/src/report.js",
+      "sha256": "560f88548f8688a75c67e6c5dc754bd15b3e0e2506606a42816cac2754645827"
+    },
+    {
+      "path": "packages/site-check/src/robots.js",
+      "sha256": "30982b945478ee347227bf1a33a5a210c39bca557d2096a212d26cea4bb77fe4"
+    },
+    {
+      "path": "packages/site-check/src/rules.js",
+      "sha256": "781c475fb987844046bd98f2543c1b8e8bb328ea22fa86f524c784ea53552e51"
+    },
+    {
+      "path": "packages/site-check/src/seo.js",
+      "sha256": "bef8b7cc9946f421e6e022bac4ba08ebb1687ea0834d80652e1b2eeee95fdd5e"
+    },
+    {
+      "path": "pnpm-lock.yaml",
+      "sha256": "d39a195d6098792685ac3a13f0972f16ff9e7f0fe1e00c670bb5dc9f574bdf21"
+    },
+    {
+      "path": "pnpm-workspace.yaml",
+      "sha256": "d115dc6c83ba283a7d17146ad456056f3f70b003edb8c312a52880b48b034001"
+    },
+    {
+      "path": "README.md",
+      "sha256": "85a988de1b32ec01c95e6f663535cbe1b9eb3bde7b936818bcf6475b4f668709"
+    },
+    {
+      "path": "scripts/check-pack.mjs",
+      "sha256": "fc5069865d3b405d4b18db49775eca5f7de76aa3bc96be1f7583e52ec9f1946d"
+    },
+    {
+      "path": "scripts/check-release.mjs",
+      "sha256": "cc4505d88411efebb489b369a8e9f9da9f95f77ecd3253bfc494d602b216a7d6"
+    },
+    {
+      "path": "scripts/compare-cloud.mjs",
+      "sha256": "78e0ccb6cfa246715b1c695e2661a638ced087d1e6b614b6c473556c437658ca"
+    },
+    {
+      "path": "skills/flapbase-site-check/SKILL.md",
+      "sha256": "d1fa7d5a7c152c2704c82fb1036e901df7be30912be09f0fbe62956cb55eca29"
+    },
+    {
+      "path": "tests/cloud-fixtures.test.js",
+      "sha256": "b27ecccb01e5ece6cdc7301c2a732ba6b0950e70224da2fe79a00bc3e6cc1097"
+    },
+    {
+      "path": "tests/fetch.test.js",
+      "sha256": "ed797a8f4d55ba989237fe5e85bf7a57e4cf2cfb8479efc6895cf2a51a367623"
+    },
+    {
+      "path": "tests/fixtures/cloud-reference.json",
+      "sha256": "419e7b14d96559fd8fbf79f03665f59865a7e0f5a15b2ae6e9f1a871a06bbf68"
+    },
+    {
+      "path": "tests/helpers.js",
+      "sha256": "2b9674f92d1d0f242424d02a92096bcacf54dc4a9c553414049236d6cf7347e9"
+    },
+    {
+      "path": "tests/input.test.js",
+      "sha256": "ac4644862295873b7dae9a180374cb2968f622310c9d5c87b69b69f367aac06f"
+    },
+    {
+      "path": "tests/release.test.js",
+      "sha256": "361d20a1854f0ff8e54c4aa9dcbca5c9bdadf844629293ad43417fd32c1f1f91"
+    },
+    {
+      "path": "tests/robots.test.js",
+      "sha256": "6d3adb6feade7b27831fdc98526f8160826e151562350209ec1508fb82c57b1e"
+    },
+    {
+      "path": "tests/rules.test.js",
+      "sha256": "cb1a5e358a1dbb8855280292ba05649cbc92b05238b58597c409e1ceb455fe2b"
+    },
+    {
+      "path": "tests/skill.test.js",
+      "sha256": "9dc20b6471f9bfc41a83bdf26268df2ef20b1dd85e77ad174d69f1aa838ca94d"
+    },
+    {
+      "path": "tests/types.ts",
+      "sha256": "e7d0290cc5d0cf2e85576c47bc7d5ab469c0873669ce8669a56252e56f756e15"
+    }
+  ]
+}

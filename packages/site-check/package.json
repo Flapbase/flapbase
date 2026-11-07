@@ -1,0 +1,33 @@
+{
+  "name": "@flapbase/site-check",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "サイト点検の純粋な規則と Node 用の取得",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "default": "./src/index.js"
+    }
+  },
+  "files": [
+    "src/",
+    "LICENSE",
+    "NOTICE",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "license": "Apache-2.0",
+  "scripts": {
+    "test": "node --test --test-concurrency=1 ../../tests/*.test.js"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Flapbase/flapbase.git",
+    "directory": "packages/site-check"
+  }
+}

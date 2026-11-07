@@ -1,0 +1,13 @@
+{
+  "version": "flapbase.site-check-history/v1",
+  "url": "https://flapbase.com/",
+  "recordedOn": "2026-11-07",
+  "kind": "historical-summary",
+  "source": "改善前の記事記録",
+  "observations": {
+    "basicChecks": { "passed": 11, "total": 11 },
+    "noLanguage": { "language": "en", "approximateVisibleTextLength": 670 },
+    "japaneseSearchCrawler": { "language": "ja", "approximateVisibleTextLength": 2700 },
+    "structuredData": { "types": ["WebSite"], "organization": false }
+  }
+}

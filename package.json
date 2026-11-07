@@ -1,0 +1,36 @@
+{
+  "name": "@flapbase/cli",
+  "version": "0.1.0",
+  "description": "手元でサイトの基本と AI からの読まれ方を点検する CLI",
+  "type": "module",
+  "bin": {
+    "flap": "bin/flap.js"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "packageManager": "pnpm@10.29.3",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Flapbase/flapbase.git"
+  },
+  "files": [
+    "bin/",
+    "packages/site-check/src/",
+    "skills/",
+    "LICENSE",
+    "NOTICE",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "node --test --test-concurrency=1 tests/*.test.js",
+    "check:release": "node scripts/check-release.mjs",
+    "check:pack": "node scripts/check-pack.mjs",
+    "check:cloud": "node scripts/compare-cloud.mjs",
+    "flap": "node bin/flap.js"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
