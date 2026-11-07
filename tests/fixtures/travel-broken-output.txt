@@ -1,7 +1,7 @@
 公開前に直すべき問題が 7 件
 1. 公開用フォルダに .env が混ざっています（1頁: .env）。直す所: .env を公開用フォルダから外します。
 2. HTTPS の頁が HTTP の資源を読んでいます（1頁: index.html）。直す所: 資源の URL を HTTPS に直します。
-3. 公開成果物にnoindexが指定されています（3頁: en/index.html、index.html、rates.html）。直す所: 共通の head にある noindex を外します。
+3. 公開する頁に noindex が指定されています（3頁: en/index.html、index.html、rates.html）。直す所: 共通の head にある noindex を外します。
 4. 予約・問い合わせ・購入の宛先に問題があります（1頁: index.html）。直す所: 該当するリンクかフォームの宛先を、存在する公開先に直します。
 5. 住所が食い違っています（4頁: booking.html、en/index.html、index.html、rates.html）。直す所: 同じ対象の記載を確認し、本文・別言語の頁・JSON-LD をそろえます。
 6. 料金が食い違っています（3頁: booking.html、en/index.html、index.html）。直す所: 同じ対象の記載を確認し、本文・別言語の頁・JSON-LD をそろえます。
@@ -10,9 +10,9 @@
 問題の根拠
 1. .env:1 file [file] .env
 2. index.html:9 script [html] http://cdn.example.com/menu.js
-3. en/index.html:7 meta [html] 公開成果物にnoindexが指定されています
-3. index.html:7 meta [html] 公開成果物にnoindexが指定されています
-3. rates.html:7 meta [html] 公開成果物にnoindexが指定されています
+3. en/index.html:7 meta [html] 公開する頁に noindex が指定されています
+3. index.html:7 meta [html] 公開する頁に noindex が指定されています
+3. rates.html:7 meta [html] 公開する頁に noindex が指定されています
 4. index.html:17 a [html] お問い合わせ: old-contact.html (ファイルがない)
 5. booking.html:14 p [html] 東京都港区海岸1-2-3
 5. booking.html:8 script [jsonld] 東京都港区海岸1-2-3
