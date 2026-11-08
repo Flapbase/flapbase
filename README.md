@@ -1,8 +1,8 @@
 # Flapbase
 
-A workspace for growing your business.
+A workspace that grows with your business — services, products, creative work, development. Any kind of project.
 
-Open source. Use it with your AI agents, from your own code, or in Flapbase Cloud. It grows every week.
+Open source. Use it with your AI agents, from your own code, or in Flapbase Cloud. New tools arrive every week.
 
 [日本語](#日本語)
 
@@ -117,9 +117,11 @@ Apache-2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
 
 ## 日本語
 
-事業を伸ばすためのワークスペース。
+あなたのビジネスとともに育つワークスペース。
 
-オープンソースです。AI エージェントから、自分のコードから、または Flapbase Cloud で使えます。毎週広がります。
+サービス、商品、制作の仕事、開発。どんな形のプロジェクトでも。
+
+オープンソースです。AI エージェントから、自分のコードから、または Flapbase Cloud で使えます。新しい道具が毎週増えます。
 
 ### サイトの点検
 
