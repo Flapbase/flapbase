@@ -83,6 +83,8 @@ npx skills add Flapbase/flapbase
 | [flapbase-sns-operations](skills/flapbase-sns-operations/SKILL.md) | Runs social media operations as 12 workflows across planning, making, publishing and improving, locally or with Flapbase Cloud |
 | [flapbase-curation-publishing](skills/flapbase-curation-publishing/SKILL.md) | Picks surprising, fact-checked topics from overseas news and posts, and rewrites them in Japanese for X and articles, with UIL in Flapbase Cloud |
 | [flapbase-article-acquisition](skills/flapbase-article-acquisition/SKILL.md) | Brings visitors from search and AI assistants with articles that answer real customer questions |
+| [flapbase-measures-inventory](skills/flapbase-measures-inventory/SKILL.md) | Takes stock of your marketing as audience × action × tool, without forms, and finds what to add, fix, tidy or stop |
+| [flapbase-split-test](skills/flapbase-split-test/SKILL.md) | Compares two versions at a scale that fits your numbers, and turns the result into insight |
 | [flapbase-site-diagnosis](skills/flapbase-site-diagnosis/SKILL.md) | Checks whether a site is recommended by AI, with Flapbase Cloud |
 | [flapbase-publish-work](skills/flapbase-publish-work/SKILL.md) | Publishes work from Site and Design |
 | [flapbase-projects-tasks](skills/flapbase-projects-tasks/SKILL.md) | Works with Projects and tasks |
