@@ -108,6 +108,12 @@ Skills are grouped by what you are trying to do. Within a group, use them top to
 | --- | --- |
 | [flapbase-split-test](skills/flapbase-split-test/SKILL.md) | Compares two versions at a scale that fits your numbers, and turns the result into insight |
 
+**Checklists**
+
+| Skill | What it does |
+| --- | --- |
+| [flapbase-tax-filing-prep](skills/flapbase-tax-filing-prep/SKILL.md) | Prepares the year-end tax return with a principle-level checklist; checks dates and amounts in official guidance every year, and never calculates or files |
+
 **Work in Flapbase Cloud**
 
 | Skill | What it does |
