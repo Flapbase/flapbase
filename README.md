@@ -80,6 +80,7 @@ npx skills add Flapbase/flapbase
 | [flapbase-site-migrate](skills/flapbase-site-migrate/SKILL.md) | Moves an existing site (HTML, React, Astro, WordPress export) into Flap Site |
 | [flapbase-post-check](skills/flapbase-post-check/SKILL.md) | Checks social posts locally before they go out: AI-sounding lines, facts not in your materials, missing next steps, format per channel |
 | [flapbase-post-assist](skills/flapbase-post-assist/SKILL.md) | Rewrites copy and drafts X and Instagram posts from the same materials, with Flapbase Cloud |
+| [flapbase-sns-operations](skills/flapbase-sns-operations/SKILL.md) | Runs social media operations as 12 workflows across planning, making, publishing and improving, locally or with Flapbase Cloud |
 | [flapbase-site-diagnosis](skills/flapbase-site-diagnosis/SKILL.md) | Checks whether a site is recommended by AI, with Flapbase Cloud |
 | [flapbase-publish-work](skills/flapbase-publish-work/SKILL.md) | Publishes work from Site and Design |
 | [flapbase-projects-tasks](skills/flapbase-projects-tasks/SKILL.md) | Works with Projects and tasks |
