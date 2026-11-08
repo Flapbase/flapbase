@@ -78,6 +78,8 @@ npx skills add Flapbase/flapbase
 | --- | --- |
 | [flapbase-site-check](skills/flapbase-site-check/SKILL.md) | Runs the site check locally and explains the fixes |
 | [flapbase-site-migrate](skills/flapbase-site-migrate/SKILL.md) | Moves an existing site (HTML, React, Astro, WordPress export) into Flap Site |
+| [flapbase-post-check](skills/flapbase-post-check/SKILL.md) | Checks social posts locally before they go out: AI-sounding lines, facts not in your materials, missing next steps, format per channel |
+| [flapbase-post-assist](skills/flapbase-post-assist/SKILL.md) | Rewrites copy and drafts X and Instagram posts from the same materials, with Flapbase Cloud |
 | [flapbase-site-diagnosis](skills/flapbase-site-diagnosis/SKILL.md) | Checks whether a site is recommended by AI, with Flapbase Cloud |
 | [flapbase-publish-work](skills/flapbase-publish-work/SKILL.md) | Publishes work from Site and Design |
 | [flapbase-projects-tasks](skills/flapbase-projects-tasks/SKILL.md) | Works with Projects and tasks |
@@ -85,9 +87,10 @@ npx skills add Flapbase/flapbase
 | [flapbase-connect-mcp](skills/flapbase-connect-mcp/SKILL.md) | Connects to Flapbase Cloud over MCP |
 | [flapbase-join](skills/flapbase-join/SKILL.md) | Signs up to Flapbase Cloud, with the owner's confirmation |
 | [flapbase-handoff](skills/flapbase-handoff/SKILL.md) | Leaves a handoff note |
+| [flapbase-feedback](skills/flapbase-feedback/SKILL.md) | Sends feedback to Flapbase from Flapbase Cloud, after the owner confirms |
 | [flapbase-guardrails](skills/flapbase-guardrails/SKILL.md) | Rules to keep: personal data and what people decide |
 
-The site check runs locally. The other skills use Flapbase Cloud through MCP.
+The site check and the post check run locally and send nothing. The other skills use Flapbase Cloud through MCP.
 
 ## Flapbase Cloud
 
@@ -97,7 +100,7 @@ The site check runs locally. The other skills use Flapbase Cloud through MCP.
 
 ## Feedback and contributions
 
-Issues and pull requests are closed. Send feedback from Flapbase Cloud with the feedback button in the app. To report a security issue, see [SECURITY.md](SECURITY.md).
+Issues and pull requests are closed. Send feedback from Flapbase Cloud: use the feedback button in the app, or ask your AI agent connected over MCP. To report a security issue, see [SECURITY.md](SECURITY.md).
 
 ## Development
 
@@ -149,8 +152,8 @@ Flapbase は、事業を伸ばすためのワークスペースです。この�
 npx skills add Flapbase/flapbase
 ```
 
-サイトの点検は手元で動きます。ほかの skill は、MCP で Flapbase Cloud を使います。一覧は上の表のとおりです。
+サイトの点検と投稿の点検は手元で動き、何も送りません。ほかの skill は、MCP で Flapbase Cloud を使います。一覧は上の表のとおりです。
 
 ### 意見と貢献
 
-Issues と Pull Request は受け付けていません。意見は Flapbase Cloud のアプリのフィードバックから送ってください。セキュリティの問題は [SECURITY.md](SECURITY.md) を見てください。
+Issues と Pull Request は受け付けていません。意見は Flapbase Cloud のアプリのフィードバック、または MCP でつないだ AI エージェントから送ってください。セキュリティの問題は [SECURITY.md](SECURITY.md) を見てください。
