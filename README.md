@@ -1,18 +1,20 @@
 # Flapbase
 
-Check your site before you publish: what search engines and AI can't read, and what stops people from booking or contacting you — with what to fix first.
+A workspace for growing your business.
 
-```text
-Problems to fix before publishing: 7
-1. The publish folder contains .env (1 page: .env). Fix: Remove .env from the publish folder.
-2. An HTTPS page loads an HTTP resource (1 page: index.html). Fix: Use HTTPS for the resource URL.
-```
+Open source. Use it with your AI agents, from your own code, or in Flapbase Cloud. It grows every week.
 
 [日本語](#日本語)
 
 ## Site check
 
 Check locally how search engines and AI read a site. Pass a public URL, a saved HTML file or a folder; you get what to fix, in order, with the reason. No account or API key. Node.js 22+, no external dependencies.
+
+```text
+Problems to fix before publishing: 7
+1. The publish folder contains .env (1 page: .env). Fix: Remove .env from the publish folder.
+2. An HTTPS page loads an HTTP resource (1 page: index.html). Fix: Use HTTPS for the resource URL.
+```
 
 ```sh
 git clone https://github.com/Flapbase/flapbase.git
@@ -58,13 +60,11 @@ URL fetching is limited to public HTTPS sites; private networks and local device
 
 ## Flapbase
 
-Flapbase is a set of tools to build, check, publish and run websites and marketing for small businesses. This repository opens those tools so anyone can use them locally.
+Flapbase is a workspace for growing your business. This repository opens it so anyone can run it locally.
 
-- Developers can use them directly in their own projects.
-- AI agents such as Claude Code and Codex (ChatGPT) can use them in a few steps.
-- Prefer a visual interface? Use the same tools in [Flapbase Cloud](https://flapbase.com), a workspace for growing your business. The results are the same.
-
-New tools are added every month. The first one is the site check.
+- Developers can use it directly in their own projects.
+- AI agents such as Claude Code and Codex (ChatGPT) can use it in a few steps.
+- Prefer a visual interface? Use [Flapbase Cloud](https://flapbase.com). The results are the same.
 
 ## Use from AI agents
 
@@ -110,17 +110,19 @@ Apache-2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
 
 ## 日本語
 
-公開前のサイトを点検して、検索や AI が読めない所と、予約や問い合わせにつながらない所を、直す順番つきで出します。
+事業を伸ばすためのワークスペース。
+
+オープンソースです。AI エージェントから、自分のコードから、または Flapbase Cloud で使えます。毎週広がります。
+
+### サイトの点検
+
+サイトが検索と AI に正しく読まれるかを、手元で点検します。公開している URL、保存した HTML、フォルダのどれでも渡せます。直す順番と理由を日本語で返します。アカウントと API キーは不要です。Node.js 22 以上で動き、外部のパッケージには依存しません。
 
 ```text
 公開前に直すべき問題が 7 件
 1. 公開用フォルダに .env が混ざっています（1頁: .env）。直す所: .env を公開用フォルダから外します。
 2. HTTPS の頁が HTTP の資源を読んでいます（1頁: index.html）。直す所: 資源の URL を HTTPS に直します。
 ```
-
-### サイトの点検
-
-サイトが検索と AI に正しく読まれるかを、手元で点検します。公開している URL、保存した HTML、フォルダのどれでも渡せます。直す順番と理由を日本語で返します。アカウントと API キーは不要です。Node.js 22 以上で動き、外部のパッケージには依存しません。
 
 ```sh
 node bin/flap.js check examples/cosmetics/index.html
@@ -131,13 +133,11 @@ node bin/flap.js check https://flapbase.com --json
 
 ### Flapbase
 
-Flapbase は、事業のサイトと発信を作り、点検し、公開し、運用するための道具です。このリポジトリは、その道具を誰でも手元で使えるように公開したものです。
+Flapbase は、事業を伸ばすためのワークスペースです。このリポジトリは、それを誰でも手元で使えるように公開したものです。
 
 - 開発者は、自分のプロジェクトにそのまま組み込めます。
 - AI エージェント（Claude Code、Codex（ChatGPT）など）から、少ない手数で使えます。
-- 画面から使いたい方は、事業を伸ばすためのワークスペース [Flapbase Cloud](https://flapbase.com) で、同じ道具を使えます。結果は同じです。
-
-道具は、毎月まとまった単位で足していきます。最初は「サイトの点検」です。
+- 画面から使いたい方は、[Flapbase Cloud](https://flapbase.com) で使えます。結果は同じです。
 
 ### AI エージェントから使う
 
