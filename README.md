@@ -113,6 +113,9 @@ Skills are grouped by what you are trying to do. Within a group, use them top to
 | Skill | What it does |
 | --- | --- |
 | [flapbase-tax-filing-prep](skills/flapbase-tax-filing-prep/SKILL.md) | Prepares the year-end tax return with a principle-level checklist; checks dates and amounts in official guidance every year, and never calculates or files |
+| [flapbase-checklist-monthly-close](skills/flapbase-checklist-monthly-close/SKILL.md) | Closes the month: unbilled work, unpaid invoices, receipts, fixed costs and the numbers |
+| [flapbase-checklist-year-prep](skills/flapbase-checklist-year-prep/SKILL.md) | Prepares the year: contracts and fixed costs, deadlines, ownership of accounts, goals and budget |
+| [flapbase-checklist-accounts](skills/flapbase-checklist-accounts/SKILL.md) | Checks business accounts and permissions every quarter, without touching passwords or keys |
 
 **Work in Flapbase Cloud**
 
