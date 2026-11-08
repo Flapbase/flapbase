@@ -74,28 +74,54 @@ Install the skills in Claude Code, Codex (ChatGPT) and other agents with one lin
 npx skills add Flapbase/flapbase
 ```
 
+Skills are grouped by what you are trying to do. Within a group, use them top to bottom.
+
+**Understand the business**
+
 | Skill | What it does |
 | --- | --- |
-| [flapbase-site-check](skills/flapbase-site-check/SKILL.md) | Runs the site check locally and explains the fixes |
-| [flapbase-site-migrate](skills/flapbase-site-migrate/SKILL.md) | Moves an existing site (HTML, React, Astro, WordPress export) into Flap Site |
-| [flapbase-post-check](skills/flapbase-post-check/SKILL.md) | Checks social posts locally before they go out: AI-sounding lines, facts not in your materials, missing next steps, format per channel |
-| [flapbase-post-assist](skills/flapbase-post-assist/SKILL.md) | Rewrites copy and drafts X and Instagram posts from the same materials, with Flapbase Cloud |
-| [flapbase-sns-operations](skills/flapbase-sns-operations/SKILL.md) | Runs social media operations as 12 workflows across planning, making, publishing and improving, locally or with Flapbase Cloud |
-| [flapbase-curation-publishing](skills/flapbase-curation-publishing/SKILL.md) | Picks surprising, fact-checked topics from overseas news and posts, and rewrites them in Japanese for X and articles, with UIL in Flapbase Cloud |
-| [flapbase-article-acquisition](skills/flapbase-article-acquisition/SKILL.md) | Brings visitors from search and AI assistants with articles that answer real customer questions |
+| [flapbase-business-map](skills/flapbase-business-map/SKILL.md) | Answers "what should we fix now?" by picking one question and only the analyses it needs, with evidence marked as observed, external, estimated or hypothesis |
 | [flapbase-measures-inventory](skills/flapbase-measures-inventory/SKILL.md) | Takes stock of your marketing as audience × action × tool, without forms, and finds what to add, fix, tidy or stop |
+
+**Site and AI visibility** (in order)
+
+| Skill | What it does |
+| --- | --- |
+| [flapbase-site-check](skills/flapbase-site-check/SKILL.md) | 1. Runs the site check locally and explains the fixes |
+| [flapbase-site-diagnosis](skills/flapbase-site-diagnosis/SKILL.md) | 2. Checks the content: what an AI needs to recommend the site |
+| [flapbase-ai-visibility](skills/flapbase-ai-visibility/SKILL.md) | 3. Checks every week whether AI assistants name the business correctly, and which comparison searches and lists matter |
+| [flapbase-site-migrate](skills/flapbase-site-migrate/SKILL.md) | Moves an existing site (HTML, React, Astro, WordPress export) into Flap Site |
+
+**Publishing**
+
+| Skill | What it does |
+| --- | --- |
+| [flapbase-article-acquisition](skills/flapbase-article-acquisition/SKILL.md) | Brings visitors from search and AI assistants with articles that answer real customer questions |
+| [flapbase-curation-publishing](skills/flapbase-curation-publishing/SKILL.md) | Picks surprising, fact-checked topics from overseas news and posts, and rewrites them in Japanese for X and articles, with UIL in Flapbase Cloud |
+| [flapbase-sns-operations](skills/flapbase-sns-operations/SKILL.md) | Runs social media operations as 12 workflows across planning, making, publishing and improving |
+| [flapbase-post-check](skills/flapbase-post-check/SKILL.md) | Checks social posts locally before they go out |
+| [flapbase-post-assist](skills/flapbase-post-assist/SKILL.md) | Rewrites copy and drafts X and Instagram posts from the same materials, with Flapbase Cloud |
+
+**Improve**
+
+| Skill | What it does |
+| --- | --- |
 | [flapbase-split-test](skills/flapbase-split-test/SKILL.md) | Compares two versions at a scale that fits your numbers, and turns the result into insight |
-| [flapbase-site-diagnosis](skills/flapbase-site-diagnosis/SKILL.md) | Checks whether a site is recommended by AI, with Flapbase Cloud |
-| [flapbase-publish-work](skills/flapbase-publish-work/SKILL.md) | Publishes work from Site and Design |
-| [flapbase-projects-tasks](skills/flapbase-projects-tasks/SKILL.md) | Works with Projects and tasks |
+
+**Work in Flapbase Cloud**
+
+| Skill | What it does |
+| --- | --- |
 | [flapbase-workflow](skills/flapbase-workflow/SKILL.md) | Runs workflows |
+| [flapbase-projects-tasks](skills/flapbase-projects-tasks/SKILL.md) | Works with Projects and tasks |
+| [flapbase-publish-work](skills/flapbase-publish-work/SKILL.md) | Publishes work from Site and Design |
 | [flapbase-connect-mcp](skills/flapbase-connect-mcp/SKILL.md) | Connects to Flapbase Cloud over MCP |
 | [flapbase-join](skills/flapbase-join/SKILL.md) | Signs up to Flapbase Cloud, with the owner's confirmation |
 | [flapbase-handoff](skills/flapbase-handoff/SKILL.md) | Leaves a handoff note |
 | [flapbase-feedback](skills/flapbase-feedback/SKILL.md) | Sends feedback to Flapbase from Flapbase Cloud, after the owner confirms |
 | [flapbase-guardrails](skills/flapbase-guardrails/SKILL.md) | Rules to keep: personal data and what people decide |
 
-The site check and the post check run locally and send nothing. The other skills use Flapbase Cloud through MCP.
+The site check and the post check run locally and send nothing. The other skills work locally where they can, and use Flapbase Cloud through MCP when you connect it. Only flapbase-feedback sends anything to Flapbase, and only after the owner confirms.
 
 ## Flapbase Cloud
 
