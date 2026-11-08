@@ -95,6 +95,10 @@ The site check runs locally. The other skills use Flapbase Cloud through MCP.
 
 [Examples](examples/README.md) · [Result format and Cloud mapping](docs/result.md) · [Where the rules come from](docs/provenance.md)
 
+## Feedback and contributions
+
+Issues and pull requests are closed. Send feedback from Flapbase Cloud with the feedback button in the app. To report a security issue, see [SECURITY.md](SECURITY.md).
+
 ## Development
 
 The CLI is at the root and the rules and fetching are in `packages/site-check`. No build step or added dependencies.
@@ -146,3 +150,7 @@ npx skills add Flapbase/flapbase
 ```
 
 サイトの点検は手元で動きます。ほかの skill は、MCP で Flapbase Cloud を使います。一覧は上の表のとおりです。
+
+### 意見と貢献
+
+Issues と Pull Request は受け付けていません。意見は Flapbase Cloud のアプリのフィードバックから送ってください。セキュリティの問題は [SECURITY.md](SECURITY.md) を見てください。

@@ -14,7 +14,7 @@ const privateRules = [
   ['内部のホスト', /https?:\/\/[^\s"'<>]*(?:\.internal|\.local)(?:[/:\s"'<>]|$)/iu],
 ]
 const roots = new Set(['bin', 'src', 'packages', 'scripts', 'tests', 'skills', 'examples', 'docs'])
-const topFiles = new Set(['.gitignore', 'README.md', 'LICENSE', 'NOTICE', 'package.json', 'pnpm-workspace.yaml', 'pnpm-lock.yaml'])
+const topFiles = new Set(['.gitignore', 'README.md', 'SECURITY.md', 'LICENSE', 'NOTICE', 'package.json', 'pnpm-workspace.yaml', 'pnpm-lock.yaml'])
 const ignored = new Set(['.git', 'node_modules', '.DS_Store'])
 const extensions = /\.(?:js|mjs|json|md|html|txt|xml|yaml|ts)$/u
 const exampleEnv = 'examples/travel-broken/.env'
