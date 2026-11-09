@@ -10,7 +10,9 @@ const secretRules = [
 ]
 const privateRules = [
   ['端末の絶対パス', /\/(?:Users|home)\/[A-Za-z0-9._-]+\//u],
-  ['内部の名前', new RegExp('\\b(?:' + ['FI' + 'NE', 'humanic' + 'agents', 'Another' + 'base', 'DIAGNOSIS' + '-1', 'flapbase' + '-cloud', 'sp' + 'luc'].join('|') + ')\\b', 'iu')],
+  // 内部のエンジンの名前は大文字のときだけ。小文字の fine は文字の大きさの名前（--fh-type-fine）などに使う。
+  ['内部の名前', new RegExp('\\bFI' + 'NE\\b', 'u')],
+  ['内部の名前', new RegExp('\\b(?:' + ['humanic' + 'agents', 'Another' + 'base', 'DIAGNOSIS' + '-1', 'flapbase' + '-cloud', 'sp' + 'luc'].join('|') + ')\\b', 'iu')],
   ['内部のホスト', /https?:\/\/[^\s"'<>]*(?:\.internal|\.local)(?:[/:\s"'<>]|$)/iu],
 ]
 const roots = new Set(['bin', 'src', 'packages', 'scripts', 'tests', 'skills', 'examples', 'docs'])

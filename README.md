@@ -113,6 +113,7 @@ Skills are grouped by what you are trying to do. Within a group, use them top to
 | --- | --- |
 | [flapbase-creative-brief](skills/flapbase-creative-brief/SKILL.md) | Confirms who the work is for and what they should do before making an LP, banner or social image, and leaves a brief with the reasons for the layout |
 | [flapbase-retainer-menu](skills/flapbase-retainer-menu/SKILL.md) | Turns repeat client work into a monthly menu (hours, scope, rollover, rush work) with the proposal text |
+| [flapbase-design-harness](skills/flapbase-design-harness/SKILL.md) | Builds web pages and screens to one set of rules (spacing, type, corners, lines, colour roles, focus) and measures them in the browser |
 
 **Improve**
 
