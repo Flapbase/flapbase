@@ -1,18 +1,18 @@
 公開前に直すべき問題が 7 件
-1. 公開用フォルダに .env が混ざっています（1頁: .env）。直す所: .env を公開用フォルダから外します。
-2. HTTPS の頁が HTTP の資源を読んでいます（1頁: index.html）。直す所: 資源の URL を HTTPS に直します。
-3. 公開する頁に noindex が指定されています（3頁: en/index.html、index.html、rates.html）。直す所: 共通の head にある noindex を外します。
-4. 予約・問い合わせ・購入の宛先に問題があります（1頁: index.html）。直す所: 該当するリンクかフォームの宛先を、存在する公開先に直します。
-5. 住所が食い違っています（4頁: booking.html、en/index.html、index.html、rates.html）。直す所: 同じ対象の記載を確認し、本文・別言語の頁・JSON-LD をそろえます。
-6. 料金が食い違っています（3頁: booking.html、en/index.html、index.html）。直す所: 同じ対象の記載を確認し、本文・別言語の頁・JSON-LD をそろえます。
-7. 初めの HTML に料金がありません（1頁: rates.html）。直す所: 料金を本文か JSON-LD に入れます。
+1. 公開用フォルダに .env が混ざっています（1ページ: .env）。直す所: .env を公開用フォルダから外します。
+2. HTTPS のページが HTTP の資源を読んでいます（1ページ: index.html）。直す所: 資源の URL を HTTPS に直します。
+3. 公開するページに noindex が指定されています（3ページ: en/index.html、index.html、rates.html）。直す所: 共通の head にある noindex を外します。
+4. 予約・問い合わせ・購入の宛先に問題があります（1ページ: index.html）。直す所: 該当するリンクかフォームの宛先を、存在する公開先に直します。
+5. 住所が食い違っています（4ページ: booking.html、en/index.html、index.html、rates.html）。直す所: 同じ対象の記載を確認し、本文・別言語のページ・JSON-LD をそろえます。
+6. 料金が食い違っています（3ページ: booking.html、en/index.html、index.html）。直す所: 同じ対象の記載を確認し、本文・別言語のページ・JSON-LD をそろえます。
+7. 初めの HTML に料金がありません（1ページ: rates.html）。直す所: 料金を本文か JSON-LD に入れます。
 
 問題の根拠
 1. .env:1 file [file] .env
 2. index.html:9 script [html] http://cdn.example.com/menu.js
-3. en/index.html:7 meta [html] 公開する頁に noindex が指定されています
-3. index.html:7 meta [html] 公開する頁に noindex が指定されています
-3. rates.html:7 meta [html] 公開する頁に noindex が指定されています
+3. en/index.html:7 meta [html] 公開するページに noindex が指定されています
+3. index.html:7 meta [html] 公開するページに noindex が指定されています
+3. rates.html:7 meta [html] 公開するページに noindex が指定されています
 4. index.html:17 a [html] お問い合わせ: old-contact.html (ファイルがない)
 5. booking.html:14 p [html] 東京都港区海岸1-2-3
 5. booking.html:8 script [jsonld] 東京都港区海岸1-2-3
@@ -27,7 +27,7 @@
 6. index.html:11 p [html] 12,000
 7. rates.html:1 html [html] 欠けている
 
-頁: booking.html
+ページ: booking.html
 料金: html p:11 12,000
 対応地域: html p:12 対応地域: 東京都港区 / html p:14 住所: 東京都港区海岸1-2-3 / jsonld script:8 東京都港区海岸1-2-3
 予約方法: html h1:10 海辺の旅の予約方法 / html p:16 予約方法: 下のフォームから宿泊希望日を送信してください。 / html form:17 メール 予約を申し込む (booking.html) / html button:17 予約を申し込む (booking.html)
@@ -68,7 +68,7 @@ GPTBot（学習用）: 許可
 ClaudeBot（学習用）: 許可
 Google-Extended（学習用）: 許可
 
-頁: en/index.html
+ページ: en/index.html
 料金: html p:11 13,500
 対応地域: html p:12 Service area: Minato, Tokyo / html p:14 Address: 東京都港区海岸1-2-3 / jsonld script:8 東京都港区海岸1-2-3
 予約方法: html a:16 Book your trip (../booking.html)
@@ -108,7 +108,7 @@ GPTBot（学習用）: 許可
 ClaudeBot（学習用）: 許可
 Google-Extended（学習用）: 許可
 
-頁: index.html
+ページ: index.html
 料金: html p:11 12,000
 対応地域: html p:12 対応地域: 東京都港区 / html p:14 住所: 東京都港区海岸9-9-9 / jsonld script:8 東京都港区海岸1-2-3
 予約方法: html a:16 予約・お問い合わせ (booking.html)
@@ -149,7 +149,7 @@ GPTBot（学習用）: 許可
 ClaudeBot（学習用）: 許可
 Google-Extended（学習用）: 許可
 
-頁: rates.html
+ページ: rates.html
 料金: 初めの HTML に欠けている
 対応地域: html p:12 対応地域: 東京都港区 / html p:14 住所: 東京都港区海岸1-2-3 / jsonld script:8 東京都港区海岸1-2-3
 予約方法: html a:16 予約する (booking.html)

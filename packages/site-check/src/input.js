@@ -45,7 +45,7 @@ export async function checkUrl(address, { now = new Date(), read = readPublic, f
   async function permission(target, signal) {
     const state = await robotsFor(target, signal)
     if (state.forbidden || (state.parsed && !robotsAllows(state.parsed, DIAGNOSIS_FETCH_AGENT, `${target.pathname}${target.search}`))) {
-      throw new CheckError('robots.blocked', 'robots.txt がこの頁の読み取りを止めています。')
+      throw new CheckError('robots.blocked', 'robots.txt がこのページの読み取りを止めています。')
     }
   }
   let page = null, blockedByRobots = false
@@ -53,7 +53,7 @@ export async function checkUrl(address, { now = new Date(), read = readPublic, f
     const response = await read(url.href, { beforeRequest: permission })
     if (response.text !== null && !isHtml(response.headers['content-type'])) throw new CheckError('url.not-html', '応答が HTML ではありません。')
     if (response.text === null && ![403, 429, 503].includes(response.status) && response.headers['cf-mitigated'] !== 'challenge') {
-      throw new CheckError('url.unavailable', '頁の HTML を取得できませんでした。')
+      throw new CheckError('url.unavailable', 'ページの HTML を取得できませんでした。')
     }
     page = pageOf(response)
   }

@@ -63,7 +63,7 @@ for (const [field, a, b, c] of [
   ['days', '<p>営業日: 月〜金</p>', '<p>Opening days: Monday-Friday</p>', '<p>営業日: 土日</p>'],
   ['address', '<p>住所: 東京都港区海岸1-2-3</p>', '<p>Address: 東京都 港区 海岸1-2-3</p>', '<p>住所: 東京都港区海岸9-9-9</p>'],
   ['phone', '<p>電話: 03-1234-5678</p>', '<p>Phone: +81 3-1234-5678</p>', '<p>電話: 03-9876-5432</p>'],
-]) test(`${field}: 頁・言語で一致する例と食い違う例`, () => {
+]) test(`${field}: ページ・言語で一致する例と食い違う例`, () => {
   const first = inspectPublication(a, url)
   assert.equal(compareValues([first, inspectPublication(b, url + 'en/')]).length, 0)
   const mismatch = compareValues([first, inspectPublication(c, url + 'en/')])
@@ -170,7 +170,7 @@ test('同じ原因をまとめ、異なる原因は別の件にする', () => {
   assert.equal(result.length, 2)
   assert.equal(result.find(item => item.cause === 'head').pageCount, 2)
 })
-test('再点検で直った所・新しい所・継続を頁ごとに分ける', () => {
+test('再点検で直った所・新しい所・継続をページごとに分ける', () => {
   const report = (a, b) => ({ version: 'flapbase.site-check/v1', source: { kind: 'file' }, findings: groupFindings([
     ...a.map(page => finding('a', 'cause', '問題a', '直す', [{ page }])),
     ...b.map(page => finding('b', 'other', '問題b', '直す', [{ page }])),

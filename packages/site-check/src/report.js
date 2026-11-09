@@ -32,7 +32,7 @@ export function buildReport(fetched, { source, coverage, profiles = [], now = ne
     if (!org.found) issues.push({ key: 'organization-missing', stage: 'read', part: 'ai', ai: true,
       title: 'だれが運営しているかの構造化データがありません',
       why: '構造化データに、会社やお店（Organization・LocalBusiness）がありません。',
-      fix: '会社名・お店の名前・所在地・連絡の方法を、頁に書いてあるのと同じ書き方で、JSON-LD に足します。' })
+      fix: '会社名・お店の名前・所在地・連絡の方法を、ページに書いてあるのと同じ書き方で、JSON-LD に足します。' })
   }
   if (!coverage.sitemap) rows.push({ key: 'sitemap', stage: 'read', part: 'site', label: 'sitemap.xml', value: '未確認', tone: 'na' })
   if (profiles.length) {
@@ -46,9 +46,9 @@ export function buildReport(fetched, { source, coverage, profiles = [], now = ne
     if (baseline?.language && japanese?.language && baseline.language !== japanese.language && !issues.some(issue => issue.key === 'language-redirect')) {
       const at = issues.findIndex(issue => ['initial-html', 'page-basics', 'page-technical', 'jsonld-unreadable', 'sitemap-missing', 'organization-missing'].includes(issue.key))
       const issue = { key: 'language-variants', stage: 'read', part: 'ai', ai: true,
-        title: '言語の指定で、返す頁の言語が変わります',
+        title: '言語の指定で、返すページの言語が変わります',
         why: profiles.map(item => `${profileLabel(item.profile)}: ${languageLabel(item.language)}`).join('、'),
-        fix: '言語を指定しない読み手に返す頁を確認し、伝えたい内容をその HTML に入れます。' }
+        fix: '言語を指定しない読み手に返すページを確認し、伝えたい内容をその HTML に入れます。' }
       issues.splice(at < 0 ? issues.length : at, 0, issue)
     }
   }
@@ -70,7 +70,7 @@ export function formatReport(report, { lang = 'ja' } = {}) {
   const t = text => en ? translate(text) : text
   const findings = report.findings
   const lines = [en ? `Problems to fix before publishing: ${findings.length}` : `公開前に直すべき問題が ${findings.length} 件`]
-  const summary = item => en ? `${item.title} (${item.pageCount} ${item.pageCount === 1 ? 'page' : 'pages'}: ${item.pages.join(', ')}). Fix: ${item.fix}` : `${item.title}（${item.pageCount}頁: ${item.pages.join('、')}）。直す所: ${item.fix}`
+  const summary = item => en ? `${item.title} (${item.pageCount} ${item.pageCount === 1 ? 'page' : 'pages'}: ${item.pages.join(', ')}). Fix: ${item.fix}` : `${item.title}（${item.pageCount}ページ: ${item.pages.join('、')}）。直す所: ${item.fix}`
   for (const item of findings) lines.push(`${item.priority}. ${summary(item)}`)
   if (report.difference) {
     lines.push('', en ? 'Changes since the last check' : '再点検の差分')
@@ -85,7 +85,7 @@ export function formatReport(report, { lang = 'ja' } = {}) {
   }
   const reports = report.reports ?? [report]
   for (const page of reports) {
-    lines.push('', `${en ? 'Page' : '頁'}: ${page.pagePath ?? page.url}`)
+    lines.push('', `${en ? 'Page' : 'ページ'}: ${page.pagePath ?? page.url}`)
     for (const publication of page.publication ? [page.publication, ...(page.publication.variants ?? [])] : []) {
       if (publication.profile) lines.push(`${en ? 'Requested language' : '言語の指定'}: ${publication.profile}`)
       for (const fact of publication.facts) {

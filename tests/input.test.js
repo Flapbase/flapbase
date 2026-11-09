@@ -96,12 +96,12 @@ test('URL は robots を先に読み、言語ごとの実測値を返す', async
   assert.deepEqual(report.profiles.map(item => item.language), ['en', 'ja', 'en'])
   assert.ok(report.issues.some(item => item.key === 'language-variants'))
 })
-test('言語指定なしで日本語、英語指定で英語を返す頁は修正の対象にしない', async () => {
+test('言語指定なしで日本語、英語指定で英語を返すページは修正の対象にしない', async () => {
   const { read } = reader(routes)
   const report = await checkUrl(url, { read, now })
   assert.ok(!report.issues.some(item => item.key === 'language-variants'))
 })
-test('robots が拒否した頁は取得しない', async () => {
+test('robots が拒否したページは取得しない', async () => {
   const { read, calls } = reader(() => ({ text: 'User-agent: *\nDisallow: /', headers: { 'content-type': 'text/plain' } }))
   const report = await checkUrl(url, { read, now })
   assert.equal(calls.length, 1)

@@ -27,7 +27,7 @@ export async function localDestination(link, { root, siteUrl }) {
       if (!stat.isFile()) continue
       if (url.hash && /\.html?$/iu.test(candidate) && stat.size <= 1024 * 1024) {
         const { nodes } = readHtml(await readFile(actual, 'utf8'))
-        if (!nodes.some(node => node.attrs.id === fragment || (node.tag === 'a' && node.attrs.name === fragment))) return { status: 'broken', reason: '頁内の宛先がない', finalUrl: url.href }
+        if (!nodes.some(node => node.attrs.id === fragment || (node.tag === 'a' && node.attrs.name === fragment))) return { status: 'broken', reason: 'ページ内の宛先がない', finalUrl: url.href }
       }
       return { status: 'ok', reason: null, finalUrl: url.href, localPath: relative(root, candidate).split(sep).join('/') }
     } catch (error) { if (!['ENOENT', 'ENOTDIR', 'ELOOP'].includes(error.code)) throw error }

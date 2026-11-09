@@ -156,7 +156,7 @@ export function inspectPublication(html, address, facts = DEFAULT_FACTS, page = 
       for (const target of targets.filter(Boolean)) {
         let resource
         try { resource = new URL(target, base).href } catch { continue }
-        if (resource.startsWith('http:')) findings.push(finding('publication.mixed-content', resource, 'HTTPS の頁が HTTP の資源を読んでいます', '資源の URL を HTTPS に直します。', [ev(page, location(node), resource)], 2))
+        if (resource.startsWith('http:')) findings.push(finding('publication.mixed-content', resource, 'HTTPS のページが HTTP の資源を読んでいます', '資源の URL を HTTPS に直します。', [ev(page, location(node), resource)], 2))
       }
     }
   }
@@ -181,7 +181,7 @@ export function legacyFindings(report) {
     const cause = item.code === 'robots.noindex' ? 'meta robots noindex'
       : item.code.startsWith('canonical.') ? `${item.code}:${report.publication?.htmlLocations.canonical?.text ?? item.message}` : item.message
     details.push(finding(code, cause,
-      item.message, ({ robots: '共通の head にある noindex を外します。', title: 'title を1つにし、8〜70文字で頁の内容を書きます。', description: 'meta description を1つにし、30〜160文字で頁の内容を書きます。', h1: 'h1 を1つにして頁の見出しを書きます。', canonical: 'canonical にこの頁の公開 URL を書きます。', jsonld: 'JSON-LD の型と JSON の書式を直します。' })[check.key] ?? `共通の HTML の ${check.label} を直します。`,
+      item.message, ({ robots: '共通の head にある noindex を外します。', title: 'title を1つにし、8〜70文字でページの内容を書きます。', description: 'meta description を1つにし、30〜160文字でページの内容を書きます。', h1: 'h1 を1つにしてページの見出しを書きます。', canonical: 'canonical にこのページの公開 URL を書きます。', jsonld: 'JSON-LD の型と JSON の書式を直します。' })[check.key] ?? `共通の HTML の ${check.label} を直します。`,
       [ev(page, report.publication?.htmlLocations[check.key] ?? { line: 1, selector: check.key === 'robots' ? 'meta[name=robots]' : check.key, text: '' }, item.message)], check.key === 'robots' ? 5 : 15))
   }
   for (const issue of report.issues) {
@@ -206,7 +206,7 @@ export function compareValues(publications) {
     const signatures = sets.map(items => JSON.stringify(items.map(item => item.normalized).sort()))
     if (new Set(signatures).size > 1) {
       const field = sets[0][0].field
-      findings.push(finding(`consistency.${field}`, key, `${FIELD_LABELS[field]}が食い違っています`, '同じ対象の記載を確認し、本文・別言語の頁・JSON-LD をそろえます。', sets.flat(), 8))
+      findings.push(finding(`consistency.${field}`, key, `${FIELD_LABELS[field]}が食い違っています`, '同じ対象の記載を確認し、本文・別言語のページ・JSON-LD をそろえます。', sets.flat(), 8))
     }
   }
   return findings

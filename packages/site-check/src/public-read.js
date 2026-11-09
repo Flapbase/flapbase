@@ -24,16 +24,16 @@ const ISSUE_ORDER = [
 ];
 const ISSUE_TEXT = {
     'page-blocked': { stage: 'read', part: 'ai', ai: true, title: '自動で読む相手を、bot 対策で止めています', why: 'こちらからの読み取りが止められました。検索や AI のクローラーも同じように止められている見込みがあります。', fix: 'bot 対策・WAF の設定で、検索と AI の検索のクローラーを止めていないかを確かめます。' },
-    'robots-blocks-us': { stage: 'read', part: 'site', ai: false, title: 'robots.txt で、この頁を読めないように指定しています', why: 'robots.txt が、自動で読む相手にこの頁を読まないよう求めているため、中身を診断していません。', fix: '検索に出したい頁なら、robots.txt の Disallow を外します。' },
-    noindex: { stage: 'read', part: 'site', ai: false, title: '検索から外す指示（noindex）が入っています', why: 'この頁は検索結果に出ません。', fix: '検索に出したい頁から noindex を外します。' },
+    'robots-blocks-us': { stage: 'read', part: 'site', ai: false, title: 'robots.txt で、このページを読めないように指定しています', why: 'robots.txt が、自動で読む相手にこのページを読まないよう求めているため、中身を診断していません。', fix: '検索に出したいページなら、robots.txt の Disallow を外します。' },
+    noindex: { stage: 'read', part: 'site', ai: false, title: '検索から外す指示（noindex）が入っています', why: 'このページは検索結果に出ません。', fix: '検索に出したいページから noindex を外します。' },
     'robots-disallow-all': { stage: 'read', part: 'site', ai: false, title: 'robots.txt で、サイト全体を締め出しています', why: 'どの検索のクローラーにも、サイト全体を読まないよう求めています。', fix: 'robots.txt の「Disallow: /」を外し、見せたくない所だけを指定します。' },
     'search-crawlers-blocked': { stage: 'read', part: 'ai', ai: true, title: 'AI の検索のクローラーを、robots.txt で止めています', why: '', fix: '止めている名前の組から Disallow を外します。学習用のクローラー（GPTBot・ClaudeBot など）は、止めたままにできます。' },
-    'language-redirect': { stage: 'read', part: 'ai', ai: true, title: '言語を指定しない読み手を、別の言語の頁へ転送しています', why: '', fix: '言語の指定がないときは転送せず、もとの頁を返します。別の言語へは、読み手が言語を指定したときだけ転送します。' },
-    'initial-html': { stage: 'read', part: 'ai', ai: true, title: '初めの HTML に、頁の文がほとんどありません', why: 'ブラウザで描く作りのため、検索や AI が最初に読む HTML に文がありません。', fix: '静的な HTML にするか、サーバー側で描いて、文を HTML に入れます。' },
+    'language-redirect': { stage: 'read', part: 'ai', ai: true, title: '言語を指定しない読み手を、別の言語のページへ転送しています', why: '', fix: '言語の指定がないときは転送せず、もとのページを返します。別の言語へは、読み手が言語を指定したときだけ転送します。' },
+    'initial-html': { stage: 'read', part: 'ai', ai: true, title: '初めの HTML に、ページの文がほとんどありません', why: 'ブラウザで描く作りのため、検索や AI が最初に読む HTML に文がありません。', fix: '静的な HTML にするか、サーバー側で描いて、文を HTML に入れます。' },
     'page-basics': { stage: 'read', part: 'site', ai: false, title: '', why: '', fix: '' },
     'page-technical': { stage: 'read', part: 'site', ai: false, title: '', why: '', fix: '' },
     'jsonld-unreadable': { stage: 'read', part: 'ai', ai: true, title: '構造化データが読めません', why: 'JSON-LD の書き方に誤りがあり、検索エンジンや AI が読み取れません。', fix: 'JSON として正しい形に直します。' },
-    'sitemap-missing': { stage: 'read', part: 'site', ai: false, title: 'sitemap.xml が見つかりません', why: '検索のクローラーが、サイトの頁の一覧を受け取れません。', fix: 'sitemap.xml を置き、robots.txt に Sitemap の行を書きます。' },
+    'sitemap-missing': { stage: 'read', part: 'site', ai: false, title: 'sitemap.xml が見つかりません', why: '検索のクローラーが、サイトのページの一覧を受け取れません。', fix: 'sitemap.xml を置き、robots.txt に Sitemap の行を書きます。' },
 };
 const BASIC_LABEL = { title: 'ページの題', description: 'ページの説明', h1: 'いちばん大きな見出し', canonical: '正規の URL' };
 const TECH_LABEL = { html: 'ページの言語', charset: '文字コード', doctype: '文書の種類の宣言', viewport: 'スマホの表示' };
@@ -145,7 +145,7 @@ export function runPublicDiagnosis(fetched, now = new Date()) {
     // --- 読める（サイト診断） ---
     if (fetched.blockedByRobots) {
         add('robots-blocks-us');
-        row('page', 'read', 'site', 'この頁', 'robots.txt で止めている', 'bad');
+        row('page', 'read', 'site', 'このページ', 'robots.txt で止めている', 'bad');
     }
     if (robots && disallowsAll(robots))
         add('robots-disallow-all');
@@ -157,11 +157,11 @@ export function runPublicDiagnosis(fetched, now = new Date()) {
         row('noindex', 'read', 'site', '検索から外す指示', check('robots')?.pass === false ? 'ある' : 'なし', check('robots')?.pass === false ? 'bad' : 'ok');
         const failedBasics = Object.keys(BASIC_LABEL).filter(key => check(key)?.pass === false);
         if (failedBasics.length)
-            add('page-basics', { title: `${failedBasics.map(key => BASIC_LABEL[key]).join('・')}を直すとよい`, why: '検索結果や共有のときに、頁の内容が正しく伝わりにくくなります。', fix: '題は8〜70文字、説明は30〜160文字ほどで1つずつ、いちばん大きな見出しは1つ、正規の URL はその頁自身を書きます。' });
+            add('page-basics', { title: `${failedBasics.map(key => BASIC_LABEL[key]).join('・')}を直すとよい`, why: '検索結果や共有のときに、ページの内容が正しく伝わりにくくなります。', fix: '題は8〜70文字、説明は30〜160文字ほどで1つずつ、いちばん大きな見出しは1つ、正規の URL はそのページ自身を書きます。' });
         row('basics', 'read', 'site', '題・説明・見出し', failedBasics.length ? `${failedBasics.map(key => BASIC_LABEL[key]).join('・')}を直す` : 'そろっている', failedBasics.length ? 'mid' : 'ok');
         const failedTech = Object.keys(TECH_LABEL).filter(key => check(key)?.pass === false);
         if (failedTech.length)
-            add('page-technical', { title: `${failedTech.map(key => TECH_LABEL[key]).join('・')}の設定がありません`, why: 'ブラウザや検索エンジンが、頁を正しく読み取れないことがあります。', fix: '<!doctype html>、html の lang、charset、viewport の width=device-width を、頁の先頭に書きます。' });
+            add('page-technical', { title: `${failedTech.map(key => TECH_LABEL[key]).join('・')}の設定がありません`, why: 'ブラウザや検索エンジンが、ページを正しく読み取れないことがあります。', fix: '<!doctype html>、html の lang、charset、viewport の width=device-width を、ページの先頭に書きます。' });
         row('technical', 'read', 'site', '言語・文字コード・スマホの表示', failedTech.length ? `${failedTech.map(key => TECH_LABEL[key]).join('・')}がない` : 'そろっている', failedTech.length ? 'mid' : 'ok');
     }
     if (fetched.sitemap) {
@@ -192,8 +192,8 @@ export function runPublicDiagnosis(fetched, now = new Date()) {
     if (html && page) {
         const away = page.redirected ? redirectedAwayFromLanguage(html, fetched.requestedUrl) : null;
         if (away) {
-            add('language-redirect', { why: `言語を指定しない読み手には、${languageName(away.to)}の頁が返ります。AI のクローラーの多くは言語を指定しないので、もとの頁ではなく${languageName(away.to)}の頁を読んでいる見込みが高いです。` });
-            row('language', 'read', 'ai', '読む相手で中身が変わらないか', `${languageName(away.to)}の頁へ転送`, 'bad');
+            add('language-redirect', { why: `言語を指定しない読み手には、${languageName(away.to)}のページが返ります。AI のクローラーの多くは言語を指定しないので、もとのページではなく${languageName(away.to)}のページを読んでいる見込みが高いです。` });
+            row('language', 'read', 'ai', '読む相手で中身が変わらないか', `${languageName(away.to)}のページへ転送`, 'bad');
         }
         else
             row('language', 'read', 'ai', '読む相手で中身が変わらないか', '変わらない', 'ok');

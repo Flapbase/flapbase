@@ -52,24 +52,24 @@ robots.txt のワイルドカードは、外から受け取った文字列で正
 | --- | --- |
 | `factsRequested` | `('price' \| 'area' \| 'booking')[]`。既定は3つすべて |
 | `pagePath` | ファイル入力の公開用ルートからの相対パス |
-| `publication` | 読めた HTML の事実・リンク・比較する値・頁内の問題 |
-| `findings` | 原因ごとにまとめた問題と直す順番。フォルダでは全頁と公開用ファイルをまとめる |
+| `publication` | 読めた HTML の事実・リンク・比較する値・ページ内の問題 |
+| `findings` | 原因ごとにまとめた問題と直す順番。フォルダでは全ページと公開用ファイルをまとめる |
 | `difference` | `--baseline` を指定した場合の `fixed`・`introduced`・`continuing` |
 
-`publication` は HTML が読めた頁に入り、次の欄を持ちます。
+`publication` は HTML が読めたページに入り、次の欄を持ちます。
 
 | 欄 | 内容 |
 | --- | --- |
 | `facts` | `key`、日本語の `label`、`found`、`evidence[]`。選んだ事実ごとに有無と場所を返す |
 | `links` | `page`、`line`、`selector`、`text`、`label`、元の `target`、解決した `destination`、転送後の `finalUrl`、`status`、`httpStatus`、`reason`、`kind`。ローカル先が存在すれば `localPath` も入る |
 | `values` | 料金・営業日・住所・電話の `Evidence[]`。`field`、`subject`、比較用の `normalized` を含む |
-| `findings` | この頁の追加規則の問題。`code`、`cause`、`title`、`fix`、`evidence[]`、順序用の `rank` |
+| `findings` | このページの追加規則の問題。`code`、`cause`、`title`、`fix`、`evidence[]`、順序用の `rank` |
 | `htmlLocations` | 基本11項目の要素の行・selector・本文。欠けた要素は入らない |
 | `variants` | URL 入力で読めた日本語・英語指定の応答。`profile`、`url` と同じ publication の欄 |
 
 `Evidence` は `page`（相対パスか最終 URL）、`source`（`html`・`jsonld`・`file`）、1からの `line`、要素を表す `selector`、短い `text`、根拠となる `value` を持ちます。比較する値には `field`・`subject`・`normalized`、言語指定には `profile`、壊れたリンクには `destination`・`finalUrl` も入ります。秘密ファイルの根拠はパスだけです。
 
-最上位の `findings[]` は頁内の問題の型に `id`、1からの `priority`、`pageCount`、重複を除いた `pages[]` を足します。`id` は規則の `code` と原因の `cause` の SHA-256 の先頭20桁から作ります。同じ規則と原因の問題を1件にまとめ、根拠を合流します。基本項目の題・説明なども別々の規則として扱います。共通の noindex は `html.robots.noindex` の1件です。`rank` と `priority` は直す順番で、品質の点数ではありません。
+最上位の `findings[]` はページ内の問題の型に `id`、1からの `priority`、`pageCount`、重複を除いた `pages[]` を足します。`id` は規則の `code` と原因の `cause` の SHA-256 の先頭20桁から作ります。同じ規則と原因の問題を1件にまとめ、根拠を合流します。基本項目の題・説明なども別々の規則として扱います。共通の noindex は `html.robots.noindex` の1件です。`rank` と `priority` は直す順番で、品質の点数ではありません。
 
 ### 事実と食い違いを見つける規則
 
@@ -78,7 +78,7 @@ robots.txt のワイルドカードは、外から受け取った文字列で正
 - 対応地域は「対応地域」「対象地域」「サービスエリア」「所在地」「住所」「アクセス」、英語の service area・area served・location・address と、その見出しの本文。JSON-LD は `areaServed`・`serviceArea`・`address` です。
 - 予約方法は「予約方法」「予約は」「予約受付」「予約フォーム」、予約と電話・メール・フォームなどの方法が同じ文にある本文、予約リンク・フォームの文言、JSON-LD の `ReserveAction` です。
 - 営業日は営業日・定休日などの文言と JSON-LD の `openingHours`・`dayOfWeek`、住所は住所・所在地などの文言と `address`、電話は電話などの文言と `telephone` から読みます。
-- 同じ field と subject について、頁・言語指定・本文/JSON-LD ごとに値の集合を比べます。円の区切り、電話の区切りと +81、住所の空白と郵便番号、曜日の日本語/英語と範囲をそろえます。異なる集合を見つけたら両方を返します。subject の既定は `business`。商品名は JSON-LD の Product・Service・Offer の `name`、本文は `data-subject` を使います。例: `<p data-fact="price" data-subject="化粧水">2,000円</p>`。
+- 同じ field と subject について、ページ・言語指定・本文/JSON-LD ごとに値の集合を比べます。円の区切り、電話の区切りと +81、住所の空白と郵便番号、曜日の日本語/英語と範囲をそろえます。異なる集合を見つけたら両方を返します。subject の既定は `business`。商品名は JSON-LD の Product・Service・Offer の `name`、本文は `data-subject` を使います。例: `<p data-fact="price" data-subject="化粧水">2,000円</p>`。
 
 ### リンクと公開用ファイル
 
@@ -86,11 +86,11 @@ robots.txt のワイルドカードは、外から受け取った文字列で正
 
 `status` は `ok`（宛先確認済み）、`broken`（修正が必要）、`unchecked`（未確認）。公開 URL の宛先は既存の DNS・IP 固定・転送・robots の規則で読み、HTTP 状態と最終 URL を返します。時間切れと robots の拒否は未確認です。URL 入力では言語指定分を含めて宛先50件まで確認し、同じ宛先を再利用します。
 
-フォルダではネットワークへ接続せず、公開用ルート内の相対先、HTML の拡張子補完、directory index、頁内 id を確認します。フォルダ外の URL・電話・メールは未確認。ローカルの最終 URL は解決した URL で、`localPath` は見つかったファイルです。頁ごとに宛先50件まで確認します。
+フォルダではネットワークへ接続せず、公開用ルート内の相対先、HTML の拡張子補完、directory index、ページ内 id を確認します。フォルダ外の URL・電話・メールは未確認。ローカルの最終 URL は解決した URL で、`localPath` は見つかったファイルです。ページごとに宛先50件まで確認します。
 
 公開用フォルダで `.env` と `.env.*`、`.git`、鍵の拡張子（pem・key・p12・pfx）と id_rsa などの名前を検出します。通常ファイルは先頭8 KiB の秘密鍵ヘッダーも確認します。内容は結果に含めません。シンボリックリンクの中身と .git・node_modules の中は読みません。フォルダ全体は5000項目、ヘッダーの確認は合計8 MiB、深さ8までです。例の `.env` は `EXAMPLE_ONLY=not-a-secret` の固定の1行です。公開検査で許すのは、このパスと内容の組だけです。
 
-HTTPS の頁では script・画像（srcset を含む）・iframe・音声・動画・object・stylesheet などの URL と、HTML 内の CSS の url()/@import が HTTP かを確認します。HTML の解析は20000要素・深さ128までです。
+HTTPS のページでは script・画像（srcset を含む）・iframe・音声・動画・object・stylesheet などの URL と、HTML 内の CSS の url()/@import が HTTP かを確認します。HTML の解析は20000要素・深さ128までです。
 
 ### 再点検の差分
 
@@ -100,6 +100,6 @@ node bin/flap.js check ./site --baseline /tmp/site-before.json
 node bin/flap.js check ./site --baseline /tmp/site-before.json --json
 ```
 
-前回の JSON は点検対象の外に置きます。入力の種類と `--facts` が同じ結果を比較し、問題の id と頁ごとに差を出します。`fixed` は前回だけ、`introduced` は今回だけ、`continuing` は両方にある組です。同じ原因で3頁のうち1頁を直せば、その頁だけが `fixed` に入ります。前回の問題の根拠は `fixed` にそのまま残ります。v0.1 の JSON に findings がない場合は既存の checks/issues から作ります。CLI は32 MiB 以下の前回 JSON を受け取ります。
+前回の JSON は点検対象の外に置きます。入力の種類と `--facts` が同じ結果を比較し、問題の id とページごとに差を出します。`fixed` は前回だけ、`introduced` は今回だけ、`continuing` は両方にある組です。同じ原因で3ページのうち1ページを直せば、そのページだけが `fixed` に入ります。前回の問題の根拠は `fixed` にそのまま残ります。v0.1 の JSON に findings がない場合は既存の checks/issues から作ります。CLI は32 MiB 以下の前回 JSON を受け取ります。
 
 規則のコードは `html.*`、`fact.*.missing`、`business-link.broken`、`consistency.price/days/address/phone`、`publication.env/git/private-key/mixed-content` です。既存の基本11項目以外の読まれ方の問題は、既存の issue key を保ちます。

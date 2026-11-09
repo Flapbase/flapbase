@@ -66,7 +66,7 @@ export function auditWebPublicationHtml({ html, label, expectedCanonical, expect
   for (const [, , body] of jsonLdScripts) {
     try { const parsed = JSON.parse(body); if (parsed === null || typeof parsed !== 'object') issues.push(issue('error', 'jsonld.shape', 'JSON-LDのrootはobjectまたはarrayにします')) } catch { issues.push(issue('error', 'jsonld.invalid', 'JSON-LDをJSONとして解析できません')) }
   }
-  if (robots.includes('noindex') && !allowNoindex) issues.push(issue('error', 'robots.noindex', '公開する頁に noindex が指定されています'))
+  if (robots.includes('noindex') && !allowNoindex) issues.push(issue('error', 'robots.noindex', '公開するページに noindex が指定されています'))
   if (!robots.includes('noindex') && allowNoindex) issues.push(issue('error', 'robots.noindex-expected', 'noindex許可Routeなのにnoindexが指定されていません'))
   for (const [field, values] of Object.entries(social)) {
     if (values.length !== 1) issues.push(issue('error', `social.${field}.count`, `${field}は1個必要です 現在${values.length}個`))

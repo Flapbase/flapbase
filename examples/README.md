@@ -14,7 +14,7 @@ node bin/flap.js check examples/travel --json
 
 ## 問題を入れた旅の予約サイト
 
-`travel-broken` は4頁です。共通の head の noindex、JavaScript にしかない料金、スマホメニューだけの古い問い合わせ URL、日英の料金の差、本文と JSON-LD の住所の差、HTTP script、固定の例示用 .env を含みます。
+`travel-broken` は4ページです。共通の head の noindex、JavaScript にしかない料金、スマホメニューだけの古い問い合わせ URL、日英の料金の差、本文と JSON-LD の住所の差、HTTP script、固定の例示用 .env を含みます。
 
 ```sh
 node bin/flap.js check examples/travel-broken

@@ -35,7 +35,7 @@ for (const [key, html, code] of [
   ['canonical', good.replace(url, '/cosmetics/'), 'canonical.invalid'],
 ]) test(`境界と形式: ${code}`, () => assert.ok(inspectChecks(html, url).find(check => check.key === key).findings.some(issue => issue.code === code)))
 
-test('本文をサーバーで描いた頁は script が多くても通す', () => {
+test('本文をサーバーで描いたページは script が多くても通す', () => {
   assert.equal(inspectInitialHtml(`<body><p>${'旅の紹介'.repeat(60)}</p><script>${'x'.repeat(3000)}</script></body>`).pass, true)
 })
 test('script がない短い静的 HTML は Cloud と同じく通す', () => assert.equal(inspectInitialHtml('<body><h1>旅</h1></body>').pass, true))
