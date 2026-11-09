@@ -1,38 +1,66 @@
 ---
 name: flapbase-publish-work
-description: Flapbase の Site と Design の道具で制作物を作り、確かめ、公開を人に頼む。サイトの下書き、告知の画像、手元での描画の確かめ、クレジットの見積りが出る場面で使う。
+description: Flapbase の Site と Design の道具で制作物を作り、仕上がりを確かめ、公開を人に頼む。サイトの下書きや告知の画像を作るときや、手元で表示を確かめるとき、クレジットの見積りが出る場面で使う。
 license: Apache-2.0
+business-categories: ["02", "08"]
+transaction-types: ["デジタル販売", "相談・受託"]
 ---
 
 # 制作物を出す
 
-作るのはエージェント、公開するのは人。道具は下書きか新しい版を保存するだけで、公開しない。
+## 用意するもの
 
-## Site
+制作物の材料と、どこまで作るか・公開を頼むかという依頼の範囲を用意する。
 
-1. `site_reference_guide` と `site_catalog` で、使える型・節・部品を読む。
-2. `site_create` で下書きを作る。WordPress や公開中のサイトからは `site_import_inspect` で読み、`site_import` で材料にする（文章と画像を移す権利は人が画面で確かめる）。
-3. 参考画像が要るなら `site_reference_generate`。最初は見積りが返るので、人に金額と文を承認してもらい、`creditConsent` を付けて同じ入力で送り直す。選ばれた画像は `site_reference_set` で記録する。
-4. 直しは `site_apply`。`check: true` で確かめてから、外して同じ入力で保存する。手元の画像は `site_image_upload` で上げる。
+## 始める前に
+
+すでにある版・表示・見積りと、人の承認が済んでいるかどうかを確かめる。
+
+## 手順
+
+作るのはエージェント、公開するのは人。どの道具も、下書きか新しい版を保存するだけで、公開はしない。
+
+### Site
+
+1. `site_reference_guide` と `site_catalog` で、使えるテンプレート・セクション・部品を読む。
+2. `site_create` で下書きを作る。WordPress や公開中のサイトから作る場合は、`site_import_inspect` で読み取り、`site_import` で材料として取り込む（文章と画像を移してよいかどうかは、人が画面で確かめる）。
+3. 参考画像が必要なら `site_reference_generate` を使う。最初は見積りが返るので、人に金額と文を承認してもらい、`creditConsent` を付けて同じ入力で送り直す。人が選んだ画像は `site_reference_set` で記録する。
+4. 修正は `site_apply` で行う。まず `check: true` を付けて確かめ、問題がなければ `check: true` を外して、同じ入力で保存する。手元の画像は `site_image_upload` でアップロードする。
 5. `site_get` で保存した版を読む。
 
-## Design
+### Design
 
-1. `design.catalog.list` で、レシピ・大きさ・配色を読む。
-2. `design_preview` で案を受け取る。呼ぶたびにクレジットを使うので、呼ぶ前に依頼主に確かめる。使う案は人が選ぶ。
-3. `design_save` で下書きを保存し、`design_get` で読み、`design_check` で無料の点検をして、`design_apply` で直す。直した版は `design_save` で足す。
+1. `design.catalog.list` で、レシピ・サイズ・配色を読む。
+2. `design_preview` で案を受け取る。呼ぶたびにクレジットを使うので、呼ぶ前に依頼主に確かめる。どの案を使うかは人が選ぶ。
+3. `design_save` で下書きを保存し、`design_get` で読み、`design_check` で無料の点検をして、`design_apply` で直す。直した版は `design_save` で追加して保存する。
 
-## 描画は手元、こちらで描くならクレジット
+### 表示の確認は手元で行う。Flapbase 側で描くとクレジットを使う
 
-- `site_render`・`site_compare`・`site_check`・`design_render` は、描くための HTML と実測のスクリプトを返す。既定は、エージェントの手元のブラウザ（Playwright など）で開いて描き、確かめる。
-- 手元で描けないときだけ `serverRender: true` を付ける。こちらで描き、1回の呼び出しにつき1クレジットを使う。付ける前に依頼主に確かめる。
+- `site_render`・`site_compare`・`site_check`・`design_render` は、画面に描くための HTML と、寸法などを測るスクリプトを返す。通常は、エージェントの手元のブラウザ（Playwright など）で開いて描き、仕上がりを確かめる。
+- 手元で描けないときだけ、`serverRender: true` を付ける。すると Flapbase 側で描き、1回の呼び出しにつき1クレジットを使う。付ける前に依頼主に確かめる。
 
-## 確かめを頼む
+### 確認と公開を頼む
 
-- 手元で PC とスマホの両方を描き、文字の大きさ・はみ出し・押せる大きさを見てから、人に見せる。
-- 公開は `site_publish_request` で人に頼む。承認待ちが返るだけで、公開はしない。人が Site の画面で確かめて公開する。Design の書き出しも人が画面で行う。
+- 手元で PC とスマホの両方の表示を描き、文字の大きさ・はみ出し・ボタンの押しやすさを見てから、人に見せる。
+- 公開は `site_publish_request` で人に頼む。返ってくるのは承認待ちの状態だけで、公開はされない。人が Site の画面で確かめて公開する。Design の書き出しも、人が画面で行う。
 
-## 守ること
+### 守ること
 
-- 参考にした他人の制作物の見た目をそのまま写さない。
+- 参考にした他人の制作物と、見た目がそっくりにならないようにする。
 - 画像は、使ってよいと人が確かめたものだけを使う。
+
+## チェックリスト
+
+本文にある確認項目を、確認できたもの・確認できていないもの・人の判断を待つものに分けて示し、今回の対象に抜けがないかを確かめる。
+
+## 終わりの目安
+
+制作物の版と確認の結果がそろい、公開の承認待ちなのか、公開済みなのかをはっきり示せた。
+
+## 次にできること
+
+flapbase-site-check（サイトの点検）で、公開する内容を点検する。
+
+## Flapbase で続ける
+
+[Flapbase で開く](https://flapbase.com/skills/publish-work)。ページの「エージェントで使う」に、手順と使う道具が載っている。専用のワークフローや Project は自動では作られない。ここで出した結果も自動では Flapbase に送られないので、続ける範囲と持ち込む材料を、人が確かめてから進める。

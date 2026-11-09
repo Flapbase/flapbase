@@ -1,16 +1,44 @@
 ---
 name: flapbase-feedback
-description: Flapbase の道具・skill・Cloud への改善の提案、不具合、そのほかの意見を、依頼主の確認のうえで Flapbase に送る。送ることだけを行う skill。
+description: Flapbase の道具・スキル・Cloud への改善の提案、不具合、そのほかの意見を、依頼主の確認を得たうえで Flapbase に送る。このスキルがするのは、意見を送ることだけ。
 license: Apache-2.0
+business-categories: ["09"]
+transaction-types: ["なし"]
 ---
 
 # Flapbase に意見を送る
 
-依頼主が Flapbase に伝えたいことを送る。Flapbase Cloud にログインしている人が使う（つなぎ方は flapbase-connect-mcp）。ほかの Flapbase の skill と CLI は何も送らない。送るのはこの skill を使ったときだけ。
+## 用意するもの
 
-1. 依頼主から、何について（道具・skill の名前、Cloud の画面）、何が起きたか・どうしてほしいかを聞く。
-2. 種類を選ぶ：改善の提案（suggestion）・不具合（bug）・そのほか（other）。
-3. 送る文をそのまま見せ、送ってよいか聞く。よいと言われたときだけ送る。依頼主が書いていない事情を足さない。サイトの URL・顧客の名前・連絡先は、依頼主が入れると言ったときだけ入れる。
-4. Flapbase Cloud にログインして MCP（https://mcp.flapbase.com/creative/mcp）につなぎ、`feedback_send` に `kind`・`body`・`about`（例 flapbase-site-check）と、新しい UUID の `idempotencyKey` を渡す。送り直すときは同じ値を使う。返事はワークスペースで受け取れる。
+依頼主が送りたい意見と、その対象になる道具や画面を用意してください。
 
-送った意見は Flapbase の運営が読み、改善に使う。
+## 始める前に
+
+送る本文と意見の種類を決め、依頼主から送ってよいという承認を得てください。
+
+## 手順
+
+依頼主が Flapbase に伝えたいことを送ります。Flapbase Cloud にログインしている人が使えます（接続の方法は flapbase-connect-mcp を見てください）。ほかの Flapbase のスキルや CLI は、何も送りません。意見が送られるのは、このスキルを使ったときだけです。
+
+1. 依頼主に、何についての意見か（道具やスキルの名前、Cloud の画面）と、何が起きたか、またはどうしてほしいかを聞きます。
+2. 意見の種類を、改善の提案（suggestion）・不具合（bug）・そのほか（other）から選びます。
+3. 送る文をそのまま見せて、送ってよいか聞きます。よいと言われたときだけ送ってください。依頼主が話していない事情は、足さないでください。サイトの URL・顧客の名前・連絡先は、依頼主が入れると言ったときだけ入れます。
+4. Flapbase Cloud にログインして MCP（https://mcp.flapbase.com/creative/mcp）に接続し、`feedback_send` に `kind`・`body`・`about`（例：flapbase-site-check）と、新しい UUID の `idempotencyKey` を渡します。送り直すときは、同じ値を使います。返事は、ワークスペースで受け取れます。
+
+送った意見は、Flapbase の運営が読み、改善に使います。
+
+## チェックリスト
+
+手順で確かめた項目を「確認済み」「未確認」「持ち主の判断待ち」に分けて書き出し、抜けがないかを確かめてください。
+
+## 終わりの目安
+
+承認された本文を送り、送れたことを確かめて、依頼主に報告している。
+
+## 次にできること
+
+返事を待ちながら、元の仕事に戻ります。
+
+## Flapbase で続ける
+
+なし。意見は、上の手順で送ります。

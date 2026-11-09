@@ -5,7 +5,7 @@ import { spawnSync } from 'node:child_process'
 
 test('skill の名前と説明を見つけ、記載されたローカルの命令を実行する', () => {
   const skill = readFileSync(new URL('../skills/flapbase-site-check/SKILL.md', import.meta.url), 'utf8')
-  const frontmatter = /^---\nname: ([a-z0-9-]+)\ndescription: ([^\n]+)\n---\n/u.exec(skill)
+  const frontmatter = /^---\nname: ([a-z0-9-]+)\ndescription: ([^\n]+)\n(?:[a-z-]+: [^\n]+\n)*---\n/u.exec(skill)
   assert.ok(frontmatter)
   assert.equal(frontmatter[1], 'flapbase-site-check')
   assert.ok(frontmatter[2].length > 0)

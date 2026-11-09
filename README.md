@@ -80,6 +80,9 @@ Skills are grouped by what you are trying to do. Within a group, use them top to
 
 | Skill | What it does |
 | --- | --- |
+| [flapbase-acquisition-check](skills/flapbase-acquisition-check/SKILL.md) | Lays out ad spend, visits, inquiries, deals and sales, shows where people drop off and what each lead costs |
+| [flapbase-business-profile-check](skills/flapbase-business-profile-check/SKILL.md) | Checks the business profile and service list, and rewrites the profile so it earns trust and inquiries |
+| [flapbase-ai-adoption](skills/flapbase-ai-adoption/SKILL.md) | Starts using chat AI at work: which tasks to hand off, prompt templates, and what not to put into AI |
 | [flapbase-business-map](skills/flapbase-business-map/SKILL.md) | Answers "what should we fix now?" by picking one question and only the analyses it needs, with evidence marked as observed, external, estimated or hypothesis |
 | [flapbase-measures-inventory](skills/flapbase-measures-inventory/SKILL.md) | Takes stock of your marketing as audience × action × tool, without forms, and finds what to add, fix, tidy or stop |
 
@@ -90,17 +93,26 @@ Skills are grouped by what you are trying to do. Within a group, use them top to
 | [flapbase-site-check](skills/flapbase-site-check/SKILL.md) | 1. Runs the site check locally and explains the fixes |
 | [flapbase-site-diagnosis](skills/flapbase-site-diagnosis/SKILL.md) | 2. Checks the content: what an AI needs to recommend the site |
 | [flapbase-ai-visibility](skills/flapbase-ai-visibility/SKILL.md) | 3. Checks every week whether AI assistants name the business correctly, and which comparison searches and lists matter |
+| [flapbase-mail-check](skills/flapbase-mail-check/SKILL.md) | Checks whether email to customers is set up to arrive (SPF, DKIM, DMARC) from public DNS, and gives the values to enter |
 | [flapbase-site-migrate](skills/flapbase-site-migrate/SKILL.md) | Moves an existing site (HTML, React, Astro, WordPress export) into Flap Site |
 
 **Publishing**
 
 | Skill | What it does |
 | --- | --- |
+| [flapbase-sns-check](skills/flapbase-sns-check/SKILL.md) | Checks a social profile and recent posts, then gives 10 post ideas and 3 posts ready to use |
 | [flapbase-article-acquisition](skills/flapbase-article-acquisition/SKILL.md) | Brings visitors from search and AI assistants with articles that answer real customer questions |
 | [flapbase-curation-publishing](skills/flapbase-curation-publishing/SKILL.md) | Picks surprising, fact-checked topics from overseas news and posts, and rewrites them in Japanese for X and articles, with UIL in Flapbase Cloud |
 | [flapbase-sns-operations](skills/flapbase-sns-operations/SKILL.md) | Runs social media operations as 12 workflows across planning, making, publishing and improving |
 | [flapbase-post-check](skills/flapbase-post-check/SKILL.md) | Checks social posts locally before they go out |
 | [flapbase-post-assist](skills/flapbase-post-assist/SKILL.md) | Rewrites copy and drafts X and Instagram posts from the same materials, with Flapbase Cloud |
+
+**Creative work**
+
+| Skill | What it does |
+| --- | --- |
+| [flapbase-creative-brief](skills/flapbase-creative-brief/SKILL.md) | Confirms who the work is for and what they should do before making an LP, banner or social image, and leaves a brief with the reasons for the layout |
+| [flapbase-retainer-menu](skills/flapbase-retainer-menu/SKILL.md) | Turns repeat client work into a monthly menu (hours, scope, rollover, rush work) with the proposal text |
 
 **Improve**
 
@@ -130,7 +142,7 @@ Skills are grouped by what you are trying to do. Within a group, use them top to
 | [flapbase-feedback](skills/flapbase-feedback/SKILL.md) | Sends feedback to Flapbase from Flapbase Cloud, after the owner confirms |
 | [flapbase-guardrails](skills/flapbase-guardrails/SKILL.md) | Rules to keep: personal data and what people decide |
 
-The site check and the post check run locally and send nothing. The other skills work locally where they can, and use Flapbase Cloud through MCP when you connect it. Only flapbase-feedback sends anything to Flapbase, and only after the owner confirms.
+The diagnoses, checklists and planning skills run with your own AI and send nothing. The other skills work locally where they can, and use Flapbase Cloud through MCP when you connect it. The full list with plain descriptions is at https://flapbase.com/skills. Only flapbase-feedback sends anything to Flapbase, and only after the owner confirms.
 
 ## Flapbase Cloud
 
@@ -169,8 +181,8 @@ Apache-2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
 
 ```text
 公開前に直すべき問題が 7 件
-1. 公開用フォルダに .env が混ざっています（1頁: .env）。直す所: .env を公開用フォルダから外します。
-2. HTTPS の頁が HTTP の資源を読んでいます（1頁: index.html）。直す所: 資源の URL を HTTPS に直します。
+1. 公開用フォルダに .env が混ざっています（1ページ: .env）。直す所: .env を公開用フォルダから外します。
+2. HTTPS のページが HTTP の資源を読んでいます（1ページ: index.html）。直す所: 資源の URL を HTTPS に直します。
 ```
 
 ```sh
@@ -178,7 +190,7 @@ node bin/flap.js check examples/cosmetics/index.html
 node bin/flap.js check https://flapbase.com --json
 ```
 
-基本の11項目と AI からの読まれ方に加え、料金・対応地域・予約方法が初めの HTML のどこにあるか、予約・問い合わせ・購入のリンクの宛先、頁・言語・構造化データの食い違い、公開用ファイルへの .env・.git・秘密鍵の混入と HTTP 資源を調べます。同じ原因は頁の数と一覧を付けて1件にまとめます。`--baseline` に前回の JSON を渡すと、直った所・新しく壊れた所・続いている所を表示します。URL の取得は、公開されている HTTPS のサイトに限ります。
+基本の11項目と AI からの読まれ方に加え、料金・対応地域・予約方法が初めの HTML のどこにあるか、予約・問い合わせ・購入のリンクの宛先、ページ・言語・構造化データの食い違い、公開用ファイルへの .env・.git・秘密鍵の混入と HTTP 資源を調べます。同じ原因はページの数と一覧を付けて1件にまとめます。`--baseline` に前回の JSON を渡すと、直った所・新しく壊れた所・続いている所を表示します。URL の取得は、公開されている HTTPS のサイトに限ります。
 
 ### Flapbase
 
@@ -194,7 +206,7 @@ Flapbase は、事業を伸ばすためのワークスペースです。この�
 npx skills add Flapbase/flapbase
 ```
 
-サイトの点検と投稿の点検は手元で動き、何も送りません。ほかの skill は、MCP で Flapbase Cloud を使います。一覧は上の表のとおりです。
+診断・チェックリスト・企画のスキルは、お持ちの AI だけで動き、何も送りません。ほかのスキルは、手元でできる所は手元で進め、接続したときは MCP で Flapbase Cloud を使います。一覧と説明は https://flapbase.com/skills にあります。
 
 ### 意見と貢献
 
