@@ -1,7 +1,7 @@
 {
   "version": "flapbase.release-scan/v1",
   "status": "pass",
-  "scannedFiles": 135,
+  "scannedFiles": 136,
   "excluded": [
     ".git",
     "node_modules",
@@ -69,6 +69,10 @@
     {
       "path": "docs/self-host-sbom.json",
       "sha256": "253a3456ea2bd87264ade3b33512b9a57315f2bcaeb28741adb7e2aff24b6bc5"
+    },
+    {
+      "path": "docs/skills.md",
+      "sha256": "fa46faa183447d5fdba8732c6c25d971544ddd8aff5fa3dd57f70c288add6cac"
     },
     {
       "path": "examples/apparel/index.html",
@@ -384,7 +388,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "43975486a52ce9ba393f8a90b3ff3b9867db0fa28a2b19ae7fe5fea3af6a94ce"
+      "sha256": "1dd839226707e9baddfd5f5579715d07dfe5e2db334b14f9d7c9b00280e205d6"
     },
     {
       "path": "scripts/check-pack.mjs",
