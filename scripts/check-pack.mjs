@@ -32,13 +32,14 @@ try {
   await mkdir(install)
   run('npm', ['install', '--ignore-scripts', '--no-audit', '--no-fund', '--package-lock=false', join(output, cli.filename), join(output, core.filename)], install)
   await cp(join(root, 'examples/cosmetics/index.html'), join(install, 'sample.html'))
-  const checked = JSON.parse(run('npx', ['--offline', '--no-install', '@flapbase/cli', 'check', 'sample.html', '--json'], install))
+  const checked = JSON.parse(run('npx', ['--offline', '--no-install', '@flapbase/cli', 'check', 'sample.html', '--lang', 'en', '--json'], install))
   assert.equal(checked.checks.length, 11)
   assert.ok(checked.checks.every(item => item.pass))
   const moduleUrl = pathToFileURL(join(install, 'node_modules/@flapbase/site-check/src/index.js')).href
   const script = `import { checkFile } from ${JSON.stringify(moduleUrl)}; const report = await checkFile('sample.html'); console.log(JSON.stringify(report));`
   const coreResult = JSON.parse(run(process.execPath, ['--input-type=module', '-e', script], install))
-  assert.deepEqual(coreResult.checks, checked.checks)
+  const withoutLabels = checks => checks.map(({ label, ...check }) => check)
+  assert.deepEqual(withoutLabels(coreResult.checks), withoutLabels(checked.checks))
   const installedPackage = JSON.parse(await readFile(join(install, 'node_modules/@flapbase/cli/package.json'), 'utf8'))
   assert.equal(installedPackage.dependencies, undefined)
   console.log(JSON.stringify({ status: 'pass', isolatedNpx: true, coreImport: true, tarballScan: true,

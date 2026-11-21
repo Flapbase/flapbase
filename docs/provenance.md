@@ -17,8 +17,12 @@ TypeScript の型を取り除く処理と JS の整形は抽出時だけに使�
 
 `fetch.js` はこの repo 用に実装した Node adapter です。DNS の A・AAAA を検証して取得先を固定し、元のホスト名で TLS を検証します。DNS の問い合わせも時間上限で中止します。Node の接続では IPv6 の変換用・文書用アドレスも拒否します。`input.js`・`report.js` と CLI はローカルの入力と結果の表示を担当します。
 
-生成モデルを呼ぶ処理、認証、課金、データベース、事業情報の保存を含みません。静的な HTML と robots.txt とサイトマップだけで点検します。依存パッケージは0です。
+サイト点検には生成モデルを呼ぶ処理、認証、課金、データベース、事業情報の保存を含みません。静的な HTML と robots.txt とサイトマップだけで点検します。依存パッケージは0です。
 
 比較元6ファイルの SHA-256 と固定入力11種類・robots.txt 81種類の結果を `tests/fixtures/cloud-reference.json` に記録しています。公開前検査は `scripts/check-release.mjs` で行い、選定したファイル、依存、秘密の形式、内部の名前、外部や repo 外への import を調べます。危険な URL を拒否する試験内の内部ホスト文字列だけは、明示した fixture として報告します。検査結果は `docs/release-scan.json` に保存します。
 
 Node の接続設定は公式の [net の接続オプション](https://nodejs.org/docs/latest-v22.x/api/net.html#socketconnectoptions-connectlistener) に対応しています。
+
+## デジタル商品のセルフホスト先行版
+
+Flapbase contributors の参照実装（抽出元リビジョン `f943baafdc8bf09635a485e44c293a541d3387fc`）から、商品・注文・購入者サポート、ローカル認証、公開用データ定義を `packages/self-host` に収録しています。運用側の接続先や商用サービスの実装は収録していません。依存は Better Auth、PostgreSQL クライアント、MCP SDK で、版はロックファイルに固定しています。

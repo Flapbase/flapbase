@@ -20,6 +20,8 @@ const topFiles = new Set(['.gitignore', 'README.md', 'SECURITY.md', 'LICENSE', '
 const ignored = new Set(['.git', 'node_modules', '.DS_Store'])
 const extensions = /\.(?:js|mjs|json|md|html|txt|xml|yaml|ts)$/u
 const exampleEnv = 'examples/travel-broken/.env'
+const selfHostPath = 'packages/self-host/'
+const selfHostDependencies = new Map([['@modelcontextprotocol/sdk', '1.32.0'], ['better-auth', '1.7.7'], ['pg', '8.16.3']])
 
 export async function scanRelease(root) {
   const problems = [], files = [], packages = []
@@ -37,7 +39,9 @@ export async function scanRelease(root) {
       if (path === exampleEnv && entry.isFile() && (await lstat(full)).size === 26 && await readFile(full, 'utf8') === 'EXAMPLE_ONLY=not-a-secret\n') {
         files.push({ path, sha256: createHash('sha256').update('EXAMPLE_ONLY=not-a-secret\n').digest('hex') }); continue
       }
-      if ((!path.includes('/') && !topFiles.has(path)) || (path.includes('/') && !extensions.test(path) && !['LICENSE', 'NOTICE'].includes(entry.name))) {
+      const selfHostAsset = path === selfHostPath + 'digital-product.base' || path === selfHostPath + 'store.css' ||
+        path === selfHostPath + 'auth-schema.sql' || /^packages\/self-host\/schema\/\d{3}_[a-z_]+-(?:identity|platform|vdb)\.sql$/.test(path)
+      if ((!path.includes('/') && !topFiles.has(path)) || (path.includes('/') && !extensions.test(path) && !selfHostAsset && !['LICENSE', 'NOTICE'].includes(entry.name))) {
         problems.push({ path, rule: '公開対象外のファイル' }); continue
       }
       if (!entry.isFile() || (await lstat(full)).size > 4 * 1024 * 1024) { problems.push({ path, rule: '大きさか種類' }); continue }
@@ -54,7 +58,8 @@ export async function scanRelease(root) {
         ]
         for (const match of imports.flatMap(pattern => [...body.matchAll(pattern)])) {
           const specifier = match[1]
-          if (!specifier.startsWith('node:') && !specifier.startsWith('./') && !specifier.startsWith('../')) problems.push({ path, rule: '外部か private の import' })
+          const allowedDependency = path.startsWith(selfHostPath) && [...selfHostDependencies.keys()].some(name => specifier === name || specifier.startsWith(name + '/'))
+          if (!specifier.startsWith('node:') && !specifier.startsWith('./') && !specifier.startsWith('../') && !allowedDependency) problems.push({ path, rule: '外部か private の import' })
           if (specifier.startsWith('.')) {
             const target = relative(root, resolve(dirname(full), specifier))
             if (target === '..' || target.startsWith('../')) problems.push({ path, rule: 'repo 外の import' })
@@ -63,8 +68,9 @@ export async function scanRelease(root) {
       }
       if (entry.name === 'package.json') {
         const pkg = JSON.parse(body)
-        const dependencies = Object.keys({ ...pkg.dependencies, ...pkg.devDependencies, ...pkg.optionalDependencies, ...pkg.peerDependencies })
-        if (dependencies.length) problems.push({ path, rule: '依存の追加' })
+        const dependencies = Object.entries({ ...pkg.dependencies, ...pkg.devDependencies, ...pkg.optionalDependencies, ...pkg.peerDependencies })
+        const allowedDependencies = path === selfHostPath + 'package.json' ? selfHostDependencies : new Map()
+        if (dependencies.some(([name, version]) => allowedDependencies.get(name) !== version)) problems.push({ path, rule: '依存の追加' })
         if (pkg.license !== 'Apache-2.0') problems.push({ path, rule: 'ライセンス' })
         packages.push({ path, name: pkg.name, dependencies: dependencies.length })
       }

@@ -6,6 +6,10 @@ Open source. Use it with your AI agents, from your own code, or in Flapbase Clou
 
 [日本語](#日本語)
 
+## Digital product self-host preview
+
+Publish a free download, let buyers claim and receive it, and manage orders and reply drafts with a local MCP client. Runs on Node.js and PostgreSQL. [Setup and usage](packages/self-host/README.md).
+
 ## Site check
 
 Check locally how search engines and AI read a site. Pass a public URL, a saved HTML file or a folder; you get what to fix, in order, with the reason. No account or API key. Node.js 22+, no external dependencies.
@@ -169,6 +173,8 @@ Apache-2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
 ---
 
 ## 日本語
+
+[デジタル商品のセルフホスト版](packages/self-host/README.md)で、無料商品の公開、申込、本人受取、注文確認、MCPでの返信案保存をローカルで試せます。
 
 あなたのビジネスとともに育つワークスペース。
 

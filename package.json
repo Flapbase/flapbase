@@ -30,6 +30,11 @@
     "check:cloud": "node scripts/compare-cloud.mjs",
     "flap": "node bin/flap.js"
   },
+  "pnpm": {
+    "overrides": {
+      "@modelcontextprotocol/sdk>@hono/node-server": "2.1.6"
+    }
+  },
   "publishConfig": {
     "access": "public"
   }

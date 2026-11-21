@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="ja">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ログイン | Flapbase</title>
+  <link rel="stylesheet" href="/store.css">
+  <main>
+    <h1>Flapbase</h1>
+    <form hidden>
+      <label>名前 <input name="name" autocomplete="name" maxlength="80"></label>
+      <label>メールアドレス <input name="email" type="email" autocomplete="username" required></label>
+      <label>パスワード <input name="password" type="password" autocomplete="current-password" required minlength="8"></label>
+      <button name="mode" value="sign-in">ログイン</button>
+      <button name="mode" value="sign-up">アカウントを作成</button>
+    </form>
+    <p id="auth-status" role="status"></p>
+    <button id="sign-out" hidden>ログアウト</button>
+  </main>
+  <script type="module" src="/auth-ui.js"></script>
+</html>

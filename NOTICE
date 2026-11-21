@@ -4,4 +4,4 @@ Copyright 2026 Flapbase contributors
 This product includes deterministic HTML and robots.txt inspection code
 originally developed by Flapbase contributors. It is licensed under the
 Apache License, Version 2.0. Source provenance is documented in
-https://github.com/Flapbase/flapbase/blob/main/docs/provenance.md. No third-party runtime packages are included.
+https://github.com/Flapbase/flapbase/blob/main/docs/provenance.md. Third-party runtime packages are installed separately for the self-host preview. The site-check CLI remains dependency-free.

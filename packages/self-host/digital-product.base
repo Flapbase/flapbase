@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "package": "member-resources",
+  "packageVersion": 1,
+  "presentation": {
+    "heading": "はじめての制作ガイド",
+    "introduction": "制作を始める前に確認できるガイドです。申し込むと、ご自身のアカウントで受け取れます。",
+    "layout": "standard"
+  },
+  "settings": {
+    "workflow": "flapbase:resource-distribution",
+    "support": "buyer-order"
+  }
+}
