@@ -1,6 +1,6 @@
-# Flapbase Self-host
+# Run Flapbase locally
 
-Local preview for a free digital product. Start with a product definition or use your own title, copy, and file. A buyer signs in, claims the product, and downloads the file. The operator can see the order and review a reply draft prepared through MCP.
+This quickstart runs Flapbase locally with a free digital product. Start with a product definition or use your own title, copy, and file. A buyer signs in, claims the product, and downloads the file. The operator can see the order and review a reply draft prepared through MCP.
 
 ## Start locally
 
@@ -42,7 +42,7 @@ The server binds to loopback. Local email follow-up can write a preview file whe
 
 ## 日本語
 
-無料のデジタル商品を公開し、本人申込・資料受取・問い合わせ・運営の注文確認までを試せるローカル先行版です。上の手順で空の PostgreSQL を準備して起動します。最初の運営者を登録し、ログイン後の `/auth/context` に表示される `principalId` で Project を作ります。
+Flapbaseを手元で起動し、無料のデジタル商品の公開・本人申込・資料受取・問い合わせ・注文確認を試します。上の手順で空のPostgreSQLデータベースを準備します。最初の運営者を登録し、ログイン後の `/auth/context` に表示される `principalId` で Project を作ります。
 
 - `/store` から案内とファイルを確認して公開します。[共通の .base](digital-product.base) を使うと下書きから始められます。
 - 別のブラウザプロファイルで商品ページを開き、購入者として登録・申込・ダウンロードします。受取画面から送った問い合わせは、運営者が `/store` で確認できます。

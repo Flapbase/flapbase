@@ -232,7 +232,7 @@
     },
     {
       "path": "packages/self-host/README.md",
-      "sha256": "5dc1e43fe88a8b638807af8506a32b7d8aa39592c04e78ae612af2167623a9df"
+      "sha256": "ef9c782341a9652edb24dd26955cab8e6cc4a09725df24dcce616f59fc68448d"
     },
     {
       "path": "packages/self-host/schema/000_schema-identity.sql",
@@ -388,7 +388,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "1dd839226707e9baddfd5f5579715d07dfe5e2db334b14f9d7c9b00280e205d6"
+      "sha256": "abdfe596087588ce41a279506624c11ceed31a791bc9158a05717690426caf4c"
     },
     {
       "path": "scripts/check-pack.mjs",

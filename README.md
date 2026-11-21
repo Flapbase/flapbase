@@ -1,14 +1,14 @@
-# Flapbase
+# Flapbase - Agentic Business Framework
 
-A workspace that grows with your business — services, products, creative work, development. Any kind of project.
+Build, publish, and run digital products with your AI agent.
 
-Open source. Use it with your AI agents, from your own code, or in Flapbase Cloud. New tools arrive every week.
+Flapbase is open source. Run it on your own infrastructure or build your own frontend with the [Flapbase Cloud API](#using-the-managed-service).
 
 [日本語](#日本語)
 
-## Digital product self-host preview
+## Quickstart
 
-Publish a free download, let buyers claim and receive it, and manage orders and reply drafts with a local MCP client. Runs on Node.js and PostgreSQL. [Setup and usage](packages/self-host/README.md).
+Run Flapbase locally with Node.js and PostgreSQL. Publish a free digital product, let signed-in buyers claim and download it, review orders, and save reply drafts through MCP. [Get started](packages/self-host/README.md).
 
 ## Site check
 
@@ -62,21 +62,15 @@ For a file, robots.txt and the sitemap are read from the same folder; for a fold
 
 URL fetching is limited to public HTTPS sites; private networks and local devices are refused. Limits: HTML 1 MiB and 10 s, robots.txt 64 KiB, sitemap 256 KiB, 3 redirects. Folders: up to 100 HTML files, 8 MiB in total, depth 8.
 
-## Flapbase
+## Using the managed service
 
-Flapbase is a workspace for growing your business. This repository opens it so anyone can run it locally.
-
-- Developers can use it directly in their own projects.
-- AI agents such as Claude Code and Codex (ChatGPT) can use it in a few steps.
-- Prefer a visual interface? Use [Flapbase Cloud](https://flapbase.com). The results are the same.
-
-[Skills documentation](docs/skills.md)
-
-## Flapbase Cloud
+Use the Cloud API as a managed backend for your own frontend, or use the hosted interface to build and run your business in Flapbase Cloud.
 
 [Flapbase Cloud](https://flapbase.com) is a workspace for growing your business. The site check uses the same rules as its free diagnosis, and tests confirm that the same HTML gives the same result. This tool runs only on your machine and does not call Flapbase APIs or send your data. Continuous monitoring and checking whether you appear in AI answers are available in Flapbase Cloud.
 
 [Examples](examples/README.md) · [Result format and Cloud mapping](docs/result.md) · [Where the rules come from](docs/provenance.md) · [Architecture](docs/architecture.md)
+
+[Skills documentation](docs/skills.md)
 
 ## Feedback and contributions
 
@@ -97,13 +91,13 @@ Apache-2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
 
 ## 日本語
 
-[デジタル商品のセルフホスト版](packages/self-host/README.md)で、無料商品の公開、申込、本人受取、注文確認、MCPでの返信案保存をローカルで試せます。
+**AIエージェントとデジタル商品を作り 公開し 運営する**
 
-あなたのビジネスとともに育つワークスペース。
+Flapbaseはオープンソースです。自分の環境で動かすことも、[Flapbase Cloud API](#using-the-managed-service)をバックエンドにして独自の画面を作ることもできます。
 
-サービス、商品、制作の仕事、開発。どんな形のプロジェクトでも。
+### はじめる
 
-オープンソースです。AI エージェントから、自分のコードから、または Flapbase Cloud で使えます。新しい道具が毎週増えます。
+Node.jsとPostgreSQLでFlapbaseをローカル起動し、無料商品の公開・申込・本人受取・注文確認・MCPでの返信案保存を試せます。 [セットアップ手順](packages/self-host/README.md#日本語)
 
 ### サイトの点検
 
@@ -121,14 +115,6 @@ node bin/flap.js check https://flapbase.com --json
 ```
 
 基本の11項目と AI からの読まれ方に加え、料金・対応地域・予約方法が初めの HTML のどこにあるか、予約・問い合わせ・購入のリンクの宛先、ページ・言語・構造化データの食い違い、公開用ファイルへの .env・.git・秘密鍵の混入と HTTP 資源を調べます。同じ原因はページの数と一覧を付けて1件にまとめます。`--baseline` に前回の JSON を渡すと、直った所・新しく壊れた所・続いている所を表示します。URL の取得は、公開されている HTTPS のサイトに限ります。
-
-### Flapbase
-
-Flapbase は、事業を伸ばすためのワークスペースです。このリポジトリは、それを誰でも手元で使えるように公開したものです。
-
-- 開発者は、自分のプロジェクトにそのまま組み込めます。
-- AI エージェント（Claude Code、Codex（ChatGPT）など）から、少ない手数で使えます。
-- 画面から使いたい方は、[Flapbase Cloud](https://flapbase.com) で使えます。結果は同じです。
 
 [Skills のドキュメント](docs/skills.md#日本語)
 
