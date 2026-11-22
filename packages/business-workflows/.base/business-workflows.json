@@ -1089,8 +1089,7 @@
         "orderId",
         "requestId",
         "body",
-        "expectedVersion",
-        "idempotencyKey"
+        "expectedVersion"
       ],
       "approval": [
         "商品と価格",
