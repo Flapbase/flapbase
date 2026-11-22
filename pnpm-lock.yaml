@@ -11,6 +11,8 @@ importers:
 
   .: {}
 
+  packages/business-workflows: {}
+
   packages/self-host:
     dependencies:
       '@modelcontextprotocol/sdk':

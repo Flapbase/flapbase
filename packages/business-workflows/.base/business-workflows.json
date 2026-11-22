@@ -1,0 +1,919 @@
+{
+  "specKeys": [
+    "KEY:FLAPBASE-PROJECT-WORKFLOW-SSOT-V3"
+  ],
+  "featureKeys": [
+    "workspace.apps.mcp-authoring",
+    "workspace.apps.verified-release"
+  ],
+  "version": 1,
+  "businesses": {
+    "member-ai-course": {
+      "status": "connected",
+      "templateId": "flapbase:member-ai-course",
+      "title": "AI教材の講座事業を始める",
+      "purpose": "教材・購入者向けAIの構築、公開、受講後の運営と変更",
+      "workflows": [
+        "course-authoring",
+        "course-offer",
+        "app-release",
+        "course-operations",
+        "app-change"
+      ],
+      "acceptance": "本人の購入・受講・教材に根拠のある回答・未回答の運営確認・旧版の受講維持"
+    },
+    "standard-service": {
+      "status": "connected",
+      "templateId": "flapbase:standard-service",
+      "title": "定型サービスの顧客対応を始める",
+      "purpose": "受付と顧客ポータルの構築、公開、案件の運営と変更",
+      "workflows": [
+        "service-intake",
+        "app-release",
+        "customer-operations",
+        "app-change"
+      ],
+      "acceptance": "本人の受付・案件化・見積・進捗・納品・公開後の版更新"
+    },
+    "free-resource": {
+      "status": "existing",
+      "templateId": "flapbase:resource-distribution",
+      "title": "無料資料を提供する",
+      "purpose": "資料の準備から公開、申込と受取の確認まで",
+      "workflows": [
+        "resource-distribution",
+        "purchase-fulfillment"
+      ],
+      "acceptance": "無料申込・本人への提供・受付時の版の維持・運営の注文確認"
+    },
+    "recruitment": {
+      "status": "planned",
+      "templateId": null,
+      "title": "採用・応募管理",
+      "purpose": "求人公開・本人応募・選考・結果確認",
+      "workflows": [
+        "service-intake",
+        "app-release",
+        "applicant-review",
+        "app-change"
+      ],
+      "acceptance": "応募者本人の受付・担当者による選考・結果公開と通知の確認"
+    },
+    "digital-product-sales": {
+      "status": "planned",
+      "templateId": null,
+      "title": "デジタル商品を販売する",
+      "purpose": "告知・購入・提供・サポート・フォロー",
+      "workflows": [
+        "product-offer",
+        "app-release",
+        "purchase-fulfillment",
+        "support-operations",
+        "app-change"
+      ],
+      "acceptance": "商品公開・決済確定・本人への提供・再受取・購入者サポート"
+    },
+    "organization-training": {
+      "status": "planned",
+      "templateId": null,
+      "title": "法人向け研修ポータルを運営する",
+      "purpose": "法人単位の招待・受講割当・進捗確認",
+      "workflows": [
+        "course-authoring",
+        "app-release",
+        "member-access",
+        "learner-progress",
+        "app-change"
+      ],
+      "acceptance": "法人別の招待と権限・受講割当・受講・法人内の進捗確認"
+    },
+    "paid-membership": {
+      "status": "planned",
+      "templateId": null,
+      "title": "会員制サービスを運営する",
+      "purpose": "入会・利用権・会員コンテンツ・更新と退会",
+      "workflows": [
+        "product-offer",
+        "app-release",
+        "member-access",
+        "support-operations",
+        "app-change"
+      ],
+      "acceptance": "加入・利用権の付与・提供・契約更新・解約時の利用権停止"
+    },
+    "booking-service": {
+      "status": "planned",
+      "templateId": null,
+      "title": "予約サービスを運営する",
+      "purpose": "空き枠公開・予約・振替・実施後の案内",
+      "workflows": [
+        "service-intake",
+        "scheduled-intake",
+        "app-release",
+        "app-change"
+      ],
+      "acceptance": "空き枠の確保・予約・通知・振替と取消・対応結果の確認"
+    },
+    "event-registration": {
+      "status": "planned",
+      "templateId": null,
+      "title": "イベント・セミナーを受け付ける",
+      "purpose": "開催回・申込・当日受付・参加結果",
+      "workflows": [
+        "service-intake",
+        "scheduled-intake",
+        "app-release",
+        "app-change"
+      ],
+      "acceptance": "開催回の定員付き申込・確定案内・出欠・運営の結果確認"
+    },
+    "customer-sales": {
+      "status": "planned",
+      "templateId": null,
+      "title": "顧客・商談を管理する",
+      "purpose": "顧客・商談の登録、担当と次回対応、結果の記録",
+      "workflows": [
+        "service-intake",
+        "sales-operations"
+      ],
+      "acceptance": "顧客と商談の登録・担当割当・対応期限・成約結果の確認"
+    },
+    "customer-support": {
+      "status": "planned",
+      "templateId": null,
+      "title": "顧客向けサポートポータルを提供する",
+      "purpose": "案内・会員問い合わせ・担当者の返信と再訪",
+      "workflows": [
+        "service-intake",
+        "app-release",
+        "support-operations",
+        "app-change"
+      ],
+      "acceptance": "顧客本人の問い合わせ・担当振分・返信案・人による返信・本人の再訪"
+    }
+  },
+  "workflows": {
+    "course-authoring": [
+      {
+        "key": "prepare",
+        "title": "講座と教材を準備する",
+        "phase": "create",
+        "performer": "agent",
+        "procedures": [
+          "course.prepare"
+        ]
+      }
+    ],
+    "course-offer": [
+      {
+        "key": "offer",
+        "title": "教材と価格を確認して講座を出品する",
+        "phase": "publish",
+        "performer": "human",
+        "procedures": [
+          "course.offer"
+        ]
+      }
+    ],
+    "service-intake": [
+      {
+        "key": "prepare",
+        "title": "公開サイトの受付を準備する",
+        "phase": "create",
+        "performer": "agent",
+        "procedures": [
+          "intake.prepare"
+        ]
+      }
+    ],
+    "app-release": [
+      {
+        "key": "compose",
+        "title": "事業アプリの下書きを組み立てる",
+        "phase": "create",
+        "performer": "agent",
+        "procedures": [
+          "app.compose"
+        ]
+      },
+      {
+        "key": "release",
+        "title": "候補版を確認して公開する",
+        "phase": "publish",
+        "performer": "human",
+        "procedures": [
+          "release.review"
+        ]
+      }
+    ],
+    "course-operations": [
+      {
+        "key": "operate",
+        "title": "購入後の受講と質問対応を運営する",
+        "phase": "analyze",
+        "performer": "human",
+        "procedures": [
+          "course.support"
+        ]
+      }
+    ],
+    "customer-operations": [
+      {
+        "key": "operate",
+        "title": "受付を案件につないで対応する",
+        "phase": "analyze",
+        "performer": "human",
+        "procedures": [
+          "inquiry.manage"
+        ]
+      }
+    ],
+    "app-change": [
+      {
+        "key": "revise",
+        "title": "運営から見つかった変更を候補版にする",
+        "phase": "create",
+        "performer": "agent",
+        "procedures": [
+          "app.revise"
+        ]
+      },
+      {
+        "key": "release-change",
+        "title": "変更版を確認して公開する",
+        "phase": "publish",
+        "performer": "human",
+        "procedures": [
+          "release.review"
+        ]
+      }
+    ],
+    "product-offer": [
+      {
+        "key": "offer",
+        "title": "商品と提供条件を用意する",
+        "phase": "create",
+        "performer": "human",
+        "procedures": [
+          "offer.prepare"
+        ]
+      }
+    ],
+    "purchase-fulfillment": [
+      {
+        "key": "fulfill",
+        "title": "確定した申込と提供を照合する",
+        "phase": "analyze",
+        "performer": "human",
+        "procedures": [
+          "order.fulfill"
+        ]
+      }
+    ],
+    "scheduled-intake": [
+      {
+        "key": "schedule",
+        "title": "予約枠または開催回を定める",
+        "phase": "plan",
+        "performer": "human",
+        "procedures": [
+          "schedule.prepare"
+        ]
+      },
+      {
+        "key": "attendance",
+        "title": "予約の変更または参加を記録する",
+        "phase": "analyze",
+        "performer": "human",
+        "procedures": [
+          "schedule.operate"
+        ]
+      }
+    ],
+    "applicant-review": [
+      {
+        "key": "applicants",
+        "title": "応募と選考結果を記録する",
+        "phase": "analyze",
+        "performer": "human",
+        "procedures": [
+          "recruitment.review"
+        ]
+      }
+    ],
+    "member-access": [
+      {
+        "key": "access",
+        "title": "会員や法人の利用権を管理する",
+        "phase": "analyze",
+        "performer": "human",
+        "procedures": [
+          "access.manage"
+        ]
+      }
+    ],
+    "learner-progress": [
+      {
+        "key": "progress",
+        "title": "受講進捗と完了を確認する",
+        "phase": "analyze",
+        "performer": "human",
+        "procedures": [
+          "learning.progress"
+        ]
+      }
+    ],
+    "support-operations": [
+      {
+        "key": "support",
+        "title": "問い合わせに対応する",
+        "phase": "analyze",
+        "performer": "human",
+        "procedures": [
+          "support.respond"
+        ]
+      }
+    ],
+    "sales-operations": [
+      {
+        "key": "follow-up",
+        "title": "案件と次回対応を管理する",
+        "phase": "analyze",
+        "performer": "human",
+        "procedures": [
+          "sales.follow-up"
+        ]
+      }
+    ],
+    "resource-distribution": [
+      {
+        "key": "prepare",
+        "title": "無料資料と提供画面を用意する",
+        "phase": "create",
+        "performer": "agent",
+        "procedures": [
+          "resource.prepare"
+        ]
+      }
+    ]
+  },
+  "procedures": {
+    "course.prepare": {
+      "tools": [
+        "course_draft_get",
+        "course_draft_save"
+      ],
+      "verify": "講座の成果物IDと固定版を記録する。"
+    },
+    "course.offer": {
+      "tools": [],
+      "verify": "人が教材の版と価格を確認し、出品して公開済みの掲載IDを記録する。"
+    },
+    "intake.prepare": {
+      "tools": [
+        "site_catalog",
+        "site_create",
+        "site_get",
+        "site_apply"
+      ],
+      "verify": "フォームを含むSiteの候補版を記録する。"
+    },
+    "resource.prepare": {
+      "tools": [
+        "app_resources_prepare"
+      ],
+      "verify": "資料と提供画面の候補版を記録する。"
+    },
+    "app.compose": {
+      "tools": [
+        "app_template_get",
+        "app_draft_create",
+        "app_draft_get",
+        "app_draft_apply"
+      ],
+      "verify": "Appの候補版と確認先を記録する。"
+    },
+    "release.review": {
+      "tools": [
+        "work_item_submit",
+        "site_publish_request"
+      ],
+      "verify": "人が確認した版を既存の公開画面で公開する。"
+    },
+    "course.support": {
+      "tools": [
+        "member_ai_reviews_list",
+        "order_support_get",
+        "support_requests_list",
+        "support_reply_draft_save"
+      ],
+      "verify": "購入者の問い合わせに返信案を保存し、会員AIの未回答は運営画面で確認する。"
+    },
+    "inquiry.manage": {
+      "tools": [
+        "inbox_list",
+        "customer_get",
+        "deal_create_from_inquiry"
+      ],
+      "verify": "Project内の受付と案件の関連を確認する。"
+    },
+    "offer.prepare": {
+      "tools": [],
+      "verify": "商品・価格・提供条件と出品候補版を確認する。"
+    },
+    "order.fulfill": {
+      "tools": [
+        "order_support_get"
+      ],
+      "verify": "確定した注文と購入者本人の利用権、提供した版を照合する。"
+    },
+    "schedule.prepare": {
+      "tools": [
+        "booking_offers_list"
+      ],
+      "verify": "空き枠または開催回、定員、締切、変更条件を記録する。"
+    },
+    "schedule.operate": {
+      "tools": [],
+      "verify": "確定、振替、取消または参加の結果を記録する。"
+    },
+    "recruitment.review": {
+      "tools": [
+        "recruitment_applications_list"
+      ],
+      "verify": "本人の応募と、担当者が決めた選考結果を記録する。"
+    },
+    "access.manage": {
+      "tools": [
+        "membership_roster_list"
+      ],
+      "verify": "利用権の発行・停止と対象本人または法人の範囲を照合する。"
+    },
+    "learning.progress": {
+      "tools": [],
+      "verify": "許可された範囲の受講と完了の状況を確認する。"
+    },
+    "support.respond": {
+      "tools": [
+        "customer_get",
+        "support_requests_list",
+        "support_reply_draft_save"
+      ],
+      "verify": "問い合わせを担当へ渡し、返信案を確認に回す。"
+    },
+    "sales.follow-up": {
+      "tools": [
+        "inbox_list",
+        "customer_get",
+        "deal_create_from_inquiry",
+        "deal_get",
+        "deal_status_update"
+      ],
+      "verify": "案件の現在の状態、担当と次回対応を確認する。"
+    },
+    "app.revise": {
+      "tools": [
+        "app_draft_get",
+        "app_draft_apply",
+        "work_item_submit"
+      ],
+      "verify": "現行版を基準に、変更した候補版を提出する。"
+    }
+  },
+  "settings": {
+    "member-ai-course": {
+      "workflow_create": [
+        "name",
+        "start"
+      ],
+      "app_draft_apply": [
+        "base.presentation",
+        "base.modules.course.listingId",
+        "base.modules.member-ai.definition.credits",
+        "base.modules.member-ai.definition.flows"
+      ],
+      "approval": [
+        "講座の教材版と出品条件",
+        "Appの公開版"
+      ]
+    },
+    "standard-service": {
+      "workflow_create": [
+        "name",
+        "start"
+      ],
+      "site_apply": [
+        "operations"
+      ],
+      "app_draft_apply": [
+        "base.presentation",
+        "base.modules.customer-portal.sections"
+      ],
+      "approval": [
+        "受付フォームとSiteの公開版",
+        "Appの公開版"
+      ]
+    }
+  },
+  "executions": {
+    "member-ai-course": {
+      "unanswered": {
+        "title": "会員AIの未回答を確認する",
+        "steps": [
+          {
+            "key": "list",
+            "tool": "member_ai_reviews_list",
+            "inputs": {}
+          }
+        ]
+      }
+    },
+    "standard-service": {
+      "portal-draft": {
+        "title": "顧客ポータルの下書きを編集する",
+        "steps": [
+          {
+            "key": "apply",
+            "tool": "app_draft_apply",
+            "inputs": {
+              "artifactId": {
+                "parameter": "artifactId"
+              },
+              "expectedRevisionId": {
+                "parameter": "expectedRevisionId"
+              },
+              "idempotencyKey": {
+                "parameter": "idempotencyKey"
+              },
+              "base": {
+                "parameter": "base"
+              }
+            }
+          },
+          {
+            "key": "submit",
+            "tool": "work_item_submit",
+            "inputs": {
+              "workItemId": {
+                "parameter": "workItemId"
+              },
+              "expectedVersion": {
+                "parameter": "expectedVersion"
+              },
+              "idempotencyKey": {
+                "parameter": "submissionKey"
+              },
+              "artifactId": {
+                "result": "apply",
+                "path": [
+                  "artifactId"
+                ]
+              },
+              "revisionId": {
+                "result": "apply",
+                "path": [
+                  "revisionId"
+                ]
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "executionsByWorkflow": {
+    "course-authoring": [
+      "course-draft"
+    ],
+    "service-intake": [
+      "site-draft"
+    ],
+    "customer-operations": [
+      "inquiries",
+      "intake-to-case",
+      "deal-status",
+      "update-deal-status"
+    ],
+    "purchase-fulfillment": [
+      "order-status"
+    ],
+    "sales-operations": [
+      "inquiries",
+      "customer-history",
+      "intake-to-case",
+      "deal-status",
+      "update-deal-status"
+    ],
+    "support-operations": [
+      "customer-history",
+      "order-support",
+      "reply-draft"
+    ],
+    "resource-distribution": [
+      "prepare-free-resource"
+    ],
+    "scheduled-intake": [
+      "booking-offers"
+    ],
+    "member-access": [
+      "membership-roster"
+    ],
+    "applicant-review": [
+      "recruitment-applications"
+    ]
+  },
+  "sharedExecutions": {
+    "course-draft": {
+      "title": "講座の下書きを保存する",
+      "steps": [
+        {
+          "key": "save",
+          "tool": "course_draft_save",
+          "inputs": {
+            "artifactRef": {
+              "parameter": "artifactRef"
+            },
+            "document": {
+              "parameter": "document"
+            },
+            "prior": {
+              "parameter": "prior"
+            },
+            "idempotencyKey": {
+              "parameter": "idempotencyKey"
+            }
+          }
+        },
+        {
+          "key": "submit",
+          "tool": "work_item_submit",
+          "inputs": {
+            "workItemId": {
+              "parameter": "workItemId"
+            },
+            "expectedVersion": {
+              "parameter": "expectedVersion"
+            },
+            "idempotencyKey": {
+              "parameter": "submissionKey"
+            },
+            "artifactId": {
+              "result": "save",
+              "path": [
+                "course",
+                "pin",
+                "artifactRef"
+              ]
+            },
+            "revisionId": {
+              "result": "save",
+              "path": [
+                "course",
+                "artifactRevisionId"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "site-draft": {
+      "title": "公開サイトの候補版を更新する",
+      "steps": [
+        {
+          "key": "run",
+          "tool": "site_apply",
+          "inputs": {
+            "artifactId": {
+              "parameter": "artifactId"
+            },
+            "expectedRevisionId": {
+              "parameter": "expectedRevisionId"
+            },
+            "idempotencyKey": {
+              "parameter": "idempotencyKey"
+            },
+            "operations": {
+              "parameter": "operations"
+            },
+            "content": {
+              "parameter": "content"
+            },
+            "check": {
+              "parameter": "check"
+            }
+          }
+        }
+      ]
+    },
+    "inquiries": {
+      "title": "事業の問い合わせを確認する",
+      "steps": [
+        {
+          "key": "run",
+          "tool": "inbox_list",
+          "inputs": {
+            "entrance": {
+              "parameter": "entrance"
+            }
+          }
+        }
+      ]
+    },
+    "intake-to-case": {
+      "title": "問い合わせを案件にする",
+      "steps": [
+        {
+          "key": "create",
+          "tool": "deal_create_from_inquiry",
+          "inputs": {
+            "inquiryId": {
+              "parameter": "inquiryId"
+            },
+            "idempotencyKey": {
+              "parameter": "idempotencyKey"
+            }
+          }
+        }
+      ]
+    },
+    "order-status": {
+      "title": "注文の状態と本人への提供を確認する",
+      "steps": [
+        {
+          "key": "run",
+          "tool": "order_support_get",
+          "inputs": {
+            "orderId": {
+              "parameter": "orderId"
+            }
+          }
+        }
+      ]
+    },
+    "customer-history": {
+      "title": "同じProjectの顧客履歴を確認する",
+      "steps": [
+        {
+          "key": "run",
+          "tool": "customer_get",
+          "inputs": {
+            "contactId": {
+              "parameter": "contactId"
+            }
+          }
+        }
+      ]
+    },
+    "order-support": {
+      "title": "購入者からの問い合わせと返信案を読む",
+      "steps": [
+        {
+          "key": "run",
+          "tool": "support_requests_list",
+          "inputs": {
+            "orderId": {
+              "parameter": "orderId"
+            }
+          }
+        }
+      ]
+    },
+    "reply-draft": {
+      "title": "購入者への返信案を保存する",
+      "steps": [
+        {
+          "key": "run",
+          "tool": "support_reply_draft_save",
+          "inputs": {
+            "orderId": {
+              "parameter": "orderId"
+            },
+            "requestId": {
+              "parameter": "requestId"
+            },
+            "expectedVersion": {
+              "parameter": "expectedVersion"
+            },
+            "body": {
+              "parameter": "body"
+            }
+          }
+        }
+      ]
+    },
+    "prepare-free-resource": {
+      "title": "無料資料と受取画面の下書きを作る",
+      "steps": [
+        {
+          "key": "run",
+          "tool": "app_resources_prepare",
+          "inputs": {
+            "name": {
+              "parameter": "name"
+            },
+            "sourceProjectId": {
+              "parameter": "sourceProjectId"
+            },
+            "artifactRevisionId": {
+              "parameter": "artifactRevisionId"
+            },
+            "idempotencyKey": {
+              "parameter": "idempotencyKey"
+            },
+            "base": {
+              "parameter": "base"
+            },
+            "resourceTitle": {
+              "parameter": "resourceTitle"
+            },
+            "description": {
+              "parameter": "description"
+            },
+            "siteTemplateId": {
+              "parameter": "siteTemplateId"
+            }
+          },
+          "projectInput": "targetProjectId"
+        }
+      ]
+    },
+    "booking-offers": {
+      "title": "対象事業の予約枠と定員の設定を確認する",
+      "steps": [
+        {
+          "key": "run",
+          "tool": "booking_offers_list",
+          "inputs": {
+            "limit": {
+              "parameter": "limit"
+            }
+          }
+        }
+      ]
+    },
+    "membership-roster": {
+      "title": "事業に割り当てた会員枠の状態を読む",
+      "steps": [
+        {
+          "key": "run",
+          "tool": "membership_roster_list",
+          "inputs": {
+            "limit": {
+              "parameter": "limit"
+            },
+            "after": {
+              "parameter": "after"
+            }
+          }
+        }
+      ]
+    },
+    "recruitment-applications": {
+      "title": "求人への応募結果と選考状況を読む",
+      "steps": [
+        {
+          "key": "run",
+          "tool": "recruitment_applications_list",
+          "inputs": {}
+        }
+      ]
+    },
+    "deal-status": {
+      "title": "案件の状態と版を読む",
+      "steps": [
+        {
+          "key": "run",
+          "tool": "deal_get",
+          "inputs": {
+            "caseId": {
+              "parameter": "caseId"
+            }
+          }
+        }
+      ]
+    },
+    "update-deal-status": {
+      "title": "案件の状態を変更する",
+      "steps": [
+        {
+          "key": "run",
+          "tool": "deal_status_update",
+          "inputs": {
+            "caseId": {
+              "parameter": "caseId"
+            },
+            "expectedVersion": {
+              "parameter": "expectedVersion"
+            },
+            "status": {
+              "parameter": "status"
+            },
+            "idempotencyKey": {
+              "parameter": "idempotencyKey"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

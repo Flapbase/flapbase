@@ -1,0 +1,18 @@
+{
+  "name": "@flapbase/business-workflows",
+  "version": "0.1.0",
+  "description": "Standard Flapbase business workflow definitions",
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    "./business-workflows.json": "./.base/business-workflows.json"
+  },
+  "files": [".base/business-workflows.json", "LICENSE", "README.md"],
+  "engines": { "node": ">=22" },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Flapbase/flapbase.git",
+    "directory": "packages/business-workflows"
+  },
+  "publishConfig": { "access": "public" }
+}

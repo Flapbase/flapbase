@@ -18,6 +18,10 @@ node examples/cloud-starter/run.mjs
 
 Open [http://127.0.0.1:5264/](http://127.0.0.1:5264/) and edit [site.base.json](examples/cloud-starter/site.base.json). Connect a published free product to accept signups with Flap ID and review orders in Cloud. [Setup and deployment](examples/cloud-starter/README.md).
 
+## Business workflow definitions
+
+[Standard .base definitions](packages/business-workflows/README.md) cover eleven business patterns and describe which stages connect to managed operations.
+
 ## Site check
 
 Check locally how search engines and AI read a site. Pass a public URL, a saved HTML file or a folder; you get what to fix, in order, with the reason. No account or API key. Node.js 22+, no external dependencies.
@@ -98,6 +102,8 @@ Apache-2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
 ---
 
 ## 日本語
+
+[11事業の標準 .base と使い方](packages/business-workflows/README.md)
 
 **AIエージェントとデジタル商品を作り 公開し 運営する**
 
