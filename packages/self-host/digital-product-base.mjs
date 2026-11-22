@@ -13,13 +13,14 @@ const digitalProductBaseSchema = {
     },
     settings: {
       type: 'object', additionalProperties: false, required: ['workflow', 'support'],
-      properties: { workflow: { const: 'flapbase:resource-distribution' }, support: { const: 'buyer-order' } },
+      properties: { workflow: { enum: ['flapbase:resource-distribution', 'flapbase:customer-support'] }, support: { const: 'buyer-order' } },
     },
   },
 }
 
 function validate(value, schema) {
   if ('const' in schema) return value === schema.const
+  if ('enum' in schema) return schema.enum.includes(value)
   if (schema.type === 'string') {
     return typeof value === 'string' && value.trim().length >= schema.minLength && value.length <= schema.maxLength && !value.includes('\0')
   }
@@ -33,6 +34,6 @@ export function parseDigitalProductBase(value) {
   return {
     version: 1, package: 'member-resources', packageVersion: 1,
     presentation: { heading: value.presentation.heading.trim(), introduction: value.presentation.introduction.trim(), layout: 'standard' },
-    settings: { workflow: 'flapbase:resource-distribution', support: 'buyer-order' },
+    settings: { workflow: value.settings.workflow, support: 'buyer-order' },
   }
 }

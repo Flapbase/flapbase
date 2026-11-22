@@ -139,15 +139,15 @@
       "acceptance": "顧客と商談の登録・担当割当・対応期限・成約結果の確認"
     },
     "customer-support": {
-      "status": "planned",
-      "templateId": null,
+      "status": "connected",
+      "templateId": "flapbase:customer-support",
       "title": "顧客向けサポートポータルを提供する",
-      "purpose": "案内・会員問い合わせ・担当者の返信と再訪",
+      "purpose": "商品・資料の提供から、購入者の問い合わせ対応と返信の再訪まで",
       "workflows": [
-        "service-intake",
-        "app-release",
-        "support-operations",
-        "app-change"
+        "resource-distribution",
+        "resource-release",
+        "purchase-fulfillment",
+        "order-support-lifecycle"
       ],
       "acceptance": "顧客本人の問い合わせ・担当振分・返信案・人による返信・本人の再訪"
     }
@@ -355,6 +355,55 @@
           "resource.prepare"
         ]
       }
+    ],
+    "resource-release": [
+      {
+        "key": "publish",
+        "title": "提供する資料と画面を確認して公開する",
+        "phase": "publish",
+        "performer": "human",
+        "procedures": [
+          "resource.publish"
+        ]
+      }
+    ],
+    "order-support-lifecycle": [
+      {
+        "key": "assign",
+        "title": "注文の問い合わせを担当者へ割り当てる",
+        "phase": "analyze",
+        "performer": "human",
+        "procedures": [
+          "support.assign"
+        ]
+      },
+      {
+        "key": "draft-reply",
+        "title": "購入者への返信案を保存する",
+        "phase": "create",
+        "performer": "agent",
+        "procedures": [
+          "support.draft"
+        ]
+      },
+      {
+        "key": "confirm-reply",
+        "title": "返信を確認して注文の履歴に公開する",
+        "phase": "publish",
+        "performer": "human",
+        "procedures": [
+          "support.confirm"
+        ]
+      },
+      {
+        "key": "buyer-revisit",
+        "title": "購入者本人が同じ注文で返信を確認する",
+        "phase": "analyze",
+        "performer": "human",
+        "procedures": [
+          "support.revisit"
+        ]
+      }
     ]
   },
   "procedures": {
@@ -481,6 +530,30 @@
         "work_item_submit"
       ],
       "verify": "現行版を基準に、変更した候補版を提出する。"
+    },
+    "resource.publish": {
+      "tools": [],
+      "verify": "運営者が提供条件・資料・申込と受取の画面を確認し、商品の提供と画面を既存の公開画面で公開する。"
+    },
+    "support.assign": {
+      "tools": [
+        "support_requests_list"
+      ],
+      "verify": "本人の注文で受け付けた問い合わせを注文詳細で開き、同じProjectの担当者を選ぶ。"
+    },
+    "support.draft": {
+      "tools": [
+        "support_reply_draft_save"
+      ],
+      "verify": "対象の注文・問い合わせID・現在の版を照合し、返信案を保存する。"
+    },
+    "support.confirm": {
+      "tools": [],
+      "verify": "運営者が注文詳細で返信案を確認し、確認した本文を購入者への返信として公開する。"
+    },
+    "support.revisit": {
+      "tools": [],
+      "verify": "購入者本人でログインして同じ注文を開き、公開済みの返信を確認する。"
     }
   },
   "settings": {
@@ -625,6 +698,10 @@
     ],
     "applicant-review": [
       "recruitment-applications"
+    ],
+    "order-support-lifecycle": [
+      "order-support",
+      "reply-draft"
     ]
   },
   "sharedExecutions": {
@@ -877,9 +954,15 @@
           "key": "run",
           "tool": "booking_outcome_record",
           "inputs": {
-            "bookingId": { "parameter": "bookingId" },
-            "outcome": { "parameter": "outcome" },
-            "idempotencyKey": { "parameter": "idempotencyKey" }
+            "bookingId": {
+              "parameter": "bookingId"
+            },
+            "outcome": {
+              "parameter": "outcome"
+            },
+            "idempotencyKey": {
+              "parameter": "idempotencyKey"
+            }
           }
         }
       ]
