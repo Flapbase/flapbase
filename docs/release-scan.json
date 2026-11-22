@@ -1,7 +1,7 @@
 {
   "version": "flapbase.release-scan/v1",
   "status": "pass",
-  "scannedFiles": 136,
+  "scannedFiles": 142,
   "excluded": [
     ".git",
     "node_modules",
@@ -85,6 +85,26 @@
     {
       "path": "examples/apparel/sitemap.xml",
       "sha256": "a8e7b93c34f265f7d694c0103206221b5b70fd87795c33e2d136773ba3e06abd"
+    },
+    {
+      "path": "examples/cloud-starter/cloud.mjs",
+      "sha256": "8c54f5b9fd7a8239ed594308afd72103d259f56662273c06b7321ab7cea75a62"
+    },
+    {
+      "path": "examples/cloud-starter/README.md",
+      "sha256": "ad2600352add9672e1be8d36784353e235ed73f65594bad561c13495d5ee610a"
+    },
+    {
+      "path": "examples/cloud-starter/run.mjs",
+      "sha256": "238bcf3037f63edce92d5e68a371962c8c2885bc501a6f8c7e5062f238d9d548"
+    },
+    {
+      "path": "examples/cloud-starter/site.base.json",
+      "sha256": "dd9b08194268a59876d1af25c3570f46e29230e41380d5c50d25e1814768dd41"
+    },
+    {
+      "path": "examples/cloud-starter/site.mjs",
+      "sha256": "9f764add4b81f5a6cb3341d67bcc3ec5caaa1b94c44a7793b48506294d92ee4f"
     },
     {
       "path": "examples/cosmetics/index.html",
@@ -388,7 +408,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "abdfe596087588ce41a279506624c11ceed31a791bc9158a05717690426caf4c"
+      "sha256": "36d31b7e407c5a2936e48771fcde4230eca7856e46c135f4ee91ee1f46d723a4"
     },
     {
       "path": "scripts/check-pack.mjs",
@@ -537,6 +557,10 @@
     {
       "path": "tests/cloud-fixtures.test.js",
       "sha256": "b27ecccb01e5ece6cdc7301c2a732ba6b0950e70224da2fe79a00bc3e6cc1097"
+    },
+    {
+      "path": "tests/cloud-starter.test.js",
+      "sha256": "3d4c1f11480e71ab9f87f265761df537a57fe5b683666ceff7d63d7a6c7ed8c6"
     },
     {
       "path": "tests/fetch.test.js",

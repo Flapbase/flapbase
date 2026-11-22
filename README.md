@@ -2,13 +2,21 @@
 
 Build, publish, and run digital products with your AI agent.
 
-Flapbase is open source. Run it on your own infrastructure or build your own frontend with the [Flapbase Cloud API](#using-the-managed-service).
+Start with an open-source frontend and connect it to [Flapbase Cloud](#using-the-managed-service) when you are ready to accept signups.
 
 [日本語](#日本語)
 
 ## Quickstart
 
-Run Flapbase locally with Node.js and PostgreSQL. Publish a free digital product, let signed-in buyers claim and download it, review orders, and save reply drafts through MCP. [Get started](packages/self-host/README.md).
+Requires Node.js 22 or later.
+
+```sh
+git clone https://github.com/Flapbase/flapbase.git
+cd flapbase
+node examples/cloud-starter/run.mjs
+```
+
+Open [http://127.0.0.1:5264/](http://127.0.0.1:5264/) and edit [site.base.json](examples/cloud-starter/site.base.json). Connect a published free product to accept signups with Flap ID and review orders in Cloud. [Setup and deployment](examples/cloud-starter/README.md).
 
 ## Site check
 
@@ -93,11 +101,11 @@ Apache-2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
 
 **AIエージェントとデジタル商品を作り 公開し 運営する**
 
-Flapbaseはオープンソースです。自分の環境で動かすことも、[Flapbase Cloud API](#using-the-managed-service)をバックエンドにして独自の画面を作ることもできます。
+オープンソースのフロントを手元で作り、申込を受け付ける段階で [Flapbase Cloud](#using-the-managed-service) につなぎます。
 
 ### はじめる
 
-Node.jsとPostgreSQLでFlapbaseをローカル起動し、無料商品の公開・申込・本人受取・注文確認・MCPでの返信案保存を試せます。 [セットアップ手順](packages/self-host/README.md#日本語)
+Node.js 22以上で `node examples/cloud-starter/run.mjs` を実行します。[ローカルのプレビュー](http://127.0.0.1:5264/) を開き、告知ページを編集します。公開済みの無料商品をつなぐと、Flap IDでの申込・本人受取とCloudの注文確認を使えます。 [設定と公開の手順](examples/cloud-starter/README.md)
 
 ### サイトの点検
 
