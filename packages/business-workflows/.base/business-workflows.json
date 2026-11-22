@@ -1008,7 +1008,7 @@
     },
     "training.assign": {
       "tools": [],
-      "verify": "担当者が同じProjectの公開済み教材の版と所属済みの受講者を選び、割当IDを本人に伝える。同じ依頼を再送する場合は同じ割当IDを使う。",
+      "verify": "担当者が同じProjectの公開済み教材の版と所属済みの受講者を選び、受講リンク（/learn/assignments/{assignmentId}）を本人に伝える。同じ依頼を再送する場合は同じ割当IDを使う。",
       "humanActions": [
         {
           "method": "POST",
