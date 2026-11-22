@@ -71,16 +71,15 @@
       "acceptance": "商品公開・決済確定・本人への提供・再受取・購入者サポート"
     },
     "organization-training": {
-      "status": "planned",
-      "templateId": null,
+      "status": "connected",
+      "templateId": "flapbase:organization-training",
       "title": "法人向け研修ポータルを運営する",
       "purpose": "法人単位の招待・受講割当・進捗確認",
       "workflows": [
         "course-authoring",
-        "app-release",
-        "member-access",
-        "learner-progress",
-        "app-change"
+        "training-release",
+        "training-access",
+        "learner-progress"
       ],
       "acceptance": "法人別の招待と権限・受講割当・受講・法人内の進捗確認"
     },
@@ -656,6 +655,46 @@
           "download.receive"
         ]
       }
+    ],
+    "training-access": [
+      {
+        "key": "training-invite",
+        "title": "法人の担当者と受講者を招待する",
+        "phase": "publish",
+        "performer": "human",
+        "procedures": [
+          "training.invite"
+        ]
+      },
+      {
+        "key": "training-assign",
+        "title": "受講者に公開済みの教材を割り当てる",
+        "phase": "publish",
+        "performer": "human",
+        "procedures": [
+          "training.assign"
+        ]
+      },
+      {
+        "key": "training-attend",
+        "title": "本人が教材を開いて受講する",
+        "phase": "analyze",
+        "performer": "human",
+        "procedures": [
+          "training.attend"
+        ]
+      }
+    ],
+    "training-release": [
+      {
+        "key": "training-release",
+        "title": "教材を確認して公開版を保存する",
+        "phase": "publish",
+        "performer": "human",
+        "procedures": [
+          "training.release"
+        ]
+      }
     ]
   },
   "procedures": {
@@ -755,7 +794,17 @@
     },
     "learning.progress": {
       "tools": [],
-      "verify": "許可された範囲の受講と完了の状況を確認する。"
+      "verify": "担当者が自分の法人のProjectを開き、割当別に受講の完了数を確認する。",
+      "humanActions": [
+        {
+          "method": "GET",
+          "path": "/api/courses/v1/workspaces/{workspaceId}/projects/{projectId}/assignments",
+          "actor": "training-manager",
+          "query": [
+            "after"
+          ]
+        }
+      ]
     },
     "support.respond": {
       "tools": [
@@ -931,6 +980,90 @@
         "order_support_get"
       ],
       "verify": "確定した注文の購入者本人で受取画面を開き、同じ注文から再受取できることを確認する。"
+    },
+    "training.invite": {
+      "tools": [],
+      "verify": "法人ごとの非公開Projectを選び、担当者はメンバー、受講者は閲覧者としてそのProjectだけに招待する。本人が招待を受け、所属したことを確認する。",
+      "humanActions": [
+        {
+          "method": "POST",
+          "path": "/api/collab/v1/workspaces/{workspaceId}/members/invitations",
+          "actor": "workspace-manager",
+          "body": [
+            "name",
+            "email",
+            "role",
+            "projectIds"
+          ]
+        },
+        {
+          "method": "POST",
+          "path": "/api/collab/v1/reviewer-invitations/accept",
+          "actor": "invitee",
+          "body": [
+            "token"
+          ]
+        }
+      ]
+    },
+    "training.assign": {
+      "tools": [],
+      "verify": "担当者が同じProjectの公開済み教材の版と所属済みの受講者を選び、割当IDを本人に伝える。同じ依頼を再送する場合は同じ割当IDを使う。",
+      "humanActions": [
+        {
+          "method": "POST",
+          "path": "/api/courses/v1/workspaces/{workspaceId}/projects/{projectId}/assignments",
+          "actor": "training-manager",
+          "body": [
+            "assignmentId",
+            "learnerId",
+            "artifactRevisionId"
+          ]
+        }
+      ]
+    },
+    "training.attend": {
+      "tools": [],
+      "verify": "招待を受けた本人が割り当てられた版の教材を開き、受講の完了を記録する。",
+      "humanActions": [
+        {
+          "method": "GET",
+          "path": "/api/courses/v1/assignments/{assignmentId}",
+          "actor": "learner"
+        },
+        {
+          "method": "POST",
+          "path": "/api/courses/v1/assignments/{assignmentId}/progress",
+          "actor": "learner",
+          "body": [
+            "lessonId",
+            "completed",
+            "expectedVersion"
+          ],
+          "headers": [
+            "idempotency-key"
+          ]
+        }
+      ]
+    },
+    "training.release": {
+      "tools": [],
+      "verify": "内容を確認した担当者が公開状態の教材版を保存し、返された教材版IDを割当に使う。改訂済みの教材を公開しても既存の割当は元の版を参照する。",
+      "humanActions": [
+        {
+          "method": "POST",
+          "path": "/api/courses/v1/workspaces/{workspaceId}/projects/{projectId}/courses/{courseId}/revisions",
+          "actor": "training-manager",
+          "body": [
+            "kind",
+            "prior",
+            "document"
+          ],
+          "headers": [
+            "idempotency-key"
+          ]
+        }
+      ]
     }
   },
   "settings": {
@@ -1095,6 +1228,16 @@
         "商品と価格",
         "公開版",
         "購入者への返信"
+      ]
+    },
+    "organization-training": {
+      "workflow_create": [
+        "name",
+        "start"
+      ],
+      "approval": [
+        "法人の担当者と受講者",
+        "受講者に割り当てる公開教材の版"
       ]
     }
   },
