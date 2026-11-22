@@ -985,7 +985,7 @@
     },
     "training.invite": {
       "tools": [],
-      "verify": "法人ごとの非公開Projectを選び、担当者はメンバー、受講者は閲覧者としてそのProjectだけに招待する。本人が招待を受け、所属したことを確認する。",
+      "verify": "Workspace管理者が非公開Projectに法人担当者を招く。担当者はコース教材から受講者を同じProjectに招く。受講者はメールアドレスを本人確認して、閲覧者として参加する。",
       "humanActions": [
         {
           "method": "POST",
@@ -996,6 +996,15 @@
             "email",
             "role",
             "projectIds"
+          ]
+        },
+        {
+          "method": "POST",
+          "path": "/api/collab/v1/workspaces/{workspaceId}/projects/{projectId}/training-invitations",
+          "actor": "training-manager",
+          "body": [
+            "email",
+            "name"
           ]
         },
         {
