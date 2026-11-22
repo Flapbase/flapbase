@@ -434,7 +434,9 @@
       "verify": "空き枠または開催回、定員、締切、変更条件を記録する。"
     },
     "schedule.operate": {
-      "tools": [],
+      "tools": [
+        "booking_records_list"
+      ],
       "verify": "確定、振替、取消または参加の結果を記録する。"
     },
     "recruitment.review": {
