@@ -13,3 +13,7 @@ Flapbase Cloud executes available actions through the authenticated MCP connecti
 ### 購入者サポート
 
 `customer-support` を選ぶと、無料資料の公開から購入者の問い合わせ対応までを導入できます。Workspace単位で接続し、配布用の[デジタル商品定義](../self-host/digital-product.base)の `settings.workflow` を `flapbase:customer-support` にして `base` に渡します。`prepare-free-resource` は資料の固定版を基に、下書き・受取画面・サポートの工程を作ります。既存Projectを使う場合は `projectId` を指定し、新しく始める場合は省きます。運営者が提供条件と画面を確認して公開します。購入者本人が受取画面から問い合わせを送り、運営者は注文詳細で担当者を割り当てます。`order-support` で対象の問い合わせと現在の版を取得し、`reply-draft` で返信案を保存します。運営者が確認して公開すると、購入者が同じ注文の問い合わせ履歴で返信を読めます。
+
+### 採用・応募管理
+
+採用プレビューが有効な環境で `recruitment` を選びます。`recruitment-install` に対象の `projectId` を渡し、求人の固定版を導入します。同じProjectで再実行すると同じ導入を開けます。運営者が事業管理で原稿を保存し、検証・承認した版を公開します。応募者はログインして応募し、同じ求人から選考状況を確認できます。`recruitment-applications` は委任先Projectの応募の状態と版を返します。最終結果の確定と通知は残作業です。

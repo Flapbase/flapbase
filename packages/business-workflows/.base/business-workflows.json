@@ -47,15 +47,13 @@
       "acceptance": "無料申込・本人への提供・受付時の版の維持・運営の注文確認"
     },
     "recruitment": {
-      "status": "planned",
-      "templateId": null,
+      "status": "connected",
+      "templateId": "flapbase:recruitment",
       "title": "採用・応募管理",
       "purpose": "求人公開・本人応募・選考・結果確認",
       "workflows": [
-        "service-intake",
-        "app-release",
-        "applicant-review",
-        "app-change"
+        "recruitment-launch",
+        "applicant-review"
       ],
       "acceptance": "応募者本人の受付・担当者による選考・結果公開と通知の確認"
     },
@@ -293,11 +291,20 @@
     "applicant-review": [
       {
         "key": "applicants",
-        "title": "応募と選考結果を記録する",
+        "title": "本人の応募を確認して選考を進める",
         "phase": "analyze",
         "performer": "human",
         "procedures": [
           "recruitment.review"
+        ]
+      },
+      {
+        "key": "selection-result",
+        "title": "選考結果を確定して応募者に知らせる",
+        "phase": "publish",
+        "performer": "human",
+        "procedures": [
+          "recruitment.notify"
         ]
       }
     ],
@@ -404,6 +411,35 @@
           "support.revisit"
         ]
       }
+    ],
+    "recruitment-launch": [
+      {
+        "key": "install",
+        "title": "Projectに採用機能を追加する",
+        "phase": "create",
+        "performer": "agent",
+        "procedures": [
+          "recruitment.install"
+        ]
+      },
+      {
+        "key": "job-draft",
+        "title": "求人原稿と応募の入口を準備する",
+        "phase": "create",
+        "performer": "human",
+        "procedures": [
+          "recruitment.draft"
+        ]
+      },
+      {
+        "key": "job-release",
+        "title": "求人の候補版を確認して公開する",
+        "phase": "publish",
+        "performer": "human",
+        "procedures": [
+          "recruitment.publish"
+        ]
+      }
     ]
   },
   "procedures": {
@@ -493,7 +529,7 @@
       "tools": [
         "recruitment_applications_list"
       ],
-      "verify": "本人の応募と、担当者が決めた選考結果を記録する。"
+      "verify": "同じProjectの応募と公開時の求人版を確認し、担当者が選考を進める。"
     },
     "access.manage": {
       "tools": [
@@ -554,6 +590,24 @@
     "support.revisit": {
       "tools": [],
       "verify": "購入者本人でログインして同じ注文を開き、公開済みの返信を確認する。"
+    },
+    "recruitment.install": {
+      "tools": [
+        "app_add_recruitment"
+      ],
+      "verify": "対象Projectに求人の固定版を導入し、返された事業管理のリンクを開く。"
+    },
+    "recruitment.draft": {
+      "tools": [],
+      "verify": "事業管理で求人名と募集内容を保存し、公開候補を検証する。"
+    },
+    "recruitment.publish": {
+      "tools": [],
+      "verify": "公開権限を持つ担当者が確認した候補を適用し、公開求人と本人応募の入口を開く。"
+    },
+    "recruitment.notify": {
+      "tools": [],
+      "verify": "人が選考結果を確定し、応募者本人が再訪して結果と通知を確認する。"
     }
   },
   "settings": {
@@ -702,6 +756,9 @@
     "order-support-lifecycle": [
       "order-support",
       "reply-draft"
+    ],
+    "recruitment-launch": [
+      "recruitment-install"
     ]
   },
   "sharedExecutions": {
@@ -1028,6 +1085,16 @@
               "parameter": "idempotencyKey"
             }
           }
+        }
+      ]
+    },
+    "recruitment-install": {
+      "title": "対象Projectに採用機能を追加する",
+      "steps": [
+        {
+          "key": "run",
+          "tool": "app_add_recruitment",
+          "inputs": {}
         }
       ]
     }
