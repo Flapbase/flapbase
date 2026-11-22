@@ -86,16 +86,16 @@
       "acceptance": "法人別の招待と権限・受講割当・受講・法人内の進捗確認"
     },
     "paid-membership": {
-      "status": "planned",
-      "templateId": null,
+      "status": "connected",
+      "templateId": "flapbase:paid-membership",
       "title": "会員制サービスを運営する",
       "purpose": "入会・利用権・会員コンテンツ・更新と退会",
       "workflows": [
-        "product-offer",
-        "app-release",
+        "membership-offer",
+        "membership-publication",
         "member-access",
-        "support-operations",
-        "app-change"
+        "membership-cycle",
+        "support-operations"
       ],
       "acceptance": "加入・利用権の付与・提供・契約更新・解約時の利用権停止"
     },
@@ -467,6 +467,66 @@
           "recruitment.publish"
         ]
       }
+    ],
+    "membership-offer": [
+      {
+        "key": "plan",
+        "title": "会員プランと閲覧権を設定する",
+        "phase": "create",
+        "performer": "human",
+        "procedures": [
+          "membership.offer"
+        ]
+      }
+    ],
+    "membership-publication": [
+      {
+        "key": "content",
+        "title": "会員記事と募集の入口を用意する",
+        "phase": "create",
+        "performer": "agent",
+        "procedures": [
+          "membership.content"
+        ]
+      },
+      {
+        "key": "release",
+        "title": "案内と閲覧の条件を確認して公開する",
+        "phase": "publish",
+        "performer": "human",
+        "procedures": [
+          "release.review"
+        ]
+      },
+      {
+        "key": "join",
+        "title": "加入と本人の閲覧を確認する",
+        "phase": "analyze",
+        "performer": "human",
+        "procedures": [
+          "membership.join"
+        ]
+      }
+    ],
+    "membership-cycle": [
+      {
+        "key": "renew",
+        "title": "更新後の有効期間を確認する",
+        "phase": "analyze",
+        "performer": "human",
+        "procedures": [
+          "membership.renew"
+        ]
+      },
+      {
+        "key": "end",
+        "title": "解約と期間満了後の公開範囲を確認する",
+        "phase": "analyze",
+        "performer": "human",
+        "procedures": [
+          "membership.end"
+        ]
+      }
     ]
   },
   "procedures": {
@@ -650,6 +710,34 @@
     "service.deliver": {
       "tools": [],
       "verify": "運営者が案件で納品物を送付し、顧客本人がポータルで受取を記録する。"
+    },
+    "membership.offer": {
+      "tools": [],
+      "verify": "運営者が既存の会員プランで価格・周期・閲覧権と受取設定を確認する。"
+    },
+    "membership.content": {
+      "tools": [
+        "site_get",
+        "site_apply",
+        "site_publish_request"
+      ],
+      "verify": "公開Siteに会員限定記事を用意し、対象プランを選ぶ。募集を有効にした公開版と人の承認を確認する。"
+    },
+    "membership.join": {
+      "tools": [],
+      "verify": "読者本人が公開記事から申し込み、支払いの確定後に対象の会員本文が読める。"
+    },
+    "membership.renew": {
+      "tools": [
+        "membership_roster_list"
+      ],
+      "verify": "既存の継続請求で期間が更新され、対象会員の閲覧が続くことを確認する。"
+    },
+    "membership.end": {
+      "tools": [
+        "membership_roster_list"
+      ],
+      "verify": "本人の解約後は支払済み期間だけ閲覧でき、満了後は本文が返らない。"
     }
   },
   "settings": {
@@ -707,6 +795,24 @@
           }
         ]
       }
+    },
+    "paid-membership": {
+      "workflow_create": [
+        "name",
+        "start"
+      ],
+      "site_apply": [
+        "operations",
+        "content"
+      ],
+      "membership_roster_list": [
+        "limit",
+        "after"
+      ],
+      "approval": [
+        "会員プランの価格と閲覧権",
+        "案内を掲載した公開版"
+      ]
     }
   },
   "executions": {
@@ -823,6 +929,9 @@
     ],
     "recruitment-launch": [
       "recruitment-install"
+    ],
+    "membership-publication": [
+      "site-draft"
     ]
   },
   "sharedExecutions": {
@@ -1162,5 +1271,19 @@
         }
       ]
     }
+  },
+  "discovery": {
+    "lookup": {
+      "tool": "app_template_get",
+      "input": {
+        "templateId": "business-app"
+      }
+    },
+    "selection": [
+      "workflowCatalog.businesses で目的と完了条件に合う事業キーを選ぶ。設置済みの同じ業務は既存のワークフローを使う。",
+      "まとまった業務は workflows と procedures を読む。同じ設定・対象の業務は共有の定義と実行キーを選ぶ。",
+      "導入時は workflow_templates_list で templateId を確認し、workflow_create に同じ作業の再送で同じ鍵を渡す。",
+      "実行では executions の事業キー・実行キー・定義の版とダイジェストを business_workflow_step_run に渡す。人の工程は担当者が行う。"
+    ]
   }
 }

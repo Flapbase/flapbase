@@ -21,3 +21,7 @@ Flapbase Cloud executes available actions through the authenticated MCP connecti
 ### 定型サービス
 
 `standard-service` の `settings["standard-service"].appBase` を `portal-draft` に渡し、顧客ポータルの候補版を保存します。運営者が公開した受付から問い合わせが入り、`intake-to-case` で案件につなぎます。運営者が見積を送り、顧客本人がポータルで回答します。`deal-status` と `update-deal-status` で案件の状態を扱います。納品物は運営者が案件から送り、顧客本人がポータルで受け取ります。
+
+### 有料会員の運営
+
+`paid-membership` の標準工程は、プランと公開記事の準備、本人の加入、閲覧権の確認、更新、解約後の満了を扱います。Site候補版と会員照会は共通の実行キーを参照します。プランの価格設定と公開は運営者、申込と解約は会員本人が既存画面から行います。エージェントは `app_template_get` の `business-app` から事業キー、共通業務、実行キー、固定版を取得します。
