@@ -914,13 +914,10 @@
         "start"
       ],
       "site_apply": [
-        "operations: set-booking",
-        "offerId",
-        "heading"
+        "operations"
       ],
       "booking_records_list": [
-        "limit",
-        "after"
+        "limit"
       ],
       "booking_outcome_record": [
         "bookingId",
@@ -938,13 +935,10 @@
         "start"
       ],
       "site_apply": [
-        "operations: set-booking",
-        "offerId",
-        "heading"
+        "operations"
       ],
       "booking_records_list": [
-        "limit",
-        "after"
+        "limit"
       ],
       "booking_outcome_record": [
         "bookingId",
