@@ -672,6 +672,7 @@
         "phase": "publish",
         "performer": "human",
         "procedures": [
+          "training.roster",
           "training.assign"
         ]
       },
@@ -794,13 +795,14 @@
     },
     "learning.progress": {
       "tools": [],
-      "verify": "担当者が自分の法人のProjectを開き、割当別に受講の完了数を確認する。",
+      "verify": "コース教材の「研修の割当と進捗」で、受講者ごとに割当時の版と完了数を確認する。",
       "humanActions": [
         {
           "method": "GET",
           "path": "/api/courses/v1/workspaces/{workspaceId}/projects/{projectId}/assignments",
           "actor": "training-manager",
           "query": [
+            "courseId",
             "after"
           ]
         }
@@ -1061,6 +1063,21 @@
           ],
           "headers": [
             "idempotency-key"
+          ]
+        }
+      ]
+    },
+    "training.roster": {
+      "tools": [],
+      "verify": "コース教材の「研修の割当と進捗」で、同じProjectに所属する人から受講者を選ぶ。",
+      "humanActions": [
+        {
+          "method": "GET",
+          "path": "/api/courses/v1/workspaces/{workspaceId}/projects/{projectId}/assignments",
+          "actor": "training-manager",
+          "query": [
+            "view=learners",
+            "after"
           ]
         }
       ]
