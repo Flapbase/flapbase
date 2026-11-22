@@ -58,16 +58,15 @@
       "acceptance": "応募者本人の受付・担当者による選考・結果公開と通知の確認"
     },
     "digital-product-sales": {
-      "status": "planned",
-      "templateId": null,
+      "status": "connected",
+      "templateId": "flapbase:digital-product-sales",
       "title": "デジタル商品を販売する",
       "purpose": "告知・購入・提供・サポート・フォロー",
       "workflows": [
-        "product-offer",
-        "app-release",
+        "download-offer",
+        "download-publication",
         "purchase-fulfillment",
-        "support-operations",
-        "app-change"
+        "order-support-lifecycle"
       ],
       "acceptance": "商品公開・決済確定・本人への提供・再受取・購入者サポート"
     },
@@ -617,6 +616,46 @@
           "release.review"
         ]
       }
+    ],
+    "download-offer": [
+      {
+        "key": "offer",
+        "title": "提供ファイルと販売条件を設定する",
+        "phase": "create",
+        "performer": "human",
+        "procedures": [
+          "download.offer"
+        ]
+      }
+    ],
+    "download-publication": [
+      {
+        "key": "compose",
+        "title": "公開サイトに商品の購入導線を置く",
+        "phase": "create",
+        "performer": "agent",
+        "procedures": [
+          "download.site"
+        ]
+      },
+      {
+        "key": "release",
+        "title": "商品と案内を確認して公開する",
+        "phase": "publish",
+        "performer": "human",
+        "procedures": [
+          "release.review"
+        ]
+      },
+      {
+        "key": "receive",
+        "title": "本人の購入と再受取を確認する",
+        "phase": "analyze",
+        "performer": "human",
+        "procedures": [
+          "download.receive"
+        ]
+      }
     ]
   },
   "procedures": {
@@ -874,6 +913,24 @@
         "customer_get"
       ],
       "verify": "担当者が確認した成約・失注を現在版に記録し、同じ顧客と案件の履歴から結果を確認する。"
+    },
+    "download.offer": {
+      "tools": [],
+      "verify": "運営者がProjectの公開Site、提供ファイルの固定版、販売者表示、価格と受取設定を確認して、既存の商品管理から出品する。"
+    },
+    "download.site": {
+      "tools": [
+        "site_get",
+        "site_apply",
+        "site_publish_request"
+      ],
+      "verify": "出品の応答に含まれる set-download-product を対象Siteの候補版へ適用し、人が公開する版を確認する。"
+    },
+    "download.receive": {
+      "tools": [
+        "order_support_get"
+      ],
+      "verify": "確定した注文の購入者本人で受取画面を開き、同じ注文から再受取できることを確認する。"
     }
   },
   "settings": {
@@ -1016,6 +1073,30 @@
         "担当と期限",
         "成約・失注の結果"
       ]
+    },
+    "digital-product-sales": {
+      "workflow_create": [
+        "name",
+        "start"
+      ],
+      "site_apply": [
+        "operations"
+      ],
+      "order_support_get": [
+        "orderId"
+      ],
+      "support_reply_draft_save": [
+        "orderId",
+        "requestId",
+        "body",
+        "expectedVersion",
+        "idempotencyKey"
+      ],
+      "approval": [
+        "商品と価格",
+        "公開版",
+        "購入者への返信"
+      ]
     }
   },
   "executions": {
@@ -1143,6 +1224,9 @@
     "booking-operation": [
       "booking-records",
       "booking-outcome"
+    ],
+    "download-publication": [
+      "site-draft"
     ]
   },
   "sharedExecutions": {

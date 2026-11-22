@@ -33,3 +33,7 @@ Flapbase Cloud executes available actions through the authenticated MCP connecti
 ### 顧客と商談の管理
 
 `customer-sales` は、受付フォームの候補版と公開から、顧客照会、案件化、担当と期限、成約・失注までを扱います。共通の `site-draft`、`intake-to-case`、`deal-status`、`update-deal-status`、`customer-history` を使います。担当と期限は運営者が既存の案件画面で設定します。
+
+### デジタル商品販売
+
+`digital-product-sales` は出品から公開Siteの購入導線、決済確定、購入者本人の再受取、注文サポートまでを扱います。商品管理と決済は既存の運営経路を使い、外部エージェントは共通の `site-draft`、`order-status`、`order-support`、`reply-draft` を選びます。出品と公開、購入者への返信は人の工程です。
