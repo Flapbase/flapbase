@@ -124,12 +124,13 @@
       "acceptance": "開催回の定員付き申込・確定案内・出欠・運営の結果確認"
     },
     "customer-sales": {
-      "status": "planned",
-      "templateId": null,
+      "status": "connected",
+      "templateId": "flapbase:customer-sales",
       "title": "顧客・商談を管理する",
       "purpose": "顧客・商談の登録、担当と次回対応、結果の記録",
       "workflows": [
         "service-intake",
+        "sales-publication",
         "sales-operations"
       ],
       "acceptance": "顧客と商談の登録・担当割当・対応期限・成約結果の確認"
@@ -368,12 +369,30 @@
     ],
     "sales-operations": [
       {
-        "key": "follow-up",
-        "title": "案件と次回対応を管理する",
+        "key": "receive",
+        "title": "問い合わせを顧客と案件につなぐ",
         "phase": "analyze",
         "performer": "human",
         "procedures": [
-          "sales.follow-up"
+          "sales.receive"
+        ]
+      },
+      {
+        "key": "follow-up",
+        "title": "担当・期限と次の対応を設定する",
+        "phase": "analyze",
+        "performer": "human",
+        "procedures": [
+          "sales.plan"
+        ]
+      },
+      {
+        "key": "close-deal",
+        "title": "成約・失注を記録して履歴を確認する",
+        "phase": "analyze",
+        "performer": "human",
+        "procedures": [
+          "sales.close"
         ]
       }
     ],
@@ -587,6 +606,17 @@
           "booking.outcome"
         ]
       }
+    ],
+    "sales-publication": [
+      {
+        "key": "release",
+        "title": "受付の内容を確認して公開する",
+        "phase": "publish",
+        "performer": "human",
+        "procedures": [
+          "release.review"
+        ]
+      }
     ]
   },
   "procedures": {
@@ -695,16 +725,6 @@
         "support_reply_draft_save"
       ],
       "verify": "問い合わせを担当へ渡し、返信案を確認に回す。"
-    },
-    "sales.follow-up": {
-      "tools": [
-        "inbox_list",
-        "customer_get",
-        "deal_create_from_inquiry",
-        "deal_get",
-        "deal_status_update"
-      ],
-      "verify": "案件の現在の状態、担当と次回対応を確認する。"
     },
     "app.revise": {
       "tools": [
@@ -832,6 +852,28 @@
         "booking_outcome_record"
       ],
       "verify": "終了した予約だけを確認し、実施・出欠結果を対象Projectに記録する。"
+    },
+    "sales.receive": {
+      "tools": [
+        "inbox_list",
+        "customer_get",
+        "deal_create_from_inquiry"
+      ],
+      "verify": "公開フォームで受け付けた問い合わせを既存の顧客に照合し、対象Projectの案件へ一度だけ転記する。"
+    },
+    "sales.plan": {
+      "tools": [
+        "deal_get"
+      ],
+      "verify": "運営者が既存の案件画面で担当・期限・次の対応を現在の版に設定し、更新結果を確認する。"
+    },
+    "sales.close": {
+      "tools": [
+        "deal_get",
+        "deal_status_update",
+        "customer_get"
+      ],
+      "verify": "担当者が確認した成約・失注を現在版に記録し、同じ顧客と案件の履歴から結果を確認する。"
     }
   },
   "settings": {
@@ -948,6 +990,31 @@
       "approval": [
         "受付内容と日時",
         "公開するSiteの版"
+      ]
+    },
+    "customer-sales": {
+      "workflow_create": [
+        "name",
+        "start"
+      ],
+      "site_apply": [
+        "operations",
+        "content"
+      ],
+      "deal_create_from_inquiry": [
+        "inquiryId",
+        "idempotencyKey"
+      ],
+      "deal_status_update": [
+        "caseId",
+        "status",
+        "expectedVersion",
+        "idempotencyKey"
+      ],
+      "approval": [
+        "受付フォームと公開版",
+        "担当と期限",
+        "成約・失注の結果"
       ]
     }
   },

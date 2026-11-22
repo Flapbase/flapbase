@@ -29,3 +29,7 @@ Flapbase Cloud executes available actions through the authenticated MCP connecti
 ### 予約サービスとイベント受付
 
 `booking-service` と `event-registration` は、受付条件の設定後に同じ公開・運営工程を使います。対象Projectのメニューを `booking-offers` で取得し、`site-draft` の `site_apply` に `set-booking` を渡します。人が公開した後は既存の予約受付から確定・変更・取消しを行い、`booking-records` と `booking-outcome` で実施結果を確認します。固定開催日は開催専用の担当者の日付別受付時間を使います。
+
+### 顧客と商談の管理
+
+`customer-sales` は、受付フォームの候補版と公開から、顧客照会、案件化、担当と期限、成約・失注までを扱います。共通の `site-draft`、`intake-to-case`、`deal-status`、`update-deal-status`、`customer-history` を使います。担当と期限は運営者が既存の案件画面で設定します。
