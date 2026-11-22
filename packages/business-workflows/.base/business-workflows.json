@@ -613,7 +613,8 @@
       "prepare-free-resource"
     ],
     "scheduled-intake": [
-      "booking-offers"
+      "booking-offers",
+      "booking-records"
     ],
     "member-access": [
       "membership-roster"
@@ -843,6 +844,20 @@
         {
           "key": "run",
           "tool": "booking_offers_list",
+          "inputs": {
+            "limit": {
+              "parameter": "limit"
+            }
+          }
+        }
+      ]
+    },
+    "booking-records": {
+      "title": "予約を照会し、受付と実施の状況を確認する",
+      "steps": [
+        {
+          "key": "run",
+          "tool": "booking_records_list",
           "inputs": {
             "limit": {
               "parameter": "limit"
