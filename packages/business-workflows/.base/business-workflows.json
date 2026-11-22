@@ -224,6 +224,33 @@
         "procedures": [
           "inquiry.manage"
         ]
+      },
+      {
+        "key": "quote",
+        "title": "見積を送り、顧客の回答を確認する",
+        "phase": "analyze",
+        "performer": "human",
+        "procedures": [
+          "service.quote"
+        ]
+      },
+      {
+        "key": "progress",
+        "title": "受注後の進捗を更新する",
+        "phase": "analyze",
+        "performer": "human",
+        "procedures": [
+          "service.progress"
+        ]
+      },
+      {
+        "key": "deliver",
+        "title": "成果物を送り、顧客の受取を確認する",
+        "phase": "analyze",
+        "performer": "human",
+        "procedures": [
+          "service.deliver"
+        ]
       }
     ],
     "app-change": [
@@ -608,6 +635,21 @@
     "recruitment.notify": {
       "tools": [],
       "verify": "担当者が選考中の応募を採用または見送りで確定する。応募者本人はログインして応募履歴を開き、結果の通知と確定内容を確認する。"
+    },
+    "service.quote": {
+      "tools": [],
+      "verify": "運営者が案件で見積を作成して送付し、顧客本人がポータルで承認または辞退する。"
+    },
+    "service.progress": {
+      "tools": [
+        "deal_get",
+        "deal_status_update"
+      ],
+      "verify": "顧客の回答を確認し、担当者が受注・作業中・納品済みの状態を記録する。顧客本人は同じ案件の進捗を確認する。"
+    },
+    "service.deliver": {
+      "tools": [],
+      "verify": "運営者が案件で納品物を送付し、顧客本人がポータルで受取を記録する。"
     }
   },
   "settings": {
@@ -641,8 +683,30 @@
       ],
       "approval": [
         "受付フォームとSiteの公開版",
-        "Appの公開版"
-      ]
+        "Appの公開版",
+        "送付する見積と納品物"
+      ],
+      "appBase": {
+        "version": 1,
+        "package": "business-app",
+        "packageVersion": 1,
+        "presentation": {
+          "heading": "顧客ポータル",
+          "introduction": "案件の進捗と見積、納品物を確認できます。",
+          "layout": "standard"
+        },
+        "modules": [
+          {
+            "kind": "customer-portal",
+            "sections": [
+              "cases",
+              "requests",
+              "quotes",
+              "deliverables"
+            ]
+          }
+        ]
+      }
     }
   },
   "executions": {

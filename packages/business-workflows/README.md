@@ -17,3 +17,7 @@ Flapbase Cloud executes available actions through the authenticated MCP connecti
 ### 採用・応募管理
 
 採用プレビューが有効な環境で `recruitment` を選びます。`recruitment-install` に対象の `projectId` を渡し、求人の固定版を導入します。同じProjectで再実行すると同じ導入を開けます。運営者が事業管理で原稿を保存し、検証・承認した版を公開します。応募者はログインして応募し、同じ求人から選考状況を確認できます。`recruitment-applications` は委任先Projectの応募の状態と版を返します。運営者が選考中の応募を採用または見送りで確定すると、応募者本人の応募履歴に結果の通知が出ます。
+
+### 定型サービス
+
+`standard-service` の `settings["standard-service"].appBase` を `portal-draft` に渡し、顧客ポータルの候補版を保存します。運営者が公開した受付から問い合わせが入り、`intake-to-case` で案件につなぎます。運営者が見積を送り、顧客本人がポータルで回答します。`deal-status` と `update-deal-status` で案件の状態を扱います。納品物は運営者が案件から送り、顧客本人がポータルで受け取ります。
