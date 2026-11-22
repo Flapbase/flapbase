@@ -435,7 +435,8 @@
     },
     "schedule.operate": {
       "tools": [
-        "booking_records_list"
+        "booking_records_list",
+        "booking_outcome_record"
       ],
       "verify": "確定、振替、取消または参加の結果を記録する。"
     },
@@ -616,7 +617,8 @@
     ],
     "scheduled-intake": [
       "booking-offers",
-      "booking-records"
+      "booking-records",
+      "booking-outcome"
     ],
     "member-access": [
       "membership-roster"
@@ -864,6 +866,20 @@
             "limit": {
               "parameter": "limit"
             }
+          }
+        }
+      ]
+    },
+    "booking-outcome": {
+      "title": "確認済みの出欠結果を記録する",
+      "steps": [
+        {
+          "key": "run",
+          "tool": "booking_outcome_record",
+          "inputs": {
+            "bookingId": { "parameter": "bookingId" },
+            "outcome": { "parameter": "outcome" },
+            "idempotencyKey": { "parameter": "idempotencyKey" }
           }
         }
       ]
