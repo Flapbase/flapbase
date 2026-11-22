@@ -1,6 +1,6 @@
 {
   "name": "@flapbase/business-workflows",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Standard Flapbase business workflow definitions",
   "license": "Apache-2.0",
   "type": "module",
