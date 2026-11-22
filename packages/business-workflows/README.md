@@ -25,3 +25,7 @@ Flapbase Cloud executes available actions through the authenticated MCP connecti
 ### 有料会員の運営
 
 `paid-membership` の標準工程は、プランと公開記事の準備、本人の加入、閲覧権の確認、更新、解約後の満了を扱います。Site候補版と会員照会は共通の実行キーを参照します。プランの価格設定と公開は運営者、申込と解約は会員本人が既存画面から行います。エージェントは `app_template_get` の `business-app` から事業キー、共通業務、実行キー、固定版を取得します。
+
+### 予約サービスとイベント受付
+
+`booking-service` と `event-registration` は、受付条件の設定後に同じ公開・運営工程を使います。対象Projectのメニューを `booking-offers` で取得し、`site-draft` の `site_apply` に `set-booking` を渡します。人が公開した後は既存の予約受付から確定・変更・取消しを行い、`booking-records` と `booking-outcome` で実施結果を確認します。固定開催日は開催専用の担当者の日付別受付時間を使います。

@@ -100,28 +100,26 @@
       "acceptance": "加入・利用権の付与・提供・契約更新・解約時の利用権停止"
     },
     "booking-service": {
-      "status": "planned",
-      "templateId": null,
+      "status": "connected",
+      "templateId": "flapbase:booking-service",
       "title": "予約サービスを運営する",
       "purpose": "空き枠公開・予約・振替・実施後の案内",
       "workflows": [
-        "service-intake",
-        "scheduled-intake",
-        "app-release",
-        "app-change"
+        "booking-settings",
+        "booking-publication",
+        "booking-operation"
       ],
       "acceptance": "空き枠の確保・予約・通知・振替と取消・対応結果の確認"
     },
     "event-registration": {
-      "status": "planned",
-      "templateId": null,
+      "status": "connected",
+      "templateId": "flapbase:event-registration",
       "title": "イベント・セミナーを受け付ける",
       "purpose": "開催回・申込・当日受付・参加結果",
       "workflows": [
-        "service-intake",
-        "scheduled-intake",
-        "app-release",
-        "app-change"
+        "event-settings",
+        "booking-publication",
+        "booking-operation"
       ],
       "acceptance": "開催回の定員付き申込・確定案内・出欠・運営の結果確認"
     },
@@ -527,6 +525,68 @@
           "membership.end"
         ]
       }
+    ],
+    "booking-settings": [
+      {
+        "key": "schedule",
+        "title": "予約メニューと受付時間を設定する",
+        "phase": "plan",
+        "performer": "human",
+        "procedures": [
+          "booking.settings"
+        ]
+      }
+    ],
+    "event-settings": [
+      {
+        "key": "schedule",
+        "title": "開催日時と定員を設定する",
+        "phase": "plan",
+        "performer": "human",
+        "procedures": [
+          "event.settings"
+        ]
+      }
+    ],
+    "booking-publication": [
+      {
+        "key": "compose",
+        "title": "公開サイトに予約の入口を用意する",
+        "phase": "create",
+        "performer": "agent",
+        "procedures": [
+          "booking.site"
+        ]
+      },
+      {
+        "key": "release",
+        "title": "受付内容を確認して公開する",
+        "phase": "publish",
+        "performer": "human",
+        "procedures": [
+          "release.review"
+        ]
+      }
+    ],
+    "booking-operation": [
+      {
+        "key": "confirm",
+        "title": "申込・確定案内・変更を確認する",
+        "phase": "analyze",
+        "performer": "human",
+        "procedures": [
+          "booking.confirm"
+        ]
+      },
+      {
+        "key": "attendance",
+        "title": "実施・出欠結果を記録する",
+        "phase": "analyze",
+        "performer": "human",
+        "procedures": [
+          "booking.outcome"
+        ]
+      }
     ]
   },
   "procedures": {
@@ -738,6 +798,40 @@
         "membership_roster_list"
       ],
       "verify": "本人の解約後は支払済み期間だけ閲覧でき、満了後は本文が返らない。"
+    },
+    "booking.settings": {
+      "tools": [
+        "booking_offers_list"
+      ],
+      "verify": "運営者が既存の予約設定で、Project、受付時間、所要時間、受付締切、変更条件と定員を確認する。初期の受付は無料。"
+    },
+    "event.settings": {
+      "tools": [
+        "booking_offers_list"
+      ],
+      "verify": "開催日時と定員を設定する。日時が固定の開催では、開催専用の担当者の通常受付を空にし、日付別の受付時間だけを設定する。同じ担当者の受付時間は他メニューでも参照される。"
+    },
+    "booking.site": {
+      "tools": [
+        "booking_offers_list",
+        "site_get",
+        "site_apply",
+        "site_publish_request"
+      ],
+      "verify": "対象Projectの受付中メニューを選び、Site候補版に set-booking で結び付ける。運営者が版を確認して公開する。"
+    },
+    "booking.confirm": {
+      "tools": [
+        "booking_records_list"
+      ],
+      "verify": "本人の申込みと確定案内、日程変更・取消の結果を既存の予約画面で確認する。"
+    },
+    "booking.outcome": {
+      "tools": [
+        "booking_records_list",
+        "booking_outcome_record"
+      ],
+      "verify": "終了した予約だけを確認し、実施・出欠結果を対象Projectに記録する。"
     }
   },
   "settings": {
@@ -812,6 +906,54 @@
       "approval": [
         "会員プランの価格と閲覧権",
         "案内を掲載した公開版"
+      ]
+    },
+    "booking-service": {
+      "workflow_create": [
+        "name",
+        "start"
+      ],
+      "site_apply": [
+        "operations: set-booking",
+        "offerId",
+        "heading"
+      ],
+      "booking_records_list": [
+        "limit",
+        "after"
+      ],
+      "booking_outcome_record": [
+        "bookingId",
+        "outcome",
+        "idempotencyKey"
+      ],
+      "approval": [
+        "受付内容と日時",
+        "公開するSiteの版"
+      ]
+    },
+    "event-registration": {
+      "workflow_create": [
+        "name",
+        "start"
+      ],
+      "site_apply": [
+        "operations: set-booking",
+        "offerId",
+        "heading"
+      ],
+      "booking_records_list": [
+        "limit",
+        "after"
+      ],
+      "booking_outcome_record": [
+        "bookingId",
+        "outcome",
+        "idempotencyKey"
+      ],
+      "approval": [
+        "受付内容と日時",
+        "公開するSiteの版"
       ]
     }
   },
@@ -932,6 +1074,14 @@
     ],
     "membership-publication": [
       "site-draft"
+    ],
+    "booking-publication": [
+      "booking-offers",
+      "site-draft"
+    ],
+    "booking-operation": [
+      "booking-records",
+      "booking-outcome"
     ]
   },
   "sharedExecutions": {
