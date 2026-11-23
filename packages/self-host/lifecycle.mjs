@@ -151,7 +151,8 @@ export function createStoreLifecycle({ store, projectId, sendEmail }) {
         FROM vdb.records WHERE schema_id=$1 AND project_id=$2 AND data->>'kind'='lead' AND data->>'consent'='true'
         ORDER BY created_at DESC LIMIT 100`, [schemaId, projectId])
       const { rows: requests } = await client.query(`
-        SELECT record_id AS "requestId", data->>'orderId' AS "orderId", data->>'body' AS body, data->>'reply' AS reply
+        SELECT record_id AS "requestId",data->>'orderId' AS "orderId",data->>'body' AS body,data->>'reply' AS reply,
+          data->>'publishedReply' AS "publishedReply",data->>'assigneeId' AS "assigneeId",version::int
         FROM vdb.records WHERE schema_id=$1 AND project_id=$2 AND data->>'kind'='support_request'
         ORDER BY created_at DESC LIMIT 100`, [schemaId, projectId])
       const { rows: [counts] } = await client.query(`
@@ -160,9 +161,45 @@ export function createStoreLifecycle({ store, projectId, sendEmail }) {
           count(*) FILTER (WHERE schema_id=$1 AND data->>'kind'='follow_up' AND data->>'status'='sent')::int AS "followUps",
           count(*) FILTER (WHERE schema_id=$3 AND data->>'kind'='order' AND coalesce(data->>'status','paid')='paid')::int AS orders,
           count(*) FILTER (WHERE schema_id=$3 AND data->>'kind'='order' AND data->>'received'='true')::int AS downloads,
-          count(*) FILTER (WHERE schema_id=$1 AND data->>'kind'='support_request' AND data->>'reply' IS NULL)::int AS "supportPending"
+          count(*) FILTER (WHERE schema_id=$1 AND data->>'kind'='support_request' AND data->>'publishedReply' IS NULL)::int AS "supportPending"
         FROM vdb.records WHERE project_id=$2 AND schema_id IN ($1,$3)`, [schemaId, projectId, orderSchema])
-      return { emailPreviewEnabled: Boolean(sendEmail), productDraft: await draft(client, schemaId), followUpDraft: await draft(client, schemaId, 'follow_up_draft'), leads: includeEmails ? leads : [], requests, counts }
+      return { actor, emailPreviewEnabled: Boolean(sendEmail), productDraft: await draft(client, schemaId), followUpDraft: await draft(client, schemaId, 'follow_up_draft'), leads: includeEmails ? leads : [], requests, counts }
+    })
+  }
+
+  async function buyerSupport(client, actor, orderId) {
+    const { schemaId } = await context(client, actor, 'buyer')
+    const { rows } = await client.query(`
+      SELECT data->>'body' AS question,data->>'publishedReply' AS reply
+      FROM vdb.records WHERE schema_id=$1 AND project_id=$2 AND owner_principal_id=$3 AND access='private'
+        AND data->>'kind'='support_request' AND data->>'orderId'=$4
+      ORDER BY created_at DESC,record_id DESC LIMIT 50
+    `, [schemaId, projectId, actor, orderId])
+    return rows
+  }
+
+  async function reviewSupport(actor, { requestId, expectedVersion, action, body }) {
+    if (!storeId(requestId) || !Number.isSafeInteger(expectedVersion) || expectedVersion < 1 || !['assign','publish'].includes(action)) throw invalid()
+    const reply = action === 'publish' ? requiredText(body, 3000) : undefined
+    return store.transaction(async client => {
+      const { schemaId } = await context(client, actor, 'operator')
+      const request = schemaId && await store.get(client, schemaId, requestId, 'support_request')
+      if (!request) throw missing()
+      const prior = request.data
+      if (action === 'publish' && prior.assigneeId !== actor) throw forbidden()
+      if (prior.publishedReply) {
+        if (action === 'publish' && prior.publishedReply === reply && Number(request.version) === expectedVersion + 1) return { status: 'published' }
+        throw new StoreError(409, 'support_version_conflict')
+      }
+      if (action === 'assign' && prior.assigneeId === actor && Number(request.version) === expectedVersion + 1) return { status: 'assigned' }
+      const patch = action === 'assign' ? { assigneeId: actor } : { publishedReply: reply, publishedBy: actor, publishedAt: new Date().toISOString() }
+      const result = await client.query(`
+        UPDATE vdb.records SET data=data || $4::jsonb,version=version+1,updated_at=now()
+        WHERE schema_id=$1 AND project_id=$2 AND record_id=$3 AND data->>'kind'='support_request'
+          AND version=$5 AND data->>'publishedReply' IS NULL
+      `, [schemaId, projectId, requestId, patch, expectedVersion])
+      if (result.rowCount !== 1) throw new StoreError(409, 'support_version_conflict')
+      return { status: action === 'assign' ? 'assigned' : 'published' }
     })
   }
 
@@ -234,10 +271,12 @@ export function createStoreLifecycle({ store, projectId, sendEmail }) {
       const release = await store.get(client, orderSchema, order.data.revisionId, 'release')
       if (!release) throw missing()
       if (reply !== undefined) {
+        if (request.data.publishedReply || (request.data.assigneeId && request.data.assigneeId !== actor)) throw forbidden()
         const { rows: [updated] } = await client.query(`
           UPDATE vdb.records SET data=data||$4::jsonb,version=version+1,updated_at=clock_timestamp()
           WHERE schema_id=$1 AND project_id=$2 AND record_id=$3 AND data->>'kind'='support_request'
-            AND ($5::bigint IS NULL OR version=$5) RETURNING version::int`,
+            AND ($5::bigint IS NULL OR version=$5) AND data->>'publishedReply' IS NULL
+            AND (data->>'assigneeId' IS NULL OR data->>'assigneeId'=$4::jsonb->>'replyActorId') RETURNING version::int`,
         [schemaId, projectId, args.requestId, { reply, replyActorId: actor }, versioned ? args.expectedVersion : null])
         if (updated) return versioned ? { requestId: args.requestId, version: updated.version } : { requestId: args.requestId, draftSaved: true }
         const latest = await store.get(client, schemaId, args.requestId, 'support_request')
@@ -251,5 +290,5 @@ export function createStoreLifecycle({ store, projectId, sendEmail }) {
     })
   }
 
-  return { membershipDraft, installBase, registerLead, stopFollowUp, sendFollowUp, openSupport, operatorSnapshot, call }
+  return { buyerSupport, reviewSupport, membershipDraft, installBase, registerLead, stopFollowUp, sendFollowUp, openSupport, operatorSnapshot, call }
 }

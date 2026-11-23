@@ -237,21 +237,22 @@ export async function createFreeDownloadStore({ pool, projectId, directory, rend
     return { schemaId, workspaceId, order, release: release.data }
   }
 
-  async function receive(principalId, orderId, downloaded = false) {
+  async function receive(principalId, orderId, downloaded = false, buyerSupport) {
     return transaction(async client => {
       const { schemaId, order, release } = await paidOrder(client, principalId, orderId)
+      const supportThreads = !downloaded && buyerSupport ? await buyerSupport(client, principalId, orderId) : undefined
       if (release.membership) {
         if (downloaded || !canReadMembership(order.data, clock())) throw missing()
-        return release
+        return { ...release, supportThreads }
       }
-      if (release.coursePin && !downloaded) return release
+      if (release.coursePin && !downloaded) return { ...release, supportThreads }
       if (release.coursePin || !/^[0-9a-f]{64}$/.test(release.digest)) throw missing()
       if (downloaded && order.data.received !== true) {
         await client.query(`
           UPDATE vdb.records SET data=jsonb_set(data,'{received}','true')
           WHERE schema_id=$1 AND project_id=$2 AND record_id=$3 AND owner_principal_id=$4`, [schemaId, projectId, orderId, principalId])
       }
-      return { ...release, path: join(blobs, release.digest) }
+      return { ...release, path: join(blobs, release.digest), ...(supportThreads && { supportThreads }) }
     })
   }
 

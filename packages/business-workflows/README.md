@@ -31,7 +31,7 @@ The last command returns a pinned MCP request that you can hand to an OAuth-conn
 | --- | --- | --- |
 | `free-resource` | `local-base`、`/store` | 無料の資料公開、本人申込と受取 |
 | `digital-product-sales` | `local-base`、`/store` | デジタル商品の公開、テスト決済、提供、フォロー |
-| `customer-support` | `local-base`、`/store` | 本人の注文への問い合わせ、照会、MCPの返信案と運営画面 |
+| `customer-support` | `local-base`、`/store` | 本人の注文への問い合わせ、担当割当、MCPの返信案、確認後の本人向け公開 |
 | `recruitment` | `/recruitment` | 求人公開、応募、選考、本人への結果表示 |
 | `booking-service` | `/booking` | 受付枠の公開、予約、振替・取消、出欠 |
 | `event-registration` | `/booking` | 開催日時の公開、参加申込、参加結果 |

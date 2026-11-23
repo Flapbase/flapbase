@@ -65,6 +65,9 @@ const formOperations = {
     email: form.elements.email.value, consent: form.elements.consent.checked }, '登録しました'],
   'follow-up': form => ['/api/store/follow-up', { leadId: form.dataset.lead,
     subject: form.elements.subject.value, body: form.elements.body.value }, '案内を記録しました'],
+  'assign-support': form => ['/api/store/support/review', { action: 'assign', requestId: form.dataset.request, expectedVersion: Number(form.dataset.version) }, '担当を設定しました'],
+  'publish-support': form => ['/api/store/support/review', { action: 'publish', requestId: form.dataset.request,
+    expectedVersion: Number(form.dataset.version), body: form.elements.body.value }, '返信を公開しました'],
   support: form => ['/api/store/support', { orderId: form.dataset.order, body: form.elements.body.value }, '問い合わせを受け付けました'],
   unsubscribe: form => ['/unsubscribe', { leadId: form.dataset.lead }, '案内を停止しました'],
 }
@@ -81,6 +84,7 @@ for (const form of document.querySelectorAll('form[data-operation]')) {
       const data = await response.json()
       if (!response.ok) result.textContent = '操作できませんでした。設定と権限を確認してください'
       else if (data.status === 'sending' || data.status === 'delivery_unknown') result.textContent = '送信結果を確認しています'
+      else if (form.dataset.operation === 'assign-support' || form.dataset.operation === 'publish-support') location.reload()
       else {
         result.textContent = success
         form.reset()

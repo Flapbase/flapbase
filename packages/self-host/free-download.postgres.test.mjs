@@ -253,6 +253,24 @@ test('self-host completes the digital product and paid course flows through exte
       assert.deepEqual(await tool('support_reply_draft_save',draft),{requestId:opened.requestId,version:2})
       assert.equal((await mcp.callTool({name:'support_reply_draft_save',arguments:{...draft,body:'古い版の返信'}})).isError,true)
       assert.match(await (await get('/store', owner.cookie)).text(), /最初にキット内の案内をご覧ください/)
+      const correction = '最初にキットの説明書をご確認ください。'
+      const pendingReceipt = await (await get(reserved.receiptUrl, buyer.cookie)).text()
+      assert.match(pendingReceipt, /キットの使い方を教えてください/)
+      assert.doesNotMatch(pendingReceipt, /最初にキット内の案内をご覧ください/)
+      const reviewPath = '/api/store/support/review'
+      const reviewed = { ...opened, action: 'publish', expectedVersion: 3, body: correction }
+      assert.equal((await post(reviewPath, reviewed, buyer.cookie)).status, 403)
+      assert.equal((await post(reviewPath, reviewed, owner.cookie)).status, 403)
+      const assign = { ...opened, action: 'assign', expectedVersion: 2 }
+      assert.deepEqual(await (await post(reviewPath, assign, owner.cookie)).json(), { status: 'assigned' })
+      assert.deepEqual(await (await post(reviewPath, assign, owner.cookie)).json(), { status: 'assigned' })
+      assert.equal((await post(reviewPath, { ...reviewed, expectedVersion: 2 }, owner.cookie)).status, 409)
+      assert.equal((await tool('operations_summary')).supportPending, 1)
+      assert.deepEqual(await (await post(reviewPath, reviewed, owner.cookie)).json(), { status: 'published' })
+      assert.deepEqual(await (await post(reviewPath, reviewed, owner.cookie)).json(), { status: 'published' })
+      assert.equal((await mcp.callTool({ name: 'support_reply_draft_save', arguments: { ...draft, expectedVersion: 4 } })).isError,true)
+      assert.match(await (await get(reserved.receiptUrl, buyer.cookie)).text(), /キットの説明書をご確認ください/)
+      assert.equal((await get(reserved.receiptUrl, other.cookie)).status, 404)
       assert.deepEqual(await tool('operations_summary'), { projectId, leads: 1, followUps: 1, orders: 3, downloads: 3, supportPending: 0 })
       const artifactRef = randomUUID(), chapterId = randomUUID(), lessonId = randomUUID(), lockedLessonId = randomUUID()
       const courseDocument = { contractVersion: 'course-document/v1', revision: 1,

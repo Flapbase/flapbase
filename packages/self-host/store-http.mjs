@@ -40,7 +40,7 @@ ${productLinks ? `<section><h2>公開済みの商品</h2><ul>${productLinks}</ul
 ${courseKnowledge ? '<p><a href="/training/questions">教材で答えられなかった質問</a></p>' : ''}`)
 }
 
-function renderOperations({ leads, requests, counts, followUpDraft, emailPreviewEnabled }) {
+function renderOperations({ actor, leads, requests, counts, followUpDraft, emailPreviewEnabled }) {
   return `<section><h2>見込客とフォロー</h2><p>登録 ${counts.leads}件・案内プレビュー ${counts.followUps}件</p>
 ${emailPreviewEnabled ? '<p>案内はプレビューに記録します。</p>' : '<p>案内プレビューは設定されていません。</p>'}
 ${leads.map(lead => `<form data-operation="follow-up" data-lead="${lead.id}">
@@ -48,7 +48,14 @@ ${leads.map(lead => `<form data-operation="follow-up" data-lead="${lead.id}">
 <label>案内文 <textarea name="body" required maxlength="3000">${escape(followUpDraft?.body ?? '')}</textarea></label>
 <button${emailPreviewEnabled ? '' : ' disabled'}>この内容で案内する</button><p role="status"></p></form>`).join('')}</section>
 <section><h2>購入者サポート</h2>${requests.length ? requests.map(request => `<article><p>${escape(request.body)}</p>
-<p>注文 ${request.orderId}</p>${request.reply ? `<p>返信の下書き</p><p class="description">${escape(request.reply)}</p>` : ''}</article>`).join('') : '<p>問い合わせはまだありません</p>'}</section>`
+<p>注文 ${request.orderId}</p>${request.publishedReply ? `<p>公開済みの返信</p><p class="description">${escape(request.publishedReply)}</p>`
+  : request.assigneeId === actor
+    ? `<form data-operation="publish-support" data-request="${request.requestId}" data-version="${request.version}">
+       <label>返信<textarea name="body" required maxlength="3000">${escape(request.reply ?? '')}</textarea></label>
+       <button>確認した返信を公開</button><p role="status"></p></form>`
+    : `${request.reply ? '<p>返信の下書き</p><p class="description">' + escape(request.reply) + '</p>' : ''}
+       <form data-operation="assign-support" data-request="${request.requestId}" data-version="${request.version}">
+         <button>${request.assigneeId ? '担当を引き継ぐ' : '担当する'}</button><p role="status"></p></form>`}</article>`).join('') : '<p>問い合わせはまだありません</p>'}</section>`
 }
 
 function renderReceipt(orderId, release, lifecycle) {
@@ -58,7 +65,11 @@ function renderReceipt(orderId, release, lifecycle) {
   : `<a href="/receive/orders/${orderId}/download">資料をダウンロード</a>`}</p>
 ${lifecycle ? `<section><h2>問い合わせる</h2><form data-operation="support" data-order="${orderId}">
 <label>問い合わせ内容 <textarea name="body" required maxlength="3000"></textarea></label>
-<button>問い合わせを送る</button><p role="status"></p></form></section>` : ''}`)
+<button>問い合わせを送る</button><p role="status"></p></form></section>
+${release.supportThreads?.length ? `<section><h2>問い合わせ履歴</h2>${release.supportThreads.map(thread =>
+  '<article><p class="description">' + escape(thread.question) + '</p>' + (thread.reply
+    ? '<h3>運営からの返信</h3><p class="description">' + escape(thread.reply) + '</p>' : '<p>返信をお待ちください。</p>') +
+  '</article>').join('')}</section>` : ''}` : ''}`)
 }
 
 export function send(res, status, value) {
@@ -141,6 +152,7 @@ export async function handleStore(req, res, { route, origin, store, lifecycle, p
     }
   }
   const followUp = lifecycle && path === '/api/store/follow-up' && req.method === 'POST'
+  const reviewSupport = lifecycle && path === '/api/store/support/review' && req.method === 'POST'
   const support = lifecycle && path === '/api/store/support' && req.method === 'POST'
   const product = /^\/products\/([0-9a-f-]{36})$/.exec(path)
   const receipt = /^\/receive\/orders\/([0-9a-f-]{36})(\/download)?$/.exec(path)
@@ -151,8 +163,8 @@ export async function handleStore(req, res, { route, origin, store, lifecycle, p
     send(res, 200, await store.page(product[1]))
     return true
   }
-  if (!checkout && !publish && !manage && !followUp && !support && !(receipt && req.method === 'GET')) return false
-  if ((checkout || publish || followUp || support) && req.headers.origin !== origin) throw new StoreError(403, 'forbidden')
+  if (!checkout && !publish && !manage && !followUp && !support && !reviewSupport && !(receipt && req.method === 'GET')) return false
+  if ((checkout || publish || followUp || support || reviewSupport) && req.headers.origin !== origin) throw new StoreError(403, 'forbidden')
   const human = await resolveHuman()
   if (!human) {
     if (manage || receipt && !receipt[2]) {
@@ -183,11 +195,13 @@ export async function handleStore(req, res, { route, origin, store, lifecycle, p
     send(res, 201, await store.publish(human.principalId, { listingId, title, description, fileName, amountMinor, bytes: Buffer.from(content, 'base64') }))
   } else if (followUp) {
     send(res, 200, await lifecycle.sendFollowUp(human.principalId, await input(req, 16_000)))
+  } else if (reviewSupport) {
+    send(res, 200, await lifecycle.reviewSupport(human.principalId, await input(req, 16_000)))
   } else if (support) {
     send(res, 201, await lifecycle.openSupport(human.principalId, await input(req, 16_000)))
   } else if (receipt) {
     let release
-    try { release = await store.receive(human.principalId, receipt[1], !!receipt[2]) }
+    try { release = await store.receive(human.principalId, receipt[1], !!receipt[2], lifecycle?.buyerSupport) }
     catch (error) {
       if (!receipt[2] && error instanceof StoreError && error.message === 'payment_pending') {
         send(res, 409, html('決済確認', '<h1>決済を確認しています</h1><p>しばらくしてからこのページを読み込み直してください。</p>'))

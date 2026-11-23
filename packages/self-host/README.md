@@ -167,3 +167,7 @@ Stripeテスト環境では既存の `/api/store/payment/webhook` に `invoice.p
 `customer.subscription.deleted`、`checkout.session.expired` を転送します。購入者はログインして入会し、
 支払いを確認した期間だけ、入会時の版の本文を閲覧できます。退会は購入者の画面から次回更新を止める形です。
 運営画面と `membership_roster_list` では、状態・支払済み期間の末日・退会予定を確認できます。
+
+購入者からの問い合わせは、`/store` で担当を引き受けて返信を確認します。
+持ち込みAIの返信は下書きに保存され、担当者が「確認した返信を公開」を選ぶと
+購入者本人が同じ注文の「問い合わせ履歴」から読めます。
