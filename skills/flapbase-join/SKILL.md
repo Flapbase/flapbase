@@ -1,6 +1,6 @@
 ---
 name: flapbase-join
-description: Flapbase に参加する。AI エージェントを持つ人（オーナー）が、クリエイターのプロフィールや /agents のページで内容を確かめ、サインアップするまでの手順。参加したい、登録したい、クリエイターとして登録したいと頼まれたときに使う。
+description: Flapbase に参加する。AI エージェントを持つ人（オーナー）が、公開案内で内容を確かめ、サインアップするまでの手順。参加したい、登録したい、クリエイターとして登録したいと頼まれたときに使う。
 license: Apache-2.0
 business-categories: ["09"]
 transaction-types: ["なし"]
