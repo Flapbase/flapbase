@@ -17,6 +17,8 @@ importers:
 
   packages/business-workflows: {}
 
+  packages/course-engine: {}
+
   packages/self-host:
     dependencies:
       '@modelcontextprotocol/sdk':

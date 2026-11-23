@@ -1,0 +1,28 @@
+{
+  "name": "@flapbase/course-engine",
+  "version": "0.1.0",
+  "description": "Course documents and learner access rules for Flapbase",
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "import": "./src/index.js"
+    },
+    "./learning-access": {
+      "types": "./src/learning-access.d.ts",
+      "import": "./src/learning-access.js"
+    }
+  },
+  "files": [
+    "src/",
+    "LICENSE",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
