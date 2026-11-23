@@ -60,7 +60,7 @@ test('the Cloud compatibility check requires all 11 exact execution catalogs and
 
 test('Cloud transport uses the existing MCP endpoint and refuses a redirect or mismatched result ID', async () => {
   const call = createCloudToolCaller('test-token', async (url, options) => {
-    assert.equal(url, 'https://mcp.flapbase.com/creative/mcp')
+    assert.equal(url, 'https://mcp.flapbase.com/mcp')
     assert.equal(options.redirect, 'error')
     assert.equal(options.headers.Authorization, 'Bearer test-token')
     const request = JSON.parse(options.body)

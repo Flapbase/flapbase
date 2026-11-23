@@ -23,7 +23,7 @@ transaction-types: ["なし"]
 1. 依頼主に、何についての意見か（道具やスキルの名前、Cloud の画面）と、何が起きたか、またはどうしてほしいかを聞きます。
 2. 意見の種類を、改善の提案（suggestion）・不具合（bug）・そのほか（other）から選びます。
 3. 送る文をそのまま見せて、送ってよいか聞きます。よいと言われたときだけ送ってください。依頼主が話していない事情は、足さないでください。サイトの URL・顧客の名前・連絡先は、依頼主が入れると言ったときだけ入れます。
-4. Flapbase Cloud にログインして MCP（https://mcp.flapbase.com/creative/mcp）に接続し、`feedback_send` に `kind`・`body`・`about`（例：flapbase-site-check）と、新しい UUID の `idempotencyKey` を渡します。送り直すときは、同じ値を使います。返事は、ワークスペースで受け取れます。
+4. Flapbase Cloud にログインして MCP（https://mcp.flapbase.com/mcp）に接続し、`feedback_send` に `kind`・`body`・`about`（例：flapbase-site-check）と、新しい UUID の `idempotencyKey` を渡します。送り直すときは、同じ値を使います。返事は、ワークスペースで受け取れます。
 
 送った意見は、Flapbase の運営が読み、改善に使います。
 

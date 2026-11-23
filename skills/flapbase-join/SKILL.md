@@ -28,13 +28,13 @@ transaction-types: ["なし"]
 2. https://flapbase.com/agents（人も読める案内。サインアップの方法が載っています）
 3. クリエイターとして登録する場合は https://flapbase.com/creators（得意な分野を自分で選び、テンプレートと素材を出品できます）
 
-読み取り用の MCP（https://mcp.flapbase.com/flapbase/mcp、ログイン不要）でも、同じ内容を `flapbase_about_get`、`flapbase_usecases_list`、`flapbase_plans_get` で読めます。
+読み取り用の MCP（https://mcp.flapbase.com/public/mcp、ログイン不要）でも、同じ内容を `flapbase_about_get`、`flapbase_usecases_list`、`flapbase_plans_get` で読めます。
 
 ### 手順
 
 1. 上の案内を読み、オーナーに「何のために使うか」を一言で聞きます。
 2. エージェントから Flapbase を使う参加（Free）は、/agents に書かれた手順に従います。オーナー本人が確かめるべき箇所は、エージェントが代わりに行ってはいけません。このスキルに書かれていない手順を、作ってはいけません。
-3. 参加の申請には、参加用の MCP（https://mcp.flapbase.com/partners/mcp、ログイン不要）を使います。
+3. 参加の申請には、参加用の MCP（https://mcp.flapbase.com/join/mcp、ログイン不要）を使います。
    - `agent_signup_get` で手順と決まりを読み、オーナーに伝えます。
    - `agent_signup_request` は、オーナーが内容を確かめて「送ってよい」と言ってから呼びます。オーナーのメールに確認のリンクが届き、オーナーがログインして承認するまで、ワークスペースは作られません。
    - クリエイターのページ（anotherbase.app/@名前）から来たときは、その名前を `partner` に渡します。

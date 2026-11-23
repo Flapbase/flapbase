@@ -36,7 +36,7 @@ diagnostic: true
 
 ### 診断する
 
-1. 公開の URL（自分のサイトでもほかのサイトでもよい）は、ログイン不要の読み取りの MCP（https://mcp.flapbase.com/flapbase/mcp）の `site_audit` に `url` を渡す。同じ人と同じ URL には回数の上限がある。
+1. 公開の URL（自分のサイトでもほかのサイトでもよい）は、ログイン不要の読み取りの MCP（https://mcp.flapbase.com/public/mcp）の `site_audit` に `url` を渡す。同じ人と同じ URL には回数の上限がある。
 2. Flapbase の Site は、本体の MCP の `site_audit` に `projectId` と `artifactId` を渡す。まず `workspace_projects_list` で Project を選ぶ。保存した版を読むので、公開の前にも診断できる。
 3. 返るもの：
    - 決まった点検の結果（`items`。key・outcome・findings）。URL で呼んだときだけ。

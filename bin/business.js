@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto'
 import { readFile } from 'node:fs/promises'
 
 const path = new URL('../packages/business-workflows/.base/business-workflows.json', import.meta.url)
-const endpoint = 'https://mcp.flapbase.com/creative/mcp'
+const endpoint = 'https://mcp.flapbase.com/mcp'
 const localWorkflows = {
   'free-resource': 'flapbase:resource-distribution',
   'digital-product-sales': 'flapbase:resource-distribution',

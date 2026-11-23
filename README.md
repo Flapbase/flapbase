@@ -75,7 +75,7 @@ Use the [agent guide](AGENTS.md) to map an owner's request to one of the 11 work
 For Claude Code, register the remote server and open `/mcp` to connect.
 
 ```sh
-claude mcp add --transport http flapbase https://mcp.flapbase.com/creative/mcp
+claude mcp add --transport http flapbase https://mcp.flapbase.com/mcp
 ```
 
 For Cursor, merge this entry into `.cursor/mcp.json` and connect from MCP settings.
@@ -84,7 +84,7 @@ For Cursor, merge this entry into `.cursor/mcp.json` and connect from MCP settin
 {
   "mcpServers": {
     "flapbase": {
-      "url": "https://mcp.flapbase.com/creative/mcp"
+      "url": "https://mcp.flapbase.com/mcp"
     }
   }
 }

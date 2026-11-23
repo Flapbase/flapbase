@@ -22,16 +22,16 @@ transaction-types: ["なし"]
 
 | 種類 | URL | ログイン |
 | --- | --- | --- |
-| 本体 | https://mcp.flapbase.com/creative/mcp | 必要（OAuth） |
-| 読み取り | https://mcp.flapbase.com/flapbase/mcp | 不要 |
-| 参加 | https://mcp.flapbase.com/partners/mcp | 不要 |
+| 本体 | https://mcp.flapbase.com/mcp | 必要（OAuth） |
+| 読み取り | https://mcp.flapbase.com/public/mcp | 不要 |
+| 参加 | https://mcp.flapbase.com/join/mcp | 不要 |
 
 依頼主のワークスペースで制作するときは「本体」を使います。「読み取り」で見られるのは、公開されている情報だけです。「参加」でできるのは、オーナーが Flapbase に参加する申請を作ることだけです。接続先の URL は変わることがあるので、最新のものは https://flapbase.com/llms.txt の接続方法の説明で確かめてください。
 
 ### 本体に接続する手順
 
 1. 本体の URL を、Streamable HTTP の MCP として登録します。
-2. 認可に必要な情報は、本体と同じ origin の `/.well-known/oauth-protected-resource/creative/mcp` にあります。client_id には、Client ID Metadata Document の HTTPS の URL を使います。動的なクライアント登録には対応していません。
+2. 認可に必要な情報は、本体と同じ origin の `/.well-known/oauth-protected-resource/mcp` にあります。client_id には、Client ID Metadata Document の HTTPS の URL を使います。動的なクライアント登録には対応していません。
 3. 依頼主が Flapbase にログインし、許可の画面でワークスペースを1つ選びます。ログインと許可は、依頼主本人が行います。
 4. 許可の範囲は、読む（`app.read`）と、作って保存する（`skill.invoke`）の2つです。読むだけを許可した場合、書き込む道具は一覧に表示されません。
 5. 許可は30日で切れます。切れたら、依頼主にもう一度許可を頼んでください。

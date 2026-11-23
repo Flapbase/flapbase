@@ -18,7 +18,7 @@ transaction-types: ["継続サービス"]
 
 ## 手順
 
-Flapbase Cloud の MCP（https://mcp.flapbase.com/creative/mcp。ログインが要る）の `copy_assist` を使う。接続のしかたは flapbase-connect-mcp を見る。
+Flapbase Cloud の MCP（https://mcp.flapbase.com/mcp。ログインが要る）の `copy_assist` を使う。接続のしかたは flapbase-connect-mcp を見る。
 
 1. 元の文を `text` に、事実の材料（サイトのページ・料金・FAQ・事例。依頼主が使ってよいと言ったものだけ）を `materials` に入れる。新しい UUID を `idempotencyKey` に付ける。
    - 文を直すだけなら `mode: "fix"`。直した文が1〜2案、AI っぽさの目印、何を替えたかが返る。
