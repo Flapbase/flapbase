@@ -40,6 +40,16 @@ export const RECRUITMENT_TOOLS = [
   tool('recruitment_applications_list', '対象Projectの応募の状態と版を確認します。応募本文は返しません。', true, { projectId: requestId }),
 ]
 
+const bookingLimit = { type: 'integer', minimum: 1, maximum: 100 }
+export const BOOKING_TOOLS = [
+  tool('booking_offers_list', '対象Projectの公開中の予約メニューと定員を取得します。', true, { projectId: requestId, limit: bookingLimit }, ['projectId']),
+  tool('booking_records_list', '対象Projectの予約状況を取得します。', true, { projectId: requestId, bookingId: requestId, limit: bookingLimit }, ['projectId']),
+  tool('booking_outcome_record', '確認済みの出欠結果を記録します。', false, {
+    projectId: requestId, bookingId: requestId, idempotencyKey: requestId,
+    outcome: { type: 'string', enum: ['attended', 'no_show', 'host_issue'] },
+  }),
+]
+
 function localEndpoint(origin, path) {
   const url = new URL(origin)
   if (url.origin !== origin || url.protocol !== 'http:' || !['localhost', '127.0.0.1'].includes(url.hostname)) {
@@ -86,9 +96,15 @@ export function createRecruitmentMcpServer(options) {
   return createLocalMcpServer({ ...options, path: '/api/recruitment/agent', tools: RECRUITMENT_TOOLS })
 }
 
+export function createBookingMcpServer(options) {
+  return createLocalMcpServer({ ...options, path: '/api/booking/agent', tools: BOOKING_TOOLS })
+}
+
 if (process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url) {
   const origin = process.env.FLAP_ORIGIN ?? `http://127.0.0.1:${process.env.FLAP_PORT ?? 5264}`
-  const server = process.env.FLAP_RECRUITMENT_AGENT_TOKEN
+  const server = process.env.FLAP_BOOKING_AGENT_TOKEN
+    ? createBookingMcpServer({ origin, token: process.env.FLAP_BOOKING_AGENT_TOKEN })
+    : process.env.FLAP_RECRUITMENT_AGENT_TOKEN
     ? createRecruitmentMcpServer({ origin, token: process.env.FLAP_RECRUITMENT_AGENT_TOKEN })
     : createStoreMcpServer({ origin, token: process.env.FLAP_STORE_AGENT_TOKEN })
   await server.connect(new StdioServerTransport())

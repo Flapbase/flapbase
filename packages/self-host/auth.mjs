@@ -6,7 +6,7 @@ export function createSelfHostedAuthPool(connectionString) {
   return new Pool({ connectionString, max: 1, options: '-c search_path=flap_auth,pg_catalog' })
 }
 
-export function selfHostedAuthOptions(pool, { origin, secret }) {
+export function selfHostedAuthOptions(pool, { origin, secret, sendVerificationEmail }) {
   return {
     database: pool,
     secret,
@@ -15,6 +15,7 @@ export function selfHostedAuthOptions(pool, { origin, secret }) {
     telemetry: { enabled: false },
     advanced: { ipAddress: { ipAddressHeaders: ['x-flap-loopback-client-ip'] } },
     emailAndPassword: { enabled: true },
+    ...(sendVerificationEmail && { emailVerification: { sendVerificationEmail, expiresIn: 900 } }),
     account: { accountLinking: { enabled: false } },
     session: { cookieCache: { enabled: false }, disableSessionRefresh: true },
     rateLimit: { enabled: true },
@@ -22,13 +23,16 @@ export function selfHostedAuthOptions(pool, { origin, secret }) {
 }
 
 /** The adapter returns a server-verified (issuer, subject) pair. Keep the issuer stable across host moves. */
-export function createBetterAuthAdapter(pool, { origin, issuer, secret }) {
+export function createBetterAuthAdapter(pool, { origin, issuer, secret, sendVerificationEmail }) {
   if (!issuer || !secret || secret.length < 32) throw new Error('A stable issuer and at least 32 characters of session secret are required')
-  const auth = betterAuth(selfHostedAuthOptions(pool, { origin, secret }))
+  const auth = betterAuth(selfHostedAuthOptions(pool, { origin, secret, sendVerificationEmail }))
   return {
+    emailVerification: Boolean(sendVerificationEmail),
     async verify(headers) {
       const session = await auth.api.getSession({ headers })
-      return session ? { issuer, subject: session.user.id } : null
+      return session ? { issuer, subject: session.user.id,
+        ...(sendVerificationEmail && session.user.emailVerified && { verifiedEmail: session.user.email }),
+      } : null
     },
     async handle(request) {
       const response = await auth.handler(request)
@@ -42,7 +46,7 @@ export function createBetterAuthAdapter(pool, { origin, issuer, secret }) {
 }
 
 const select = `
-  SELECT p.principal_id, p.principal_kind, p.status, i.status AS link_status
+  SELECT p.principal_id, p.principal_kind, p.status, p.email, i.status AS link_status
   FROM identity.external_identities i
   JOIN identity.principals p USING (principal_id)
   WHERE i.provider=$1 AND i.provider_subject=$2`
@@ -53,20 +57,31 @@ export function createHumanSessionResolver(pool, adapter) {
   return async headers => {
     const identity = await adapter.verify(headers)
     if (!identity) return null
-    const { issuer, subject } = identity
+    const { issuer, subject, verifiedEmail } = identity
     if (typeof issuer !== 'string' || typeof subject !== 'string' || !issuer.trim() || !subject.trim()
         || issuer.length > 512 || subject.length > 512) return null
     const client = await pool.connect()
     try {
       const scope = [issuer, subject]
       const existing = (await client.query(select, scope)).rows[0]
-      if (existing) return activeHuman(existing)
+      const resolve = async row => {
+        const human = activeHuman(row)
+        if (human && !row.email && typeof verifiedEmail === 'string') {
+          // This is metadata for an already linked Principal. It never links identities by email.
+          await client.query(`
+            UPDATE identity.principals SET email=$2 WHERE principal_id=$1 AND email IS NULL AND status='active'
+              AND NOT EXISTS(SELECT 1 FROM identity.principals WHERE principal_kind='human' AND email=$2)
+          `, [human.principalId, verifiedEmail.trim().toLowerCase()])
+        }
+        return human
+      }
+      if (existing) return await resolve(existing)
 
       await client.query('BEGIN')
       try {
         await client.query("SELECT pg_advisory_xact_lock(hashtext($1),hashtext($2))", scope)
         const concurrent = (await client.query(select, scope)).rows[0]
-        let human = activeHuman(concurrent)
+        let human = await resolve(concurrent)
         if (!concurrent) {
           // A new sign-in creates a Human without membership. Only an explicit verified link may reuse an existing Human.
           const { rows: [principal] } = await client.query(
@@ -76,7 +91,7 @@ export function createHumanSessionResolver(pool, adapter) {
             'INSERT INTO identity.external_identities(principal_id,provider,provider_subject) VALUES($1,$2,$3)',
             [principal.principal_id, ...scope],
           )
-          human = { principalId: principal.principal_id }
+          human = await resolve({ ...principal, principal_kind: 'human', status: 'active', link_status: 'active' })
         }
         await client.query('COMMIT')
         return human

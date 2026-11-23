@@ -79,5 +79,7 @@ test('local-base uses the existing install contract for free resources, digital 
   const recruitment = await businessCommand(['inspect', 'recruitment'])
   assert.equal(recruitment.localLaunch.path, '/recruitment')
   await assert.rejects(businessCommand(['local-base', 'recruitment']), /app_add_recruitment/)
-  await assert.rejects(businessCommand(['local-base', 'booking-service']), /未対応/)
+  assert.equal((await businessCommand(['inspect', 'booking-service'])).localLaunch.path, '/booking')
+  assert.equal((await businessCommand(['inspect', 'event-registration'])).localLaunch.path, '/booking')
+  await assert.rejects(businessCommand(['local-base', 'member-ai-course']), /未対応/)
 })

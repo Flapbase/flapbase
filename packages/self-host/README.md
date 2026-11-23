@@ -66,8 +66,15 @@ With the local PostgreSQL executables on your path, run `pnpm --filter @flapbase
 
 公開求人はデータディレクトリから配信し、閲覧時にPostgreSQLへ接続しません。1プロセスで稼働させ、復旧時はPostgreSQLとデータディレクトリを同じバックアップから戻してください。選考結果は応募者の画面に表示します。
 
-## 予約サービスとイベント受付のローカルDB
+## 予約サービスとイベント受付
 
-`pnpm --filter @flapbase/self-host setup booking` で、既存の予約SQLとProjectへの紐づけを導入できます。個別予約と定員付きイベントは同じ `booking.mjs` を使います。空き枠計算・確定・振替・取消・出欠は使い捨てPostgreSQLのテストで確認できます。
+通常のセットアップ後に `pnpm --filter @flapbase/self-host setup booking` を実行します。予約用のPostgreSQL操作は、既存の予約SQLから生成しています。
 
-この段階の入口はNodeモジュールです。ローカルの公開受付・運営画面・MCPの起動設定は接続前です。予約の確定には既存SQLと同じくメールを確認済みのHuman Principalが必要です。通知はDBに記録し、外部へ送信しません。
+1. `FLAP_BOOKING_PROJECT_ID` にProjectのUUID、`FLAP_BOOKING_DATA_DIR` に永続ディレクトリを設定します。新規Projectの場合は運営者の `FLAP_STORE_OWNER_ID` を設定し、`node packages/self-host/setup.mjs project` を実行します。複数事業の環境変数を同時に設定した場合は、商品、採用、予約の順で初期化対象を選びます。
+2. 起動後、運営者として `/booking` を開きます。「毎週の予約」または「指定日のイベント」を選び、受付時間と定員を設定して公開します。
+3. 公開ページから別のアカウントでログインし、確認用リンクを発行します。ローカル運用者は `FLAP_BOOKING_DATA_DIR/<ProjectのUUID>/verification-preview/` の確認メールを扱います。リンクには短い有効期限があります。送信先本人がリンクを開いた後、空き枠から申し込めます。
+4. 受付完了ページで本人の予約・振替・取消を確認できます。運営者は `/booking` で申込を確認し、開始時刻以降に出欠を記録できます。
+
+MCPを使う場合、`FLAP_BOOKING_AGENT_PRINCIPAL_ID` に対象Projectの運営権限を持つHuman Principalを設定し、サーバーとMCPクライアントに同じ `FLAP_BOOKING_AGENT_TOKEN` を設定します。既存の `mcp.mjs` から `booking_offers_list`、`booking_records_list`、`booking_outcome_record` を利用できます。
+
+受付ページは保存した公開版を配信します。空き枠と申込はPostgreSQLで照合し、決済や外部カレンダー・メールへの送信は行いません。確認メールはローカル試験向けで、確認用ディレクトリをWeb公開しないでください。受入は `booking-http.postgres.test.mjs` を実行すると再現できます。

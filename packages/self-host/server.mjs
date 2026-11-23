@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import { createServer } from 'node:http'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
@@ -11,17 +12,20 @@ import { createStripePayment, PaymentError } from './payment.mjs'
 import { handleStore, renderProduct, sendStoreError } from './store-http.mjs'
 import { createRecruitment } from './recruitment.mjs'
 import { handleRecruitment } from './recruitment-http.mjs'
+import { createBooking } from './booking.mjs'
+import { handleBooking } from './booking-http.mjs'
 
 const authPaths = new Set(['/api/auth/sign-up/email', '/api/auth/sign-in/email', '/api/auth/sign-out'])
 const files = new Map([
   ['/', ['index.html', 'text/html; charset=utf-8']],
   ['/auth-ui.js', ['auth-ui.js', 'text/javascript; charset=utf-8']],
+  ['/booking-ui.js', ['booking-ui.js', 'text/javascript; charset=utf-8']],
   ['/recruitment-ui.js', ['recruitment-ui.js', 'text/javascript; charset=utf-8']],
   ['/store-ui.js', ['store-ui.js', 'text/javascript; charset=utf-8']],
   ['/store.css', ['store.css', 'text/css; charset=utf-8']],
 ])
 
-export function createSelfHostedServer({ origin, pool, adapter, store, lifecycle, payment, delegation, recruitment, recruitmentDelegation }) {
+export function createSelfHostedServer({ origin, pool, adapter, store, lifecycle, payment, delegation, recruitment, recruitmentDelegation, booking, bookingDelegation }) {
   const url = new URL(origin)
   if (url.origin !== origin || url.protocol !== 'http:' || !['localhost', '127.0.0.1'].includes(url.hostname)) {
     throw new Error('The password reference server requires an HTTP loopback origin')
@@ -36,8 +40,10 @@ export function createSelfHostedServer({ origin, pool, adapter, store, lifecycle
         res.writeHead(403).end()
         return
       }
-      if (authPaths.has(route.pathname) && req.method === 'POST') {
-        if (req.headers.origin !== origin) {
+      const sendVerification = adapter.emailVerification && route.pathname === '/api/auth/send-verification-email' && req.method === 'POST'
+      const verifyEmail = adapter.emailVerification && route.pathname === '/api/auth/verify-email' && req.method === 'GET'
+      if (authPaths.has(route.pathname) && req.method === 'POST' || sendVerification || verifyEmail) {
+        if (!verifyEmail && req.headers.origin !== origin) {
           res.writeHead(403).end()
           return
         }
@@ -54,6 +60,9 @@ export function createSelfHostedServer({ origin, pool, adapter, store, lifecycle
       if (recruitment && await handleRecruitment(req, res, {
         route, origin, recruitment, delegation: recruitmentDelegation,
         resolveHuman: () => resolveHuman(fromNodeHeaders(req.headers)),
+      })) return
+      if (booking && await handleBooking(req, res, {
+        route, origin, booking, delegation: bookingDelegation, resolveHuman: () => resolveHuman(fromNodeHeaders(req.headers)),
       })) return
       const file = req.method === 'GET' ? files.get(route.pathname) : undefined
       if (!file) {
@@ -82,7 +91,24 @@ async function start() {
   const origin = process.env.FLAP_ORIGIN ?? `http://127.0.0.1:${port}`
   const pool = createSelfHostedAuthPool(process.env.FLAP_AUTH_DATABASE_URL)
   try {
-    const adapter = createBetterAuthAdapter(pool, { origin, issuer: process.env.FLAP_AUTH_ISSUER, secret: process.env.FLAP_AUTH_SECRET })
+    const bookingProject = process.env.FLAP_BOOKING_PROJECT_ID
+    const bookingDirectory = process.env.FLAP_BOOKING_DATA_DIR
+    const bookingToken = process.env.FLAP_BOOKING_AGENT_TOKEN
+    const bookingPrincipal = process.env.FLAP_BOOKING_AGENT_PRINCIPAL_ID
+    if ((bookingToken || bookingPrincipal) && (!bookingProject || !storeId(bookingPrincipal) || !/^[!-~]{32,}$/.test(bookingToken ?? ''))) {
+      throw new Error('Set the booking Project, operator principal and an agent token of at least 32 characters')
+    }
+    const bookingDelegation = bookingToken ? { principalId: bookingPrincipal, tokenDigest: sha('Bearer ' + bookingToken) } : undefined
+    let booking, sendVerificationEmail
+    if (bookingProject || bookingDirectory) {
+      if (!bookingDirectory) throw new Error('Set FLAP_BOOKING_DATA_DIR for booking publications and verification previews')
+      booking = createBooking({ pool, projectId: bookingProject, directory: bookingDirectory })
+      const preview = join(bookingDirectory, bookingProject, 'verification-preview')
+      await mkdir(preview, { recursive: true, mode: 0o700 })
+      sendVerificationEmail = ({ user, url }) => writeFile(join(preview, randomUUID() + '.json'),
+        JSON.stringify({ to: user.email, url }), { mode: 0o600, flag: 'wx' })
+    }
+    const adapter = createBetterAuthAdapter(pool, { origin, issuer: process.env.FLAP_AUTH_ISSUER, secret: process.env.FLAP_AUTH_SECRET, sendVerificationEmail })
     const projectId = process.env.FLAP_STORE_PROJECT_ID
     const directory = process.env.FLAP_STORE_DATA_DIR
     const token = process.env.FLAP_STORE_AGENT_TOKEN
@@ -116,7 +142,7 @@ async function start() {
     const recruitment = recruitmentProject || recruitmentDirectory
       ? await createRecruitment({ pool, projectId: recruitmentProject, directory: recruitmentDirectory })
       : undefined
-    const server = createSelfHostedServer({ origin, pool, adapter, store, lifecycle, payment, delegation, recruitment, recruitmentDelegation })
+    const server = createSelfHostedServer({ origin, pool, adapter, store, lifecycle, payment, delegation, recruitment, recruitmentDelegation, booking, bookingDelegation })
     await new Promise((resolve, reject) => {
       server.once('error', reject)
       server.listen(port, '127.0.0.1', resolve)
