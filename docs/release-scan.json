@@ -1,7 +1,7 @@
 {
   "version": "flapbase.release-scan/v1",
   "status": "pass",
-  "scannedFiles": 227,
+  "scannedFiles": 228,
   "excluded": [
     ".git",
     "node_modules",
@@ -74,6 +74,10 @@
     {
       "path": ".gitignore",
       "sha256": "63edb613f4ad0e8fb35ecf08a37c63012efbaafa08012d85b1aa608964606016"
+    },
+    {
+      "path": "AGENTS.md",
+      "sha256": "677c87cdf73832d3be720f02ec04db15adefa6f29b0b1525793d3074a21be4fb"
     },
     {
       "path": "bin/business.js",
@@ -765,7 +769,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "c48861618a3ca451924d4b7b89f93cdbb99322f7d9cd82aad43ef70a4e6901d5"
+      "sha256": "99565933e2602ed27a330cf9e6a938eebc005b01ff08d4af422aa56c5b43b06a"
     },
     {
       "path": "scripts/check-pack.mjs",
@@ -773,7 +777,7 @@
     },
     {
       "path": "scripts/check-release.mjs",
-      "sha256": "e09065a876c12984019ba4dc4c60c323f1ad839f79caa2975f7ed33e42361012"
+      "sha256": "e63e6c8eb1f6fd8465cdf18be600f0d94fb2b031d4f6cf7d7aca23bdbd1a8c21"
     },
     {
       "path": "scripts/compare-cloud.mjs",

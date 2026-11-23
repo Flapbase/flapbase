@@ -4,7 +4,7 @@
 
 Publish a product page, take signups, deliver what customers signed up for, and handle their questions from the same project. Start with one of 11 standard business workflows.
 
-[日本語](#日本語)
+[日本語](#日本語) · [Agent quickstart](#agent-quickstart)
 
 | What you can launch | What you can run |
 | --- | --- |
@@ -65,6 +65,39 @@ node bin/flap.js business list | node -pe 'JSON.parse(require("node:fs").readFil
 
 The `.base` catalog records the workflow, the inputs and the operations an agent can call. The connected agent can look up the catalog with `app_template_get` and execute a registered step with `business_workflow_step_run`. Publishing and customer-facing actions follow the project's permissions and approvals. [All 11 workflows and MCP commands](packages/business-workflows/README.md)
 
+## Agent quickstart
+
+Use the [agent guide](AGENTS.md) to map an owner's request to one of the 11 workflows and find the exact CLI and MCP inputs. On the managed path, reuse Flap ID sign-in, download delivery, order tracking, and the operator's order view while customizing the frontend.
+
+<details>
+<summary>MCP setup for Claude Code and Cursor</summary>
+
+For Claude Code, register the remote server and open `/mcp` to connect.
+
+```sh
+claude mcp add --transport http flapbase https://mcp.flapbase.com/creative/mcp
+```
+
+For Cursor, merge this entry into `.cursor/mcp.json` and connect from MCP settings.
+
+```json
+{
+  "mcpServers": {
+    "flapbase": {
+      "url": "https://mcp.flapbase.com/creative/mcp"
+    }
+  }
+}
+```
+
+The owner signs in and selects a workspace. These snippets register the endpoint. Workspace authorization requires an OAuth client that supports HTTPS Client ID Metadata Documents. For a client without that support, use a supported OAuth connection or prepare the inputs locally with `business prepare`. [Flapbase connection requirements](https://flapbase.com/agents) · [Claude Code setup](https://code.claude.com/docs/en/mcp) · [Cursor setup](https://cursor.com/docs/mcp)
+
+</details>
+
+### Safety and approvals
+
+The agent uses the workspace and Project permissions granted by the owner. It can prepare offers and save reply drafts through the available actions. For these workflows, the owner reviews and confirms publication and customer replies in Cloud. [Execution and approval details](AGENTS.md#safety-and-approvals)
+
 ## Where it runs
 
 - **With your own frontend.** Use the OSS starter or your own code, and connect the operational backend to Flapbase Cloud.
@@ -111,6 +144,10 @@ node examples/cloud-starter/run.mjs
 [ローカルプレビュー](http://127.0.0.1:5264/)を開き、[site.base.json](examples/cloud-starter/site.base.json)で告知を編集します。AIエージェントをMCPでCloudにつなぐと、登録した資料をもとに無料商品の準備を任せられます。確認して公開した商品のIDを `productId` に設定すると、告知ページから申込へ進めます。 [MCP接続](https://flapbase.com/agents) · [設定と公開の手順](examples/cloud-starter/README.md)
 
 運営者はCloudの「注文」で申込を確認できます。問い合わせが入ったら、AIが該当する注文を照会し、返信案を保存します。返信は運営者が確認します。
+
+### 持ち込みAIをつなぐ
+
+依頼に合う事業キーと操作を選び、オーナーがOAuthで許可したWorkspaceとProjectで作業します。無料資料の出品準備や問い合わせの返信案はAIに任せ、公開と返信確定はオーナーがCloudで行います。 [事業の選び方と実行手順](AGENTS.md) · [MCPの設定例](#agent-quickstart)
 
 ### ほかの事業を選ぶ
 
