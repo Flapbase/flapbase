@@ -65,3 +65,9 @@ With the local PostgreSQL executables on your path, run `pnpm --filter @flapbase
 4. 持ち込みAIから導入する場合は、サーバーに `FLAP_RECRUITMENT_AGENT_PRINCIPAL_ID` と `FLAP_RECRUITMENT_AGENT_TOKEN` を設定します。前者は対象Projectの運営権限を持つHuman Principalです。MCPクライアントは `node packages/self-host/mcp.mjs` を起動し、環境変数で同じトークンを受け取ります。標準事業定義の `app_add_recruitment` と `recruitment_applications_list` を使えます。後者が返すのは応募ID・求人名・状態・版です。
 
 公開求人はデータディレクトリから配信し、閲覧時にPostgreSQLへ接続しません。1プロセスで稼働させ、復旧時はPostgreSQLとデータディレクトリを同じバックアップから戻してください。選考結果は応募者の画面に表示します。
+
+## 予約サービスとイベント受付のローカルDB
+
+`pnpm --filter @flapbase/self-host setup booking` で、既存の予約SQLとProjectへの紐づけを導入できます。個別予約と定員付きイベントは同じ `booking.mjs` を使います。空き枠計算・確定・振替・取消・出欠は使い捨てPostgreSQLのテストで確認できます。
+
+この段階の入口はNodeモジュールです。ローカルの公開受付・運営画面・MCPの起動設定は接続前です。予約の確定には既存SQLと同じくメールを確認済みのHuman Principalが必要です。通知はDBに記録し、外部へ送信しません。

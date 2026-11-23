@@ -21,7 +21,8 @@ const ignored = new Set(['.git', 'node_modules', '.DS_Store'])
 const extensions = /\.(?:js|mjs|json|md|html|txt|xml|yaml|ts)$/u
 const exampleEnv = 'examples/travel-broken/.env'
 const selfHostPath = 'packages/self-host/'
-const selfHostRuntimeSchema = new Set([
+const selfHostSqlAssets = new Set([
+  selfHostPath + 'schema/091_bookings-platform.sql',
   selfHostPath + 'schema/000_schema-runtime.sql',
   selfHostPath + 'schema/050_idempotency-runtime.sql',
 ])
@@ -44,7 +45,7 @@ export async function scanRelease(root) {
         files.push({ path, sha256: createHash('sha256').update('EXAMPLE_ONLY=not-a-secret\n').digest('hex') }); continue
       }
       const selfHostAsset = path === selfHostPath + 'digital-product.base' || path === selfHostPath + 'store.css' ||
-        path === selfHostPath + 'auth-schema.sql' || selfHostRuntimeSchema.has(path) || /^packages\/self-host\/schema\/\d{3}_[a-z_]+-(?:identity|platform|vdb)\.sql$/.test(path)
+        path === selfHostPath + 'auth-schema.sql' || selfHostSqlAssets.has(path) || /^packages\/self-host\/schema\/\d{3}_[a-z_]+-(?:identity|platform|vdb)\.sql$/.test(path)
       if ((!path.includes('/') && !topFiles.has(path)) || (path.includes('/') && !extensions.test(path) && !selfHostAsset && !['LICENSE', 'NOTICE'].includes(entry.name))) {
         problems.push({ path, rule: '公開対象外のファイル' }); continue
       }

@@ -13,7 +13,7 @@ const schemaFiles = [
   'schema/000_schema-runtime.sql', 'schema/050_idempotency-runtime.sql', 'auth-schema.sql',
 ]
 
-async function transaction(pool, run) {
+export async function transaction(pool, run) {
   const client = await pool.connect()
   try {
     await client.query('BEGIN')
@@ -28,6 +28,10 @@ async function transaction(pool, run) {
 
 export const setupSchema = pool => transaction(pool, async client => {
   for (const file of schemaFiles) await client.query(await readFile(new URL(file, import.meta.url), 'utf8'))
+})
+
+export const setupBookingSchema = pool => transaction(pool, async client => {
+  await client.query(await readFile(new URL('schema/091_bookings-platform.sql', import.meta.url), 'utf8'))
 })
 
 export const setupProject = (pool, { ownerId, projectId, name = '無料資料' }) => transaction(pool, async client => {
@@ -57,6 +61,7 @@ if (process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url) 
       console.log('Project: ' + id)
     } else {
       await setupSchema(pool)
+      if (process.argv[2] === 'booking') await setupBookingSchema(pool)
       console.log('PostgreSQL schema is ready.')
     }
   } finally { await pool.end() }
