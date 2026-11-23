@@ -24,6 +24,8 @@ The last command returns a pinned MCP request that you can hand to an OAuth-conn
 - 認可済みのCloud MCPアクセストークンを `FLAPBASE_MCP_ACCESS_TOKEN` に渡せる環境では、`business check-cloud` でCloudが同じ定義と実行キーを提供するか確認できます。`business run` は `prepare` と同じ引数を取り、一工程を実行します。書き込みの再送では入力内の冪等キーを維持します。
 - セルフホスト導入は `business local-base <事業キー>` で作った定義を[既存のローカル起動手順](../self-host/README.md)へ渡します。現行の対象は無料資料、デジタル商品販売のローカル試験、購入者サポートです。残りの事業のセルフホスト実行には対応する業務機能が必要です。
 
+予約・イベントで使う[予約枠計算](../booking-slots/README.md)と、業務横断の[ステップ配信エンジン](../step-delivery/README.md)は、単独で組み込めます。予約の確定や配信は、保存・認可・外部接続を担当するHostが行います。
+
 ### 購入者サポート
 
 `customer-support` を選ぶと、無料資料の公開から購入者の問い合わせ対応までを導入できます。Workspace単位で接続し、配布用の[デジタル商品定義](../self-host/digital-product.base)の `settings.workflow` を `flapbase:customer-support` にして `base` に渡します。`prepare-free-resource` は資料の固定版を基に、下書き・受取画面・サポートの工程を作ります。既存Projectを使う場合は `projectId` を指定し、新しく始める場合は省きます。運営者が提供条件と画面を確認して公開します。購入者本人が受取画面から問い合わせを送り、運営者は注文詳細で担当者を割り当てます。`order-support` で対象の問い合わせと現在の版を取得し、`reply-draft` で返信案を保存します。運営者が確認して公開すると、購入者が同じ注文の問い合わせ履歴で返信を読めます。

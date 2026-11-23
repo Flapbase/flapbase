@@ -17,10 +17,16 @@ const run = (command, args, cwd = root) => {
 try {
   const output = join(scratch, 'tarballs')
   await mkdir(output)
-  const cli = JSON.parse(run('npm', ['pack', '--ignore-scripts', '--json', '--pack-destination', output]))[0]
-  const core = JSON.parse(run('npm', ['pack', '--ignore-scripts', '--json', '--pack-destination', output], resolve(root, 'packages/site-check')))[0]
-  for (const tarball of [cli, core]) {
-    const name = tarball === cli ? 'cli' : 'core'
+  const targets = [
+    ['cli', root],
+    ['site-check', resolve(root, 'packages/site-check')],
+    ['booking-slots', resolve(root, 'packages/booking-slots')],
+    ['step-delivery', resolve(root, 'packages/step-delivery')],
+  ]
+  const packages = []
+  for (const [name, directory] of targets) {
+    const tarball = JSON.parse(run('npm', ['pack', '--ignore-scripts', '--json', '--pack-destination', output], directory))[0]
+    packages.push(tarball)
     const unpack = join(scratch, `unpack-${name}`)
     await mkdir(unpack)
     run('tar', ['-xzf', join(output, tarball.filename), '-C', unpack])
@@ -30,7 +36,7 @@ try {
   }
   const install = join(scratch, 'install')
   await mkdir(install)
-  run('npm', ['install', '--ignore-scripts', '--no-audit', '--no-fund', '--package-lock=false', join(output, cli.filename), join(output, core.filename)], install)
+  run('npm', ['install', '--ignore-scripts', '--no-audit', '--no-fund', '--package-lock=false', ...packages.map(item => join(output, item.filename))], install)
   await cp(join(root, 'examples/cosmetics/index.html'), join(install, 'sample.html'))
   const checked = JSON.parse(run('npx', ['--offline', '--no-install', '@flapbase/cli', 'check', 'sample.html', '--lang', 'en', '--json'], install))
   const businesses = JSON.parse(run('npx', ['--offline', '--no-install', '@flapbase/cli', 'business', 'list'], install))
@@ -43,8 +49,10 @@ try {
   const coreResult = JSON.parse(run(process.execPath, ['--input-type=module', '-e', script], install))
   const withoutLabels = checks => checks.map(({ label, ...check }) => check)
   assert.deepEqual(withoutLabels(coreResult.checks), withoutLabels(checked.checks))
+  run(process.execPath, ['--input-type=module', '-e',
+    "import {computeSlots} from '@flapbase/booking-slots';import {StepDeliveryEngine} from '@flapbase/step-delivery';if(typeof computeSlots!=='function'||typeof StepDeliveryEngine!=='function')process.exit(1)"], install)
   const installedPackage = JSON.parse(await readFile(join(install, 'node_modules/@flapbase/cli/package.json'), 'utf8'))
   assert.equal(installedPackage.dependencies, undefined)
   console.log(JSON.stringify({ status: 'pass', isolatedNpx: true, coreImport: true, tarballScan: true,
-    packages: [cli, core].map(item => ({ name: item.name, version: item.version, files: item.files.length, unpackedSize: item.unpackedSize })) }))
+    packages: packages.map(item => ({ name: item.name, version: item.version, files: item.files.length, unpackedSize: item.unpackedSize })) }))
 } finally { await rm(scratch, { recursive: true, force: true }) }

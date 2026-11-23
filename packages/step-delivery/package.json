@@ -1,0 +1,24 @@
+{
+  "name": "@flapbase/step-delivery",
+  "version": "0.1.0",
+  "description": "Provider-neutral Flapbase step delivery rules and execution",
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/step-delivery.d.ts",
+      "import": "./src/step-delivery.js"
+    }
+  },
+  "files": [
+    "src/",
+    "LICENSE",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

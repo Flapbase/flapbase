@@ -1,0 +1,24 @@
+{
+  "name": "@flapbase/booking-slots",
+  "version": "0.1.0",
+  "description": "Flapbase booking availability and local calendar calculations",
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/slots.d.ts",
+      "import": "./src/slots.js"
+    }
+  },
+  "files": [
+    "src/",
+    "LICENSE",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

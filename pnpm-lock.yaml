@@ -11,6 +11,8 @@ importers:
 
   .: {}
 
+  packages/booking-slots: {}
+
   packages/business-workflows: {}
 
   packages/self-host:
@@ -26,6 +28,8 @@ importers:
         version: 8.16.3
 
   packages/site-check: {}
+
+  packages/step-delivery: {}
 
 packages:
 
