@@ -14,7 +14,10 @@ const keys = [
 test('the packaged CLI lists all 11 businesses and their registered execution keys', async () => {
   const listed = JSON.parse(execFileSync(process.execPath, ['bin/flap.js', 'business', 'list', '--json', '--lang', 'ja'], { encoding: 'utf8' }))
   assert.deepEqual(listed.map(row => row.businessKey), keys)
-  for (const business of listed) assert.ok(business.executions.length > 0, business.businessKey)
+  for (const business of listed) {
+    assert.ok(business.executions.length > 0, business.businessKey)
+    assert.ok(business.localWorkflow || business.localLaunch?.path, business.businessKey)
+  }
   await assert.rejects(businessCommand(['inspect', '__proto__']), /事業キー/)
 })
 
@@ -81,5 +84,8 @@ test('local-base uses the existing install contract for free resources, digital 
   await assert.rejects(businessCommand(['local-base', 'recruitment']), /app_add_recruitment/)
   assert.equal((await businessCommand(['inspect', 'booking-service'])).localLaunch.path, '/booking')
   assert.equal((await businessCommand(['inspect', 'event-registration'])).localLaunch.path, '/booking')
-  await assert.rejects(businessCommand(['local-base', 'member-ai-course']), /未対応/)
+  assert.equal((await businessCommand(['inspect', 'member-ai-course'])).localLaunch.path, '/training')
+  assert.equal((await businessCommand(['inspect', 'organization-training'])).localLaunch.path, '/training')
+  assert.equal((await businessCommand(['inspect', 'paid-membership'])).localLaunch.path, '/membership')
+  await assert.rejects(businessCommand(['local-base', 'member-ai-course']), /\/training/)
 })

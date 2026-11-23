@@ -9,6 +9,7 @@ import { createBetterAuthAdapter, createHumanSessionResolver, createSelfHostedAu
 import { createFreeDownloadStore, sha, storeId, StoreError } from './free-download.mjs'
 import { createStoreLifecycle } from './lifecycle.mjs'
 import { createStripePayment, PaymentError } from './payment.mjs'
+import { handleMembership } from './membership-http.mjs'
 import { handleStore, renderProduct, sendStoreError } from './store-http.mjs'
 import { createRecruitment } from './recruitment.mjs'
 import { handleRecruitment } from './recruitment-http.mjs'
@@ -30,6 +31,7 @@ const files = new Map([
   ['/cases-ui.js', ['cases-ui.js', 'text/javascript; charset=utf-8']],
   ['/booking-ui.js', ['booking-ui.js', 'text/javascript; charset=utf-8']],
   ['/recruitment-ui.js', ['recruitment-ui.js', 'text/javascript; charset=utf-8']],
+  ['/membership-ui.js', ['membership-ui.js', 'text/javascript; charset=utf-8']],
   ['/store-ui.js', ['store-ui.js', 'text/javascript; charset=utf-8']],
   ['/store.css', ['store.css', 'text/css; charset=utf-8']],
 ])
@@ -71,6 +73,9 @@ export function createSelfHostedServer({ origin, pool, adapter, store, lifecycle
         return
       }
       if (store && await handleStore(req, res, { route, origin, store, lifecycle, payment, delegation, courseKnowledge, resolveHuman: () => resolveHuman(fromNodeHeaders(req.headers)) })) return
+      if (store && await handleMembership(req, res, { route, origin, store, lifecycle, payment,
+        resolveHuman: () => resolveHuman(fromNodeHeaders(req.headers)),
+      })) return
       if (recruitment && await handleRecruitment(req, res, {
         route, origin, recruitment, delegation: recruitmentDelegation,
         resolveHuman: () => resolveHuman(fromNodeHeaders(req.headers)),

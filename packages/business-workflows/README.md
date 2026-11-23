@@ -22,7 +22,26 @@ The last command returns a pinned MCP request that you can hand to an OAuth-conn
 
 - `business prepare <事業キー> <実行キー> <入力JSON>` は、版とダイジェスト付きのMCP入力を作ります。入力は `projectId`、`parameters`、必要に応じて `stepKey` と `results` です。認可済みの持ち込みエージェントに渡せます。
 - 認可済みのCloud MCPアクセストークンを `FLAPBASE_MCP_ACCESS_TOKEN` に渡せる環境では、`business check-cloud` でCloudが同じ定義と実行キーを提供するか確認できます。`business run` は `prepare` と同じ引数を取り、一工程を実行します。書き込みの再送では入力内の冪等キーを維持します。
-- セルフホスト導入は `business local-base <事業キー>` で作った定義を[既存のローカル起動手順](../self-host/README.md)へ渡します。現行の対象は無料資料、デジタル商品販売のローカル試験、購入者サポートです。採用・応募管理は同じ起動方法で採用機能を有効化し、運営画面またはMCPの `app_add_recruitment` から導入します。予約サービスとイベント受付は `/booking` で公開し、同じMCP操作から予約照会と出欠を扱います。定型サービスと顧客・商談管理は `/cases` で受付を公開し、問い合わせから案件に接続します。残りの3事業には対応する業務機能が必要です。
+### セルフホストの入口
+
+[ローカル起動手順](../self-host/README.md)でPostgreSQLとProjectを準備します。
+`business inspect <事業キー>` の `localLaunch` または `localWorkflow` で起動後の入口を確認できます。
+
+| 事業キー | 入口 | ローカルで行える主な仕事 |
+| --- | --- | --- |
+| `free-resource` | `local-base`、`/store` | 無料の資料公開、本人申込と受取 |
+| `digital-product-sales` | `local-base`、`/store` | デジタル商品の公開、テスト決済、提供、フォロー |
+| `customer-support` | `local-base`、`/store` | 本人の注文への問い合わせ、照会、MCPの返信案と運営画面 |
+| `recruitment` | `/recruitment` | 求人公開、応募、選考、本人への結果表示 |
+| `booking-service` | `/booking` | 受付枠の公開、予約、振替・取消、出欠 |
+| `event-registration` | `/booking` | 開催日時の公開、参加申込、参加結果 |
+| `standard-service` | `/cases` | 問い合わせ、案件化、見積、顧客の回答、納品 |
+| `customer-sales` | `/cases` | 問い合わせ、案件化、顧客と営業の進捗管理 |
+| `member-ai-course` | `/training` | MCPの教材下書き、販売、本人受講、版固定の教材対話と未回答 |
+| `organization-training` | `/training` | MCPの教材下書き、招待、割当、本人受講、進捗 |
+| `paid-membership` | `/membership` | MCPの本文下書き、募集公開、入会・更新・退会、期間内の閲覧 |
+
+決済にはテスト環境、教材対話にはローカルのモデル接続を使います。Cloudの実行キーは上記の認証済みMCPから実行します。
 
 予約・イベントで使う[予約枠計算](../booking-slots/README.md)と、業務横断の[ステップ配信エンジン](../step-delivery/README.md)は、単独で組み込めます。予約の確定や配信は、保存・認可・外部接続を担当するHostが行います。
 

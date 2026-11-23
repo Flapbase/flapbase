@@ -11,9 +11,9 @@ export const html = (title, content, script = '/store-ui.js') => `<!doctype html
 <link rel="stylesheet" href="/store.css"><script type="module" src="${script}"></script></head>
 <body><header><a href="/">Flapbase</a></header><main>${content}</main></body></html>`
 
-export const renderProduct = ({ listingId, revisionId, title, description, amountMinor = 0, leadEnabled = false }) => html(title, `
-<h1>${escape(title)}</h1><p>${amountMinor ? amountMinor.toLocaleString('ja-JP') + '円' : '無料'}</p><p class="description">${escape(description)}</p>
-<form id="claim" data-listing="${listingId}" data-revision="${revisionId}"><button>${amountMinor ? '購入する' : '無料で申し込む'}</button></form>
+export const renderProduct = ({ listingId, revisionId, title, description, amountMinor = 0, leadEnabled = false, membership = false }) => html(title, `
+<h1>${escape(title)}</h1><p>${amountMinor ? amountMinor.toLocaleString('ja-JP') + '円' + (membership ? '／月' : '') : '無料'}</p><p class="description">${escape(description)}</p>
+<form id="claim" data-listing="${listingId}" data-revision="${revisionId}"><button>${membership ? '入会する' : amountMinor ? '購入する' : '無料で申し込む'}</button></form>
 <p id="result" role="status"></p><a href="/?next=%2Fproducts%2F${listingId}" id="login" hidden>ログインまたは登録</a>
 ${leadEnabled ? `<section><h2>案内を受け取る</h2><form data-operation="lead" data-listing="${listingId}">
 <label>メールアドレス <input type="email" name="email" required maxlength="254"></label>
@@ -21,14 +21,14 @@ ${leadEnabled ? `<section><h2>案内を受け取る</h2><form data-operation="le
 <button>登録する</button><p role="status"></p></form></section>` : ''}`)
 
 function renderDashboard({ orders, products }, operation, paymentAvailable, courseKnowledge) {
-  const options = products.filter(product => !product.isCourse).map(product => `<option value="${product.listing_id}">${escape(product.title)}</option>`).join('')
+  const options = products.filter(product => !product.isCourse && !product.isMembership).map(product => `<option value="${product.listing_id}">${escape(product.title)}</option>`).join('')
   const productLinks = products.map(product => `<li><a href="/products/${encodeURIComponent(product.listing_id)}">${escape(product.title)}</a></li>`).join('')
   const rows = orders.map(order => {
     const createdAt = new Date(order.created_at)
     return `<tr><th scope="row">${escape(order.title)}</th><td>${order.status === 'pending' ? '決済確認待ち' : Number(order.amount_minor) ? '購入済み' : '無料申込'}</td><td><time datetime="${createdAt.toISOString()}">${orderTime.format(createdAt)}</time></td></tr>`
   }).join('')
   return html('資料配布', `
-<h1>資料配布</h1><form id="publish">
+<h1>資料配布</h1><p><a href="/membership">有料会員</a></p><form id="publish">
 ${options ? `<label>公開先 <select name="listingId"><option value="">新しい商品</option>${options}</select></label>` : ''}
 <label>資料名 <input name="title" required maxlength="160" value="${escape(operation?.productDraft?.title ?? '')}"></label>
 <label>説明 <textarea name="description" maxlength="3000">${escape(operation?.productDraft?.description ?? '')}</textarea></label>
@@ -53,7 +53,8 @@ ${leads.map(lead => `<form data-operation="follow-up" data-lead="${lead.id}">
 
 function renderReceipt(orderId, release, lifecycle) {
   return html('資料の受取', `<h1>お申し込みを受け付けました</h1><p>${escape(release.title)}</p>
-<p>${release.coursePin ? `<a href="/training/orders/${orderId}">講座を受講する</a>`
+<p>${release.membership ? `<a href="/membership/orders/${orderId}">会員限定コンテンツ</a>`
+  : release.coursePin ? `<a href="/training/orders/${orderId}">講座を受講する</a>`
   : `<a href="/receive/orders/${orderId}/download">資料をダウンロード</a>`}</p>
 ${lifecycle ? `<section><h2>問い合わせる</h2><form data-operation="support" data-order="${orderId}">
 <label>問い合わせ内容 <textarea name="body" required maxlength="3000"></textarea></label>
@@ -101,7 +102,11 @@ export async function handleStore(req, res, { route, origin, store, lifecycle, p
   const path = route.pathname
   if (payment && path === '/api/store/payment/webhook' && req.method === 'POST') {
     const event = payment.verifyWebhook(await readBody(req, 128_000), req.headers['stripe-signature'])
-    if (event) await store.confirmPayment(event)
+    if (event?.kind === 'membership-invoice') {
+      const membership = await payment.resolveMembershipInvoice(event)
+      if (membership) await store.applyMembershipEvent(membership)
+    } else if (event?.kind) await store.applyMembershipEvent(event)
+    else if (event) await store.confirmPayment(event)
     send(res, 200, { received: true })
     return true
   }
@@ -109,7 +114,7 @@ export async function handleStore(req, res, { route, origin, store, lifecycle, p
     if (!canCallAgent(req, delegation)) {
       throw new StoreError(401, 'agent_unauthorized')
     }
-    const body = await input(req, 16_000)
+    const body = await input(req, 320_000)
     if (!DIGITAL_PRODUCT_TOOLS.some(tool => tool.name === body.name) || !body.arguments ||
         typeof body.arguments !== 'object' || Array.isArray(body.arguments)) throw new StoreError(403, 'agent_action_denied')
     send(res, 200, await lifecycle.call(delegation.principalId, body.name, body.arguments))
@@ -161,7 +166,7 @@ export async function handleStore(req, res, { route, origin, store, lifecycle, p
   } else if (checkout) {
     const body = await input(req, 4096)
     const order = await store.checkout(human.principalId, body.listingId, body.revisionId, !!payment)
-    const receiptUrl = '/receive/orders/' + order.orderId
+    const receiptUrl = (order.recurring ? '/membership/orders/' : '/receive/orders/') + order.orderId
     if (order.paid) send(res, 201, { orderId: order.orderId, receiptUrl })
     else {
       const { sessionId, url } = await payment.startCheckout(order)

@@ -166,6 +166,11 @@ export function createStoreLifecycle({ store, projectId, sendEmail }) {
     })
   }
 
+  async function membershipDraft(client, actor) {
+    const { schemaId } = await context(client, actor, 'operator')
+    return draft(client, schemaId, 'membership_draft')
+  }
+
   async function call(actor, name, args) {
     if (name === 'operations_summary') return { projectId, ...(await operatorSnapshot(actor)).counts }
     if (name === 'support_requests_list') {
@@ -185,14 +190,20 @@ export function createStoreLifecycle({ store, projectId, sendEmail }) {
       })
     }
     if (name === 'product_draft_save' || name === 'follow_up_draft_save') {
+      const membership = name === 'product_draft_save' && args.membershipContent !== undefined
       const data = name === 'product_draft_save'
-        ? { kind: 'product_draft', title: requiredText(args.title, 160), description: requiredText(args.description, 3000) }
+        ? { kind: membership ? 'membership_draft' : 'product_draft', title: requiredText(args.title, 160),
+          description: requiredText(args.description, 3000), ...(membership && { content: requiredText(args.membershipContent, 50_000) }) }
         : { kind: 'follow_up_draft', subject: requiredText(args.subject, 160), body: requiredText(args.body, 3000) }
       return store.transaction(async client => {
         const { schemaId } = await context(client, actor, 'operator', true)
         const entry = await put(client, schemaId, sha(JSON.stringify([projectId, data.kind])), data, { replace: true })
         return { draftId: entry.record_id, title: entry.data.title ?? entry.data.subject }
       })
+    }
+    if (name === 'membership_roster_list') {
+      if (args.projectId !== projectId) throw forbidden()
+      return store.membershipRoster(actor, { limit: args.limit, after: args.after })
     }
     if (name === 'order_support_get') {
       if (args.projectId !== projectId) throw forbidden()
@@ -205,7 +216,7 @@ export function createStoreLifecycle({ store, projectId, sendEmail }) {
         if (!release || release.data.listingId !== order.data.listingId) throw missing()
         const paymentStatus = order.data.status ?? 'paid'
         return { orderId: args.orderId, title: release.data.title, paymentStatus,
-          downloadEligible: paymentStatus === 'paid' && !release.data.coursePin, purchaseInquiryId: null,
+          downloadEligible: paymentStatus === 'paid' && !release.data.coursePin && !release.data.membership, purchaseInquiryId: null,
           ...(release.data.coursePin && { learningEligible: paymentStatus === 'paid' }) }
       })
     }
@@ -240,5 +251,5 @@ export function createStoreLifecycle({ store, projectId, sendEmail }) {
     })
   }
 
-  return { installBase, registerLead, stopFollowUp, sendFollowUp, openSupport, operatorSnapshot, call }
+  return { membershipDraft, installBase, registerLead, stopFollowUp, sendFollowUp, openSupport, operatorSnapshot, call }
 }

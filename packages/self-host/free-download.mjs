@@ -1,5 +1,6 @@
 import { createHash, randomUUID } from 'node:crypto'
 import { link, mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises'
+import { canReadMembership, membershipEvent, membershipState } from './membership-state.mjs'
 import { join } from 'node:path'
 
 const blueprint = Object.freeze({
@@ -23,7 +24,7 @@ export const invalid = () => new StoreError(400, 'invalid_request')
 export const missing = () => new StoreError(404, 'not_found')
 export const forbidden = () => new StoreError(403, 'forbidden')
 
-export async function createFreeDownloadStore({ pool, projectId, directory, renderProduct, course }) {
+export async function createFreeDownloadStore({ pool, projectId, directory, renderProduct, course, clock = Date.now }) {
   if (!storeId(projectId) || !directory) throw invalid()
   const pages = join(directory, projectId, 'public-products')
   const blobs = join(directory, projectId, 'protected-files')
@@ -76,8 +77,9 @@ export async function createFreeDownloadStore({ pool, projectId, directory, rend
   }
 
   async function publish(principalId, input) {
-    const { listingId = randomUUID(), title, description, fileName, bytes, amountMinor = 0, artifactRevisionId } = input
+    const { listingId = randomUUID(), title, description, fileName, bytes, amountMinor = 0, artifactRevisionId, membership = false } = input
     const isCourse = artifactRevisionId !== undefined
+    if (typeof membership !== 'boolean' || (membership && (isCourse || !amountMinor))) throw invalid()
     if (!Number.isSafeInteger(amountMinor) || amountMinor < 0 || (amountMinor > 0 && amountMinor < 50) || amountMinor > 10_000_000 || !storeId(listingId) || typeof title !== 'string' || !title.trim() || title.length > 160 || title.includes('\0')
         || typeof description !== 'string' || description.length > 3000 || description.includes('\0')) throw invalid()
     if (isCourse ? (!course || course.projectId !== projectId || !storeId(artifactRevisionId) || !amountMinor)
@@ -101,19 +103,19 @@ export async function createFreeDownloadStore({ pool, projectId, directory, rend
           if (!prior && input.listingId !== undefined) throw missing()
           if (prior) {
             const priorRelease = await get(client, schemaId, prior.data.currentRevisionId, 'release')
-            if (!priorRelease || Boolean(priorRelease.data.coursePin) !== isCourse) throw invalid()
+            if (!priorRelease || Boolean(priorRelease.data.coursePin) !== isCourse || Boolean(priorRelease.data.membership) !== membership) throw invalid()
           }
           const delivery = isCourse
             ? { coursePin: await course.offerPin(client, principalId, workspaceId, artifactRevisionId) }
             : { fileName, digest }
-          const release = { kind: 'release', listingId, title: title.trim(), description, ...delivery, ...(amountMinor ? { amountMinor } : {}) }
+          const release = { ...(membership && { membership: true }), kind: 'release', listingId, title: title.trim(), description, ...delivery, ...(amountMinor ? { amountMinor } : {}) }
           if (tempFile) {
             await writeFile(tempFile, bytes, { mode: 0o600, flag: 'wx' })
             await link(tempFile, join(blobs, digest)).catch(error => {
               if (error.code !== 'EEXIST') throw error
             })
           }
-          await writeFile(tempPage, renderProduct({ listingId, revisionId, title: release.title, description, amountMinor }), { mode: 0o600, flag: 'wx' })
+          await writeFile(tempPage, renderProduct({ listingId, revisionId, title: release.title, description, amountMinor, membership }), { mode: 0o600, flag: 'wx' })
           if (prior) {
             await client.query(`
               UPDATE vdb.records SET data=$4,version=version+1,updated_at=now()
@@ -144,9 +146,9 @@ export async function createFreeDownloadStore({ pool, projectId, directory, rend
     }
   }
 
-  async function checkout(principalId, listingId, revisionId, allowPaid) {
+  async function checkout(principalId, listingId, revisionId, allowPaid, now = clock()) {
     if (!storeId(listingId) || !storeId(revisionId)) throw invalid()
-    const recordKey = sha(JSON.stringify([projectId, principalId, revisionId]))
+    let recordKey = sha(JSON.stringify([projectId, principalId, revisionId]))
     return transaction(async client => {
       const { schemaId } = await scoped(client, principalId, 'buyer')
       if (!schemaId) throw missing()
@@ -154,7 +156,29 @@ export async function createFreeDownloadStore({ pool, projectId, directory, rend
       if (!release || release.data.listingId !== listingId) throw missing()
       const amountMinor = release.data.amountMinor ?? 0
       if (amountMinor && !allowPaid) throw new StoreError(503, 'payment_unavailable')
-      const purchase = order => ({ orderId: order.record_id, amountMinor, title: release.data.title, paid: order.data.status !== 'pending' })
+      const purchase = (order, offer = release) => ({ orderId: order.record_id,
+        amountMinor: order.data.amountMinor ?? amountMinor, title: offer.data.title, paid: order.data.status !== 'pending',
+        ...(release.data.membership && { recurring: true }) })
+      if (release.data.membership) {
+        await client.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))', [projectId + ':' + principalId + ':' + listingId])
+        const { rows: [membership] } = await client.query(`
+          SELECT record_id,data FROM vdb.records WHERE schema_id=$1 AND project_id=$2 AND owner_principal_id=$3
+           AND data->>'kind'='order' AND data->>'listingId'=$4 AND data->>'membership'='true'
+          ORDER BY created_at DESC,record_id DESC LIMIT 1
+        `, [schemaId, projectId, principalId, listingId])
+        if (membership) {
+          const state = membershipState(membership.data, now)
+          if (state === 'pending' || canReadMembership(membership.data, now)) {
+            const pinnedOffer = await get(client, schemaId, membership.data.revisionId, 'release')
+            if (!pinnedOffer?.data.membership || pinnedOffer.data.listingId !== listingId) throw missing()
+            return purchase(membership, pinnedOffer)
+          }
+          if (state === 'expired' && !membership.data.cancelAtPeriodEnd && !membership.data.endedAt) {
+            throw new StoreError(409, 'membership_renewal_pending')
+          }
+          recordKey = sha(JSON.stringify([recordKey, membership.record_id]))
+        }
+      }
       // Return an already accepted order even after the item has a new published revision.
       const { rows: [prior] } = await client.query(`
         SELECT record_id,data FROM vdb.records WHERE schema_id=$1 AND project_id=$2 AND record_key=$3
@@ -168,7 +192,7 @@ export async function createFreeDownloadStore({ pool, projectId, directory, rend
         ON CONFLICT (schema_id,record_key) DO UPDATE SET record_key=EXCLUDED.record_key
         WHERE vdb.records.project_id=$2 AND vdb.records.owner_principal_id=$3 AND vdb.records.data->>'kind'='order'
         RETURNING record_id,data`, [schemaId, projectId, principalId, recordKey, {
-        kind: 'order', listingId, revisionId, ...(amountMinor ? { status: 'pending', amountMinor } : {}),
+        kind: 'order', listingId, revisionId, ...(release.data.membership && { membership: true }), ...(amountMinor ? { status: 'pending', amountMinor } : {}),
       }])
       if (!order) throw new StoreError(409, 'order_conflict')
       return purchase(order)
@@ -196,7 +220,7 @@ export async function createFreeDownloadStore({ pool, projectId, directory, rend
         UPDATE vdb.records SET data=data || jsonb_build_object('status','paid','paidAt',coalesce(data->'paidAt',to_jsonb(now())))
         WHERE schema_id=$1 AND project_id=$2 AND record_id=$3 AND data->>'kind'='order'
           AND data->>'paymentSession'=$4 AND data->>'amountMinor'=$5
-          AND data->>'status' IN ('pending','paid')`, [schemaId, projectId, orderId, sessionId, String(amountMinor)])
+          AND data->>'status' IN ('pending','paid') AND data->>'membership' IS NULL`, [schemaId, projectId, orderId, sessionId, String(amountMinor)])
       if (rowCount !== 1) throw new StoreError(409, 'payment_mismatch')
     })
   }
@@ -216,6 +240,10 @@ export async function createFreeDownloadStore({ pool, projectId, directory, rend
   async function receive(principalId, orderId, downloaded = false) {
     return transaction(async client => {
       const { schemaId, order, release } = await paidOrder(client, principalId, orderId)
+      if (release.membership) {
+        if (downloaded || !canReadMembership(order.data, clock())) throw missing()
+        return release
+      }
       if (release.coursePin && !downloaded) return release
       if (release.coursePin || !/^[0-9a-f]{64}$/.test(release.digest)) throw missing()
       if (downloaded && order.data.received !== true) {
@@ -224,6 +252,77 @@ export async function createFreeDownloadStore({ pool, projectId, directory, rend
           WHERE schema_id=$1 AND project_id=$2 AND record_id=$3 AND owner_principal_id=$4`, [schemaId, projectId, orderId, principalId])
       }
       return { ...release, path: join(blobs, release.digest) }
+    })
+  }
+
+  async function applyMembershipEvent(event) {
+    return transaction(async client => {
+      const { schemaId } = await scoped(client, null, 'buyer')
+      const { rows: [order] } = await client.query(`
+        SELECT data FROM vdb.records WHERE schema_id=$1 AND project_id=$2 AND record_id=$3
+          AND access='private' AND data->>'kind'='order' AND data->>'membership'='true' FOR UPDATE
+      `, [schemaId, projectId, event.orderId])
+      if (!order) return false
+      if (event.kind === 'membership-paid' && event.amountMinor !== order.data.amountMinor) {
+        throw new StoreError(409, 'payment_mismatch')
+      }
+      if (!order.data.paymentSession) throw new StoreError(409, 'membership_checkout_pending')
+      const data = membershipEvent(order.data, event)
+      if (!data) throw new StoreError(409, 'payment_mismatch')
+      if (data !== order.data) await client.query('UPDATE vdb.records SET data=$2,updated_at=now() WHERE record_id=$1', [event.orderId, data])
+      return true
+    })
+  }
+
+  async function membershipOrder(principalId, orderId, now = clock()) {
+    if (!storeId(orderId)) throw missing()
+    return transaction(async client => {
+      const { schemaId } = await scoped(client, principalId, 'buyer')
+      const order = schemaId && await get(client, schemaId, orderId, 'order')
+      if (!order || order.owner_principal_id !== principalId || !order.data.membership) throw missing()
+      const release = await get(client, schemaId, order.data.revisionId, 'release')
+      if (!release?.data.membership || release.data.listingId !== order.data.listingId || !/^[0-9a-f]{64}$/.test(release.data.digest)) throw missing()
+      const state = membershipState(order.data, now)
+      return { state, periodEnd: order.data.paidThrough ?? null, subscriptionId: order.data.subscriptionId,
+        cancelAtPeriodEnd: Boolean(order.data.cancelAtPeriodEnd), title: release.data.title,
+        ...(canReadMembership(order.data, now) && { path: join(blobs, release.data.digest) }) }
+    })
+  }
+
+  async function recordMembershipCancellation(principalId, orderId, subscriptionId) {
+    return transaction(async client => {
+      const { schemaId } = await scoped(client, principalId, 'buyer')
+      const result = await client.query(`
+        UPDATE vdb.records SET data=data || '{"cancelAtPeriodEnd":true}',updated_at=now()
+        WHERE record_id=$1 AND schema_id=$2 AND project_id=$3 AND owner_principal_id=$4 AND access='private'
+          AND data->>'kind'='order' AND data->>'membership'='true' AND data->>'subscriptionId'=$5
+      `, [orderId, schemaId, projectId, principalId, subscriptionId])
+      if (!result.rowCount) throw missing()
+    })
+  }
+
+  async function membershipRoster(actor, { limit = 50, after } = {}, withDraft, now = clock()) {
+    if (!Number.isInteger(limit) || limit < 1 || limit > 50 ||
+        (after && (!storeId(after.id) || typeof after.createdAt !== 'string' || !Number.isFinite(Date.parse(after.createdAt))))) throw invalid()
+    return transaction(async client => {
+      const { schemaId } = await scoped(client, actor, 'operator')
+      const { rows } = await client.query(`
+        SELECT o.record_id AS id,o.data,
+          to_char(o.created_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS created_at,
+          r.data->>'title' AS title
+        FROM vdb.records o JOIN vdb.records r ON r.schema_id=o.schema_id AND r.project_id=o.project_id
+          AND r.record_id::text=o.data->>'revisionId' AND r.data->>'kind'='release'
+        WHERE o.schema_id=$1 AND o.project_id=$2 AND o.access='private' AND o.data->>'kind'='order'
+          AND o.data->>'membership'='true' AND ($3::timestamptz IS NULL OR (o.created_at,o.record_id)<($3,$4::uuid))
+        ORDER BY o.created_at DESC,o.record_id DESC LIMIT $5
+      `, [schemaId, projectId, after?.createdAt ?? null, after?.id ?? null, limit+1])
+      const items = rows.slice(0,limit).map(row => ({ id: row.id, createdAt: row.created_at,
+        planName: row.title, status: membershipState(row.data, now),
+        periodEnd: row.data.paidThrough ? new Date(row.data.paidThrough).toISOString() : null,
+        cancelAtPeriodEnd: Boolean(row.data.cancelAtPeriodEnd), scope: 'project' }))
+      const last = items.at(-1)
+      return { items, next: rows.length > limit ? { id: last.id, createdAt: last.createdAt } : null,
+        ...(withDraft && { draft: await withDraft(client, actor) }) }
     })
   }
 
@@ -240,7 +339,7 @@ export async function createFreeDownloadStore({ pool, projectId, directory, rend
         WHERE o.schema_id=$1 AND o.project_id=$2 AND o.access='private' AND o.data->>'kind'='order'
         ORDER BY o.created_at DESC,o.record_id LIMIT 100`, [schemaId,projectId])
       const { rows: products } = await client.query(`
-        SELECT l.record_id AS listing_id, r.data->>'title' AS title, r.data ? 'coursePin' AS "isCourse"
+        SELECT l.record_id AS listing_id, r.data->>'title' AS title, r.data ? 'coursePin' AS "isCourse", r.data ? 'membership' AS "isMembership"
         FROM vdb.records l JOIN vdb.records r
           ON r.record_id::text=l.data->>'currentRevisionId' AND r.schema_id=l.schema_id AND r.project_id=l.project_id AND r.data->>'kind'='release'
         WHERE l.schema_id=$1 AND l.project_id=$2 AND l.data->>'kind'='listing'
@@ -257,5 +356,5 @@ export async function createFreeDownloadStore({ pool, projectId, directory, rend
     })
   }
 
-  return { projectId, publish, checkout, attachSession, confirmPayment, receive, dashboard, page, paidOrder, transaction, scoped, get }
+  return { projectId, publish, checkout, attachSession, confirmPayment, receive, dashboard, page, paidOrder, applyMembershipEvent, membershipOrder, recordMembershipCancellation, membershipRoster, transaction, scoped, get }
 }

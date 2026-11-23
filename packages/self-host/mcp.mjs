@@ -16,9 +16,13 @@ function tool(name, description, readOnlyHint, properties = {}, required = Objec
 }
 
 export const DIGITAL_PRODUCT_TOOLS = [
-  tool('product_draft_save', '公開前の商品と告知ページのタイトル・紹介文を保存します。公開は運営画面で確認できます。', false, {
-    title: text(160), description: text(3000),
-  }),
+  tool('membership_roster_list', '対象Projectの会員契約、支払済み期間、退会予定を返します。', true, {
+    projectId: requestId, limit: { type: 'integer', minimum: 1, maximum: 50 },
+    after: { type: 'object', properties: { id: requestId, createdAt: text(64) }, required: ['id', 'createdAt'], additionalProperties: false },
+  }, ['projectId']),
+  tool('product_draft_save', '告知ページのタイトルと紹介文を保存します。会員プランでは会員限定本文も下書きできます。価格と公開は運営者が確認します。', false, {
+    title: text(160), description: text(3000), membershipContent: text(50000),
+  }, ['title', 'description']),
   tool('follow_up_draft_save', '見込客へのEmail案内を下書きします。対象の同意と送信は運営画面で確認します。', false, {
     subject: text(160), body: text(3000),
   }),

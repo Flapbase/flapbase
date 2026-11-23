@@ -156,3 +156,14 @@ OpenAI互換エンドポイントを、`FLAP_COURSE_AI_MODEL` にそこで実行
 運営画面の「教材で答えられなかった質問」に表示されます。持ち込みAIの `member_ai_reviews_list` では
 記録ID、理由、受付日時を取得できます。質問と参照箇所は連絡先などをマスクします。
 ローカル試験用の上限は購入者1人につきUTC日付で20件です。
+
+### 有料会員を募集する
+
+`flap business inspect paid-membership` から、商品用Projectの `/membership` を開きます。
+会員向け本文は `product_draft_save` の `membershipContent` として持ち込みAIからも準備できます。
+担当者が募集文・会員向け本文・月額を確認し、画面から募集ページを公開します。
+
+Stripeテスト環境では既存の `/api/store/payment/webhook` に `invoice.paid`、
+`customer.subscription.deleted`、`checkout.session.expired` を転送します。購入者はログインして入会し、
+支払いを確認した期間だけ、入会時の版の本文を閲覧できます。退会は購入者の画面から次回更新を止める形です。
+運営画面と `membership_roster_list` では、状態・支払済み期間の末日・退会予定を確認できます。

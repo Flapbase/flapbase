@@ -35,7 +35,7 @@ test('external stdio client discovers and calls project operations through the g
     }))
     const { tools } = await client.listTools()
     assert.deepEqual(tools.map(tool => tool.name), [
-      'product_draft_save', 'follow_up_draft_save', 'operations_summary', 'order_support_get', 'support_requests_list',
+      'membership_roster_list', 'product_draft_save', 'follow_up_draft_save', 'operations_summary', 'order_support_get', 'support_requests_list',
       'support_request_get', 'support_reply_draft_save',
     ])
     assert.equal(tools.find(tool => tool.name === 'operations_summary').annotations.readOnlyHint, true)
