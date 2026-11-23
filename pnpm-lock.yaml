@@ -11,6 +11,8 @@ importers:
 
   .: {}
 
+  packages/apps-recruitment: {}
+
   packages/booking-slots: {}
 
   packages/business-workflows: {}

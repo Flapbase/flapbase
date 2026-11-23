@@ -20,6 +20,7 @@ try {
   const targets = [
     ['cli', root],
     ['site-check', resolve(root, 'packages/site-check')],
+    ['apps-recruitment', resolve(root, 'packages/apps-recruitment')],
     ['booking-slots', resolve(root, 'packages/booking-slots')],
     ['step-delivery', resolve(root, 'packages/step-delivery')],
   ]
@@ -50,7 +51,7 @@ try {
   const withoutLabels = checks => checks.map(({ label, ...check }) => check)
   assert.deepEqual(withoutLabels(coreResult.checks), withoutLabels(checked.checks))
   run(process.execPath, ['--input-type=module', '-e',
-    "import {computeSlots} from '@flapbase/booking-slots';import {StepDeliveryEngine} from '@flapbase/step-delivery';if(typeof computeSlots!=='function'||typeof StepDeliveryEngine!=='function')process.exit(1)"], install)
+    "import {createRecruitmentPersistence} from '@flapbase/apps-recruitment/postgres';import {computeSlots} from '@flapbase/booking-slots';import {StepDeliveryEngine} from '@flapbase/step-delivery';if(typeof createRecruitmentPersistence!=='function'||typeof computeSlots!=='function'||typeof StepDeliveryEngine!=='function')process.exit(1)"], install)
   const installedPackage = JSON.parse(await readFile(join(install, 'node_modules/@flapbase/cli/package.json'), 'utf8'))
   assert.equal(installedPackage.dependencies, undefined)
   console.log(JSON.stringify({ status: 'pass', isolatedNpx: true, coreImport: true, tarballScan: true,

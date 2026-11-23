@@ -1,0 +1,28 @@
+{
+  "name": "@flapbase/apps-recruitment",
+  "version": "0.1.0",
+  "description": "Flapbase recruitment publication and applications for PostgreSQL",
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    "./postgres": {
+      "types": "./src/persistence.d.ts",
+      "import": "./src/persistence.js"
+    },
+    "./shared": {
+      "types": "./src/shared.d.ts",
+      "import": "./src/shared.js"
+    }
+  },
+  "files": [
+    "src/",
+    "LICENSE",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
