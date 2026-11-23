@@ -1,155 +1,108 @@
 # Flapbase - Agentic Business Framework
 
-Build, publish, and run digital products with your AI agent.
+**Launch and run a digital business with your AI agent.**
 
-Start with an open-source frontend and connect it to [Flapbase Cloud](#using-the-managed-service) when you are ready to accept signups.
+Publish a product page, take signups, deliver what customers signed up for, and handle their questions from the same project. Start with one of 11 standard business workflows.
 
 [日本語](#日本語)
 
-## Quickstart
+| What you can launch | What you can run |
+| --- | --- |
+| Free resource or digital product | Accept signups, deliver downloads, and handle order questions |
+| Online course | Prepare lessons, give members access, and review unanswered questions |
+| Booking service | Publish availability, take bookings, and track outcomes |
+| Paid membership | Publish an offer and manage member access, renewals, and cancellations |
 
-Requires Node.js 22 or later.
+## Try it with a free download
+
+`Preview the landing page → Prepare the offer with your agent → Review and publish → Take signups with Flap ID → Deliver the file and handle inquiries`
+
+1. With Node.js 22 or later, clone the repo and start the preview.
+
+   ```sh
+   git clone https://github.com/Flapbase/flapbase.git
+   cd flapbase
+   node examples/cloud-starter/run.mjs
+   ```
+
+2. Open [the local preview](http://127.0.0.1:5264/) and edit the title and description in [site.base.json](examples/cloud-starter/site.base.json).
+3. Connect your agent to Flapbase Cloud over MCP. It can prepare a free offer from your file. Review and publish it in Cloud, then set `productId` in the starter to enable signups. [MCP setup](https://flapbase.com/agents) · [Starter walkthrough](examples/cloud-starter/README.md)
+4. Check signups in Orders. When a customer asks about their order, your agent can find the inquiry through MCP and save a reply draft for you to review.
+
+## Start another business
+
+List the available workflows and inspect the one you want to use.
 
 ```sh
-git clone https://github.com/Flapbase/flapbase.git
-cd flapbase
-node examples/cloud-starter/run.mjs
+node bin/flap.js business list
+node bin/flap.js business inspect booking-service
 ```
 
-Open [http://127.0.0.1:5264/](http://127.0.0.1:5264/) and edit [site.base.json](examples/cloud-starter/site.base.json). Connect a published free product to accept signups with Flap ID and review orders in Cloud. [Setup and deployment](examples/cloud-starter/README.md).
+The list is returned as JSON. Print just the business keys for a quick scan.
 
-## Business workflow definitions
-
-[Standard .base definitions](packages/business-workflows/README.md) cover eleven business patterns and describe which stages connect to managed operations.
-
-## Site check
-
-Check locally how search engines and AI read a site. Pass a public URL, a saved HTML file or a folder; you get what to fix, in order, with the reason. No account or API key. Node.js 22+, no external dependencies.
+```sh
+node bin/flap.js business list | node -pe 'JSON.parse(require("node:fs").readFileSync(0)).map(b => b.businessKey).join("\n")'
+```
 
 ```text
-Problems to fix before publishing: 7
-1. The publish folder contains .env (1 page: .env). Fix: Remove .env from the publish folder.
-2. An HTTPS page loads an HTTP resource (1 page: index.html). Fix: Use HTTPS for the resource URL.
+member-ai-course
+standard-service
+free-resource
+recruitment
+digital-product-sales
+organization-training
+paid-membership
+booking-service
+event-registration
+customer-sales
+customer-support
 ```
 
-```sh
-git clone https://github.com/Flapbase/flapbase.git
-cd flapbase
-node bin/flap.js check examples/travel-broken
-```
+The `.base` catalog records the workflow, the inputs and the operations an agent can call. The connected agent can look up the catalog with `app_template_get` and execute a registered step with `business_workflow_step_run`. Publishing and customer-facing actions follow the project's permissions and approvals. [All 11 workflows and MCP commands](packages/business-workflows/README.md)
 
-The npm package is `@flapbase/cli` and the command is `flap`. Once published to npm:
+## Where it runs
 
-```sh
-npx --yes @flapbase/cli@0.1.0 check https://flapbase.com
-npx --yes @flapbase/cli@0.1.0 check ./site --json
-```
+- **With your own frontend.** Use the OSS starter or your own code, and connect the operational backend to Flapbase Cloud.
+- **In Flapbase Cloud.** Build and operate from the hosted interface and connect your agent over MCP. [Flapbase Cloud](https://flapbase.com)
+- **On your own host.** Run the documented local workflows with PostgreSQL. [Self-host setup and scope](packages/self-host/README.md)
 
-### What it checks
+## Before publishing
 
-- The 11 basics: doctype, language, charset, mobile viewport, title, description, canonical URL, main heading, structured data (JSON-LD), content in the initial HTML, noindex.
-- How AI reads the site: robots.txt, search, answer and training crawlers, organization structured data, responses per language, sitemap.
-- Facts in the initial HTML: price, service area and booking method, from text, headings and JSON-LD. Choose them with `--facts price,area,booking`.
-- Booking, contact and purchase links and forms, including mobile menus: source, label and final destination. URL checks follow redirects; folder checks resolve local files.
-- Prices in yen, opening days, addresses and phone numbers across pages, languages and JSON-LD.
-- Publication accidents: `.env`, `.git`, private key files and HTTP resources on HTTPS pages.
-- Problems grouped by rule and cause, with affected pages, evidence and where to fix them. `--baseline` separates fixed, new and continuing problems.
-- `--json` returns the same result as JSON. The text output is built from it.
+Use the bundled site check to review how search engines and AI read your pages and to spot common publishing problems. [Site check guide](docs/site-check.md)
 
-```sh
-node bin/flap.js check https://flapbase.com --json
-node bin/flap.js check examples/apparel/index.html
-node bin/flap.js check examples/travel --base-url https://example.com/travel/
-```
-
-Save a result, make changes and check again:
-
-```sh
-node bin/flap.js check ./site --json > /tmp/site-before.json
-node bin/flap.js check ./site --baseline /tmp/site-before.json
-node bin/flap.js check ./site --facts price,booking --json
-```
-
-For a file, robots.txt and the sitemap are read from the same folder; for a folder, from its root. No URL is fetched in that case. Anything that could not be read is reported as "unchecked". The exit code is 0 even when fixes are found, and 1 when the input or a fetch fails.
-
-URL fetching is limited to public HTTPS sites; private networks and local devices are refused. Limits: HTML 1 MiB and 10 s, robots.txt 64 KiB, sitemap 256 KiB, 3 redirects. Folders: up to 100 HTML files, 8 MiB in total, depth 8.
-
-## Using the managed service
-
-Use the Cloud API as a managed backend for your own frontend, or use the hosted interface to build and run your business in Flapbase Cloud.
-
-[Flapbase Cloud](https://flapbase.com) is a workspace for growing your business. The site check uses the same rules as its free diagnosis, and tests confirm that the same HTML gives the same result. This tool runs only on your machine and does not call Flapbase APIs or send your data. Continuous monitoring and checking whether you appear in AI answers are available in Flapbase Cloud.
-
-[Examples](examples/README.md) · [Result format and Cloud mapping](docs/result.md) · [Where the rules come from](docs/provenance.md) · [Architecture](docs/architecture.md)
-
-[Skills documentation](docs/skills.md)
-
-## Feedback and contributions
-
-Issues and pull requests are closed. Send feedback from Flapbase Cloud: use the feedback button in the app, or ask your AI agent connected over MCP. To report a security issue, see [SECURITY.md](SECURITY.md).
-
-## Development
-
-The CLI is at the root and the rules and fetching are in `packages/site-check`. No build step or added dependencies.
+## Development and feedback
 
 ```sh
 pnpm test
 pnpm check:release
 ```
 
-Apache-2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
+[Architecture](docs/architecture.md) · [Examples](examples/README.md) · [Skills documentation](docs/skills.md)
+
+Send feedback through the app or an agent connected over MCP. Issues and pull requests are closed. [Security reports](SECURITY.md)
+
+Apache-2.0. [License](LICENSE) · [Notices](NOTICE)
 
 ---
 
-### Start a standard business
-
-```sh
-node bin/flap.js business list
-node bin/flap.js business inspect free-resource
-```
-
-Choose from the eleven definitions and use the [business workflow guide](packages/business-workflows/README.md) to prepare a pinned request for your Cloud MCP connection. The guide also lists the business flows that can run with the local PostgreSQL host.
-
 ## 日本語
 
-[11事業の標準 .base と使い方](packages/business-workflows/README.md)
+**AIエージェントと事業を作り、成長させる**
 
-**AIエージェントとデジタル商品を作り 公開し 運営する**
+デジタル商品、講座、予約、会員サービスなど11事業の標準ワークフローから選べます。告知ページを公開し、申込・提供・顧客対応を同じプロジェクトで進めます。
 
-オープンソースのフロントを手元で作り、申込を受け付ける段階で [Flapbase Cloud](#using-the-managed-service) につなぎます。
+### 無料資料で始める
 
-### はじめる
+`告知ページをプレビュー → AIが出品を準備 → 人が確認して公開 → Flap IDで申込 → 本人受取・問い合わせ対応`
 
-Node.js 22以上で `node examples/cloud-starter/run.mjs` を実行します。[ローカルのプレビュー](http://127.0.0.1:5264/) を開き、告知ページを編集します。公開済みの無料商品をつなぐと、Flap IDでの申込・本人受取とCloudの注文確認を使えます。 [設定と公開の手順](examples/cloud-starter/README.md)
+Node.js 22以上で、上の手順から[ローカルプレビュー](http://127.0.0.1:5264/)を起動し、[site.base.json](examples/cloud-starter/site.base.json)で告知を編集します。AIエージェントをMCPでCloudにつなぐと、登録した資料をもとに無料商品の準備を任せられます。確認して公開した商品のIDを `productId` に設定すると、告知ページから申込へ進めます。 [MCP接続](https://flapbase.com/agents) · [設定と公開の手順](examples/cloud-starter/README.md)
 
-### 標準事業を始める
+運営者はCloudの「注文」で申込を確認できます。問い合わせが入ったら、AIが該当する注文を照会し、返信案を保存します。返信は運営者が確認します。
 
-```sh
-node bin/flap.js business list
-node bin/flap.js business inspect free-resource
-```
+### ほかの事業を選ぶ
 
-11事業から選び、[事業ワークフローの手順](packages/business-workflows/README.md#日本語)でCloud MCPへの入力を作れます。PostgreSQLで動かせる事業の範囲も同じ手順から確認できます。
+`node bin/flap.js business list` で事業を選び、たとえば `node bin/flap.js business inspect booking-service` で予約サービスの工程とAIが使える操作を確認できます。 [11事業の標準定義と実行手順](packages/business-workflows/README.md#日本語)
 
-### サイトの点検
+OSSのフロントをCloudのバックエンドにつなぐ方法、Cloud内で制作から運営まで行う方法、PostgreSQLで対応するフローを自分で動かす方法があります。 [セルフホストの手順と対応範囲](packages/self-host/README.md)
 
-サイトが検索と AI に正しく読まれるかを、手元で点検します。公開している URL、保存した HTML、フォルダのどれでも渡せます。直す順番と理由を日本語で返します。アカウントと API キーは不要です。Node.js 22 以上で動き、外部のパッケージには依存しません。
-
-```text
-公開前に直すべき問題が 7 件
-1. 公開用フォルダに .env が混ざっています（1ページ: .env）。直す所: .env を公開用フォルダから外します。
-2. HTTPS のページが HTTP の資源を読んでいます（1ページ: index.html）。直す所: 資源の URL を HTTPS に直します。
-```
-
-```sh
-node bin/flap.js check examples/cosmetics/index.html
-node bin/flap.js check https://flapbase.com --json
-```
-
-基本の11項目と AI からの読まれ方に加え、料金・対応地域・予約方法が初めの HTML のどこにあるか、予約・問い合わせ・購入のリンクの宛先、ページ・言語・構造化データの食い違い、公開用ファイルへの .env・.git・秘密鍵の混入と HTTP 資源を調べます。同じ原因はページの数と一覧を付けて1件にまとめます。`--baseline` に前回の JSON を渡すと、直った所・新しく壊れた所・続いている所を表示します。URL の取得は、公開されている HTTPS のサイトに限ります。
-
-[Skills のドキュメント](docs/skills.md#日本語)
-
-### 意見と貢献
-
-Issues と Pull Request は受け付けていません。意見は Flapbase Cloud のアプリのフィードバック、または MCP でつないだ AI エージェントから送ってください。セキュリティの問題は [SECURITY.md](SECURITY.md) を見てください。
+公開前には検索・AIからの読まれ方や公開用ファイルをローカルで点検できます。 [サイト点検ガイド](docs/site-check.md#日本語)
