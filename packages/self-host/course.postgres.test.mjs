@@ -29,7 +29,9 @@ test('private training pins the published revision, protects progress, and stops
     const port = await listen(probe)
     await close(probe)
     const origin = 'http://127.0.0.1:' + port
-    const adapter = createBetterAuthAdapter(pool, { origin, issuer: 'urn:flapbase:self-host:course-test', secret: randomUUID() })
+    const mail = []
+    const adapter = createBetterAuthAdapter(pool, { origin, issuer: 'urn:flapbase:self-host:course-test', secret: randomUUID(),
+      sendVerificationEmail: async message => { mail.push(message) } })
     const projectId = randomUUID(), otherProjectId = randomUUID()
     const training = createCourseService({ pool, projectId })
     server = createSelfHostedServer({ origin, pool, adapter, course: training })
@@ -45,7 +47,7 @@ test('private training pins the published revision, protects progress, and stops
       const cookie = signUp.headers.getSetCookie().find(value => value.startsWith('better-auth.session_token=')).split(';')[0]
       const identity = await request('/auth/context', cookie)
       assert.equal(identity.status, 200)
-      return { cookie, id: (await identity.json()).principalId }
+      return { cookie, email: name + '@example.test', id: (await identity.json()).principalId }
     }
     const manager = await account('owner'), member = await account('learner')
     const owner = manager.id, learner = member.id
@@ -58,8 +60,37 @@ test('private training pins the published revision, protects progress, and stops
     await fixture.sql.query(`INSERT INTO platform.projects(project_id,workspace_id,name,slug,created_by_principal_id,visibility)
       VALUES($1,$2,'Other','other',$3,'private')`, [otherProjectId, tenantId, owner])
     await fixture.sql.query(`INSERT INTO platform.project_memberships(project_id, principal_id, member_role) VALUES
-      ($1,$2,'member'),($1,$3,'member'),($4,$5,'owner'),($4,$2,'member')`, [projectId, learner, next, otherProjectId, owner])
+      ($1,$3,'member'),($4,$5,'owner'),($4,$2,'member')`, [projectId, learner, next, otherProjectId, owner])
 
+    const invites = '/api/courses/v1/invitations'
+    const invitationInput = { email: 'learner@example.test', name: '受講者' }
+    async function invitation(fields) {
+      const response = await request(invites, manager.cookie, fields)
+      assert.equal(response.status, 200, await response.clone().text())
+      const link = new URL((await response.json()).url)
+      assert.equal(link.pathname, '/training/join')
+      return link.hash.slice(1)
+    }
+    const oldToken = await invitation(invitationInput)
+    const token = await invitation(invitationInput)
+    const accept = (cookie, code = token) => request(invites + '/accept', cookie, { token: code })
+    assert.equal((await request(invites, member.cookie, invitationInput)).status, 404)
+    const otherTraining = createCourseService({ pool, projectId: otherProjectId })
+    await assert.rejects(otherTraining.accept({ principalId: learner, verifiedEmail: invitationInput.email }, token), { status: 410 })
+    assert.equal((await accept(member.cookie)).status, 403)
+    for (const user of [manager, member]) {
+      assert.equal((await request('/api/auth/send-verification-email', user.cookie, { email: user.email, callbackURL: origin + '/training/join' })).status, 204)
+      const confirmed = await fetch(mail.at(-1).url, { headers: { cookie: user.cookie }, redirect: 'manual' })
+      assert.ok(confirmed.status === 302 || confirmed.status === 204, await confirmed.clone().text())
+    }
+    assert.equal((await accept(manager.cookie)).status, 403)
+    assert.equal((await accept(member.cookie, oldToken)).status, 410)
+    assert.equal((await accept(member.cookie)).status, 200)
+    assert.equal((await accept(member.cookie)).status, 200)
+    assert.deepEqual(await fixture.sql.query('SELECT member_role FROM platform.project_memberships WHERE project_id=$1 AND principal_id=$2', [projectId, learner]), [{ member_role: 'viewer' }])
+    assert.match(await (await request('/training', manager.cookie)).text(), /法人研修/)
+    assert.equal((await request('/training', member.cookie)).status, 404)
+    assert.match(await (await request('/training/my', member.cookie)).text(), /教材が割り当てられると/)
     const chapterId = randomUUID(), lessonId = randomUUID(), courseId = randomUUID()
     const course = { tenantId, courseId, creatorId: owner, title: '研修', description: '基礎研修', status: 'published',
       opening: { kind: 'immediate' }, chapters: [{ id: chapterId, title: 'はじめに', order: 1 }],
@@ -106,6 +137,11 @@ test('private training pins the published revision, protects progress, and stops
     await assert.rejects(training.learn(learner, assignmentId, { ...command, completed: false }), { status: 409 })
     await assert.rejects(training.learn(learner, assignmentId, { ...command, key: randomUUID() }), { status: 409 })
     assert.equal((await training.learn(next, nextAssignment.assignmentId, read)).document.lessonBodies[0].markdown, '改訂した教材')
+    const learnerPage = await request('/training/my/' + assignmentId, member.cookie)
+    assert.equal(learnerPage.status, 200)
+    assert.match(await learnerPage.text(), /初版の教材/)
+    assert.match(await (await request('/training/my', member.cookie)).text(), new RegExp(assignmentId))
+    assert.match(await (await request('/training', manager.cookie)).text(), /1 \/ 1/)
     const listed = await request(assignments, manager.cookie)
     assert.equal((await listed.json()).assignments.find(item => item.assignmentId === assignmentId).completed, 1)
     await assert.rejects(training.assignments(learner), { status: 404 })

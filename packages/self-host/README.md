@@ -92,11 +92,16 @@ MCPを使う場合、`FLAP_BOOKING_AGENT_PRINCIPAL_ID` に対象Projectの運営
 
 初期の納品内容は文面です。ローカルの受付は運営画面で公開し、Cloudの汎用サイト・アプリ編集ツールは別の接続経路です。
 
-### 法人研修のローカルAPI
+### 法人研修のローカル画面とAPI
 
 既存のローカルDBで `pnpm --filter @flapbase/self-host setup` を再実行すると教材の保存先が追加されます。
-`FLAP_COURSE_PROJECT_ID` に非公開ProjectのIDを指定して起動します。ProjectのOwnerまたはEditorが、
-同じオリジンのログインセッションで教材の公開と受講割当を行えます。
+`FLAP_COURSE_PROJECT_ID` に非公開ProjectのID、`FLAP_COURSE_DATA_DIR` にサーバーのローカルデータ用フォルダを指定します。
+OwnerまたはEditorは `/training` から教材を公開し、招待リンクを発行できます。リンクを受け取った人は
+招待先のメールアドレスを登録・確認して参加します。ローカルのメール確認リンクは
+`<FLAP_COURSE_DATA_DIR>/<Project ID>/verification-preview/` に書き出されます。
+
+参加後の受講者に教材を割り当てると、本人の `/training/my` に表示されます。受講者は教材を読んで
+受講済みにでき、担当者は `/training` で進捗を確認できます。
 
 | 操作 | API |
 | --- | --- |

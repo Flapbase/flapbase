@@ -24,6 +24,7 @@ const authPaths = new Set(['/api/auth/sign-up/email', '/api/auth/sign-in/email',
 const files = new Map([
   ['/', ['index.html', 'text/html; charset=utf-8']],
   ['/auth-ui.js', ['auth-ui.js', 'text/javascript; charset=utf-8']],
+  ['/course-ui.js', ['course-ui.js', 'text/javascript; charset=utf-8']],
   ['/cases-ui.js', ['cases-ui.js', 'text/javascript; charset=utf-8']],
   ['/booking-ui.js', ['booking-ui.js', 'text/javascript; charset=utf-8']],
   ['/recruitment-ui.js', ['recruitment-ui.js', 'text/javascript; charset=utf-8']],
@@ -74,7 +75,7 @@ export function createSelfHostedServer({ origin, pool, adapter, store, lifecycle
         route, origin, profile: cases, delegation: casesDelegation, resolveHuman: () => resolveHuman(fromNodeHeaders(req.headers)),
       })) return
       if (course && await handleCourses(req, res, {
-        route, origin, course, resolveHuman: () => resolveHuman(fromNodeHeaders(req.headers)),
+        route, origin, course, resolveHuman: options => resolveHuman(fromNodeHeaders(req.headers), options),
       })) return
       const file = req.method === 'GET' ? files.get(route.pathname) : undefined
       if (!file) {
@@ -128,8 +129,14 @@ async function start() {
       if (!bookingDirectory) throw new Error('Set FLAP_BOOKING_DATA_DIR for booking publications and verification previews')
       booking = createBooking({ pool, projectId: bookingProject, directory: bookingDirectory })
     }
-    if (booking || cases) {
-      const preview = join(cases ? casesDirectory : bookingDirectory, cases ? casesProject : bookingProject, 'verification-preview')
+    const courseProject = process.env.FLAP_COURSE_PROJECT_ID
+    const course = courseProject ? createCourseService({ pool, projectId: courseProject }) : undefined
+    const courseDirectory = process.env.FLAP_COURSE_DATA_DIR
+    if (courseProject && !courseDirectory) throw new Error('Set FLAP_COURSE_DATA_DIR for local verification previews')
+    if (booking || cases || courseProject) {
+      const [previewDirectory, previewProject] = courseProject ? [courseDirectory, courseProject]
+        : cases ? [casesDirectory, casesProject] : [bookingDirectory, bookingProject]
+      const preview = join(previewDirectory, previewProject, 'verification-preview')
       await mkdir(preview, { recursive: true, mode: 0o700 })
       sendVerificationEmail = ({ user, url }) => writeFile(join(preview, randomUUID() + '.json'),
         JSON.stringify({ to: user.email, url }), { mode: 0o600, flag: 'wx' })
@@ -168,8 +175,6 @@ async function start() {
     const recruitment = recruitmentProject || recruitmentDirectory
       ? await createRecruitment({ pool, projectId: recruitmentProject, directory: recruitmentDirectory })
       : undefined
-    const courseProject = process.env.FLAP_COURSE_PROJECT_ID
-    const course = courseProject ? createCourseService({ pool, projectId: courseProject }) : undefined
     const server = createSelfHostedServer({ origin, pool, adapter, store, lifecycle, payment, delegation, recruitment, recruitmentDelegation, booking, bookingDelegation, cases, casesDelegation, course })
     await new Promise((resolve, reject) => {
       server.once('error', reject)

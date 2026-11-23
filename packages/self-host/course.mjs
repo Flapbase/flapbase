@@ -1,7 +1,7 @@
-import { randomUUID } from 'node:crypto'
+import { randomBytes, randomUUID } from 'node:crypto'
 import { validateCourseDocument } from '../course-engine/src/document.js'
 import { executeLearningAccess } from '../course-engine/src/learning-access.js'
-import { invalid, missing, sha, StoreError, storeId } from './free-download.mjs'
+import { forbidden, invalid, missing, sha, StoreError, storeId } from './free-download.mjs'
 import { transaction } from './setup.mjs'
 
 const blueprint = 'vdb.flap.course.training-assignment'
@@ -151,11 +151,10 @@ export function createCourseService({ pool, projectId }) {
     }, actorId, assignmentId, command, now))
   }
 
-  function assignments(actorId) {
-    return run(async db => {
-      const workspaceId = await membership(db, actorId, true)
+  async function listAssignments(db, workspaceId) {
       const { rows } = await db.query(`
-        SELECT r.record_id AS "assignmentId",r.owner_principal_id AS "learnerId",human.display_name AS "learnerName",
+        SELECT r.record_id AS "assignmentId",r.owner_principal_id AS "learnerId",coalesce(human.display_name, human.email) AS "learnerName",
+          ar.metadata #>> '{payload,document,course,title}' AS title,
           ar.artifact_revision_id AS "artifactRevisionId",ar.revision_number::int AS "courseRevision",r.version::int,
           (SELECT count(*)::int FROM jsonb_array_elements(r.data->'progress') entry WHERE entry->>'completed'='true') AS completed,
           (SELECT count(*)::int FROM jsonb_array_elements(ar.metadata#>'{payload,document,course,lessons}') lesson
@@ -171,8 +170,127 @@ export function createCourseService({ pool, projectId }) {
         ORDER BY r.created_at DESC LIMIT 50
       `, [workspaceId, projectId, blueprint, blueprintDigest])
       return rows
+  }
+
+  function assignments(actorId) {
+    return run(async db => listAssignments(db, await membership(db, actorId, true)))
+  }
+
+  function dashboard(actorId) {
+    return run(async db => {
+      const workspaceId = await membership(db, actorId, true)
+      const courses = (await db.query(`
+        SELECT latest.artifact_revision_id AS id,latest.revision_number::int AS revision,
+          latest.metadata #>> '{payload,document,course,title}' AS title
+        FROM artifact.artifacts a
+        JOIN LATERAL (
+          SELECT ar.artifact_revision_id,ar.revision_number,ar.metadata
+          FROM artifact.artifact_revisions ar WHERE ar.artifact_id=a.artifact_id
+            AND ${courseProfile} AND ar.metadata #>> '{owner,projectRef}'=a.project_id::text
+          ORDER BY ar.revision_number DESC LIMIT 1
+        ) latest ON true
+        WHERE a.workspace_id=$1 AND a.project_id=$2 AND latest.metadata #>> '{payload,document,course,status}'='published'
+        ORDER BY a.created_at DESC LIMIT 50
+      `, [workspaceId, projectId])).rows
+      const learners = (await db.query(`
+        SELECT m.principal_id AS id,coalesce(human.display_name,human.email,m.principal_id::text) AS name
+        FROM platform.project_memberships m
+        JOIN identity.principals human ON human.principal_id=m.principal_id AND human.principal_kind='human' AND human.status='active'
+        WHERE m.project_id=$1 AND m.status='active'
+          AND NOT EXISTS (SELECT 1 FROM platform.workspace_members wm
+            WHERE wm.workspace_id=$2 AND wm.principal_id=m.principal_id AND wm.status<>'active')
+        ORDER BY m.joined_at DESC LIMIT 50
+      `, [projectId, workspaceId])).rows
+      return { workspaceId, courses, learners, assignments: await listAssignments(db, workspaceId) }
     })
   }
 
-  return { release, assign, learn, assignments }
+  function learnerHome(actorId) {
+    return run(async db => {
+      const workspaceId = await membership(db, actorId)
+      const { rows } = await db.query(`
+        SELECT r.record_id AS id,ar.metadata #>> '{payload,document,course,title}' AS title
+        FROM vdb.records r JOIN vdb.schemas s USING(schema_id)
+        JOIN artifact.artifact_revisions ar ON ar.artifact_revision_id=(r.data->>'artifactRevisionId')::uuid
+          AND ar.content_digest=r.data->>'digest'
+        JOIN artifact.artifacts a ON a.artifact_id=ar.artifact_id AND a.workspace_id=s.workspace_id AND a.project_id=r.project_id
+        WHERE s.workspace_id=$1 AND r.project_id=$2 AND r.owner_principal_id=$3 AND r.access='private'
+          AND s.blueprint_ref=$4 AND s.blueprint_revision='1' AND s.blueprint_digest=$5
+          AND ${courseProfile} AND ar.metadata #>> '{owner,projectRef}'=r.project_id::text
+        ORDER BY r.created_at DESC LIMIT 50
+      `, [workspaceId, projectId, actorId, blueprint, blueprintDigest])
+      return rows
+    })
+  }
+
+  function invite(actorId, { email, name }) {
+    if (typeof email !== 'string' || typeof name !== 'string') throw invalid()
+    email = email.trim().toLowerCase()
+    name = name.trim()
+    if (!/^[^@\s]+@[^@\s]+$/.test(email) || email.length > 320 || !name || name.length > 80 || /[\x00-\x1f]/.test(name + email)) throw invalid()
+    return run(async db => {
+      const workspaceId = await membership(db, actorId, true)
+      await db.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))', [workspaceId + ':' + email])
+      const pending = await row(db, `
+        SELECT invitation_id,invite_role,project_ids,content_edit FROM platform.workspace_reviewer_invitations
+        WHERE workspace_id=$1 AND email=$2 AND status='pending' FOR UPDATE
+      `, [workspaceId, email])
+      if (pending) {
+        if (pending.invite_role !== 'viewer' || pending.content_edit ||
+            pending.project_ids.length !== 1 || pending.project_ids[0] !== projectId) throw conflict()
+        await db.query(`
+          UPDATE platform.workspace_reviewer_invitations SET status='revoked',revoked_by=$2,revoked_at=now()
+          WHERE invitation_id=$1
+        `, [pending.invitation_id, actorId])
+      }
+      const token = randomBytes(32).toString('base64url')
+      await db.query(`
+        INSERT INTO platform.workspace_reviewer_invitations(workspace_id,email,display_name,token_hash,invited_by,
+          expires_at,invite_role,project_ids)
+        VALUES($1,$2,$3,$4,$5,now()+interval '7 days','viewer',ARRAY[$6::uuid])
+      `, [workspaceId, email, name, 'sha256:' + sha(token), actorId, projectId])
+      return token
+    })
+  }
+
+  function accept({ principalId, verifiedEmail }, token) {
+    if (typeof token !== 'string' || !/^[a-zA-Z0-9_-]{43}$/.test(token)) throw invalid()
+    if (!verifiedEmail) throw new StoreError(403, 'email_verification_required')
+    return run(async db => {
+      const invitation = await row(db, `
+        SELECT i.invitation_id,i.email,i.status,i.accepted_by,i.invited_by,i.expires_at > now() AS valid
+        FROM platform.workspace_reviewer_invitations i
+        JOIN platform.projects p ON p.workspace_id=i.workspace_id AND p.project_id=$1
+        JOIN identity.principals human ON human.principal_id=$2 AND human.status='active' AND human.principal_kind='human'
+        WHERE i.token_hash=$3 AND i.invite_role='viewer' AND NOT i.content_edit AND i.project_ids=ARRAY[p.project_id]
+          AND NOT EXISTS(SELECT 1 FROM platform.workspace_members wm WHERE wm.workspace_id=p.workspace_id
+            AND wm.principal_id=human.principal_id AND wm.status<>'active')
+        FOR UPDATE OF i
+      `, [projectId, principalId, 'sha256:' + sha(token)])
+      if (!invitation || invitation.status === 'revoked') throw new StoreError(410, 'invitation_unavailable')
+      if (invitation.email !== verifiedEmail) throw forbidden()
+      if (invitation.status === 'accepted') {
+        if (invitation.accepted_by !== principalId) throw forbidden()
+        await membership(db, principalId)
+        return { state: 'joined' }
+      }
+      if (!invitation.valid) throw new StoreError(410, 'invitation_unavailable')
+      try { await membership(db, invitation.invited_by, true) } catch (error) {
+        if (error instanceof StoreError && error.status === 404) throw new StoreError(410, 'invitation_unavailable')
+        throw error
+      }
+      const member = await row(db, `
+        INSERT INTO platform.project_memberships(project_id,principal_id,member_role)
+        VALUES($1,$2,'viewer') ON CONFLICT DO NOTHING RETURNING principal_id
+      `, [projectId, principalId])
+      if (!member) await membership(db, principalId)
+      await db.query(`
+        UPDATE platform.workspace_reviewer_invitations SET status='accepted',accepted_by=$2,accepted_at=now()
+        WHERE invitation_id=$1
+      `, [invitation.invitation_id, principalId])
+      return { state: 'joined' }
+    })
+  }
+
+  return { release, assign, learn, assignments, dashboard, learnerHome, invite, accept }
 }

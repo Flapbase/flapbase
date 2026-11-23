@@ -9,6 +9,7 @@ const localWorkflows = {
   'customer-support': 'flapbase:customer-support',
 }
 const localLaunch = {
+  'organization-training': { path: '/training', configuration: 'FLAP_COURSE_PROJECT_ID' },
   'standard-service': { path: '/cases', configuration: 'FLAP_CASES_PROJECT_ID', businessKey: 'standard-service' },
   'customer-sales': { path: '/cases', configuration: 'FLAP_CASES_PROJECT_ID', businessKey: 'customer-sales' },
   recruitment: { path: '/recruitment', configuration: 'FLAP_RECRUITMENT_PROJECT_ID' },

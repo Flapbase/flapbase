@@ -54,7 +54,7 @@ const activeHuman = row => row?.principal_kind === 'human' && row.status === 'ac
   ? { principalId: row.principal_id } : null
 
 export function createHumanSessionResolver(pool, adapter) {
-  return async headers => {
+  return async (headers, { includeVerifiedEmail = false } = {}) => {
     const identity = await adapter.verify(headers)
     if (!identity) return null
     const { issuer, subject, verifiedEmail } = identity
@@ -73,7 +73,9 @@ export function createHumanSessionResolver(pool, adapter) {
               AND NOT EXISTS(SELECT 1 FROM identity.principals WHERE principal_kind='human' AND email=$2)
           `, [human.principalId, verifiedEmail.trim().toLowerCase()])
         }
-        return human
+        return human && includeVerifiedEmail && typeof verifiedEmail === 'string' && verifiedEmail.trim()
+          ? { ...human, verifiedEmail: verifiedEmail.trim().toLowerCase() }
+          : human
       }
       if (existing) return await resolve(existing)
 
