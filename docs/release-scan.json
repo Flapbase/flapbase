@@ -765,7 +765,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "9cdfcc3025c42e6b94f1042c9c7a2c41d114bde85936a981fedaf6016c16217a"
+      "sha256": "c48861618a3ca451924d4b7b89f93cdbb99322f7d9cd82aad43ef70a4e6901d5"
     },
     {
       "path": "scripts/check-pack.mjs",

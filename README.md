@@ -38,11 +38,7 @@ node bin/flap.js business list
 node bin/flap.js business inspect booking-service
 ```
 
-The list is returned as JSON. Print just the business keys for a quick scan.
-
-```sh
-node bin/flap.js business list | node -pe 'JSON.parse(require("node:fs").readFileSync(0)).map(b => b.businessKey).join("\n")'
-```
+The list is returned as JSON and includes these business keys.
 
 ```text
 member-ai-course
@@ -57,6 +53,15 @@ event-registration
 customer-sales
 customer-support
 ```
+
+<details>
+<summary>Command to print only the business keys</summary>
+
+```sh
+node bin/flap.js business list | node -pe 'JSON.parse(require("node:fs").readFileSync(0)).map(b => b.businessKey).join("\n")'
+```
+
+</details>
 
 The `.base` catalog records the workflow, the inputs and the operations an agent can call. The connected agent can look up the catalog with `app_template_get` and execute a registered step with `business_workflow_step_run`. Publishing and customer-facing actions follow the project's permissions and approvals. [All 11 workflows and MCP commands](packages/business-workflows/README.md)
 
@@ -95,7 +100,15 @@ Apache-2.0. [License](LICENSE) · [Notices](NOTICE)
 
 `告知ページをプレビュー → AIが出品を準備 → 人が確認して公開 → Flap IDで申込 → 本人受取・問い合わせ対応`
 
-Node.js 22以上で、上の手順から[ローカルプレビュー](http://127.0.0.1:5264/)を起動し、[site.base.json](examples/cloud-starter/site.base.json)で告知を編集します。AIエージェントをMCPでCloudにつなぐと、登録した資料をもとに無料商品の準備を任せられます。確認して公開した商品のIDを `productId` に設定すると、告知ページから申込へ進めます。 [MCP接続](https://flapbase.com/agents) · [設定と公開の手順](examples/cloud-starter/README.md)
+Node.js 22以上で次のコマンドを実行します。
+
+```sh
+git clone https://github.com/Flapbase/flapbase.git
+cd flapbase
+node examples/cloud-starter/run.mjs
+```
+
+[ローカルプレビュー](http://127.0.0.1:5264/)を開き、[site.base.json](examples/cloud-starter/site.base.json)で告知を編集します。AIエージェントをMCPでCloudにつなぐと、登録した資料をもとに無料商品の準備を任せられます。確認して公開した商品のIDを `productId` に設定すると、告知ページから申込へ進めます。 [MCP接続](https://flapbase.com/agents) · [設定と公開の手順](examples/cloud-starter/README.md)
 
 運営者はCloudの「注文」で申込を確認できます。問い合わせが入ったら、AIが該当する注文を照会し、返信案を保存します。返信は運営者が確認します。
 
