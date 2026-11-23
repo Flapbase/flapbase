@@ -358,8 +358,6 @@ export function createRecruitmentPersistence({ sha256, presetDigest }) {
         listOwnApplications,
         hasOwnApplication,
         listRecruitmentApplications,
-        listRecruitmentApplications,
-        listRecruitmentApplications,
         advanceRecruitmentApplication,
         finalizeRecruitmentApplication,
         readRecruitmentRelease,
