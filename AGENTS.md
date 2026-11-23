@@ -26,7 +26,7 @@ Use the catalog's `businesses`, `workflows`, `procedures`, and `executions` for 
 
 1. Run `node bin/flap.js business list` and inspect the selected key. Read the execution's parameter bindings and the workflow's human steps.
 2. For a free-download preview, edit `title` and `description` in [site.base.json](examples/cloud-starter/site.base.json) and run `node examples/cloud-starter/run.mjs`. Set `productId` after the owner publishes the corresponding free offer.
-3. For Cloud operations, use the owner's OAuth-authorized workspace. Call `workspace_projects_list`, select the authorized target Project, and call `app_template_get` with `{"templateId":"business-app"}`. Match the live workflow version and source digest against the local definition. The CLI can also check this with `node bin/flap.js business check-cloud` if it has an authorized MCP access token. [Cloud connection](https://flapbase.com/agents)
+3. For Cloud operations, use the owner's OAuth-authorized workspace. Call `workspace_projects_list`, select the authorized target Project, and call `app_template_get` with `{"templateId":"business-app"}`. Match the live workflow version and source digest against the local definition. The CLI can also check this with `node bin/flap.js business check-cloud` if it has an authorized MCP access token. [Cloud connection](README.md#agent-quickstart)
 4. Use `business prepare` to construct the versioned MCP input. Call `business_workflow_step_run` for the selected step. Use `nextStepKey` and the preceding result when the definition has a following step. [CLI guide](packages/business-workflows/README.md)
 
 | Tool | Input → output |

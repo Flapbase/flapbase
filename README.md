@@ -26,7 +26,7 @@ Publish a product page, take signups, deliver what customers signed up for, and 
    ```
 
 2. Open [the local preview](http://127.0.0.1:5264/) and edit the title and description in [site.base.json](examples/cloud-starter/site.base.json).
-3. Connect your agent to Flapbase Cloud over MCP. It can prepare a free offer from your file. Review and publish it in Cloud, then set `productId` in the starter to enable signups. [MCP setup](https://flapbase.com/agents) · [Starter walkthrough](examples/cloud-starter/README.md)
+3. Connect your agent to Flapbase Cloud over MCP. It can prepare a free offer from your file. Review and publish it in Cloud, then set `productId` in the starter to enable signups. [MCP setup](#agent-quickstart) · [Starter walkthrough](examples/cloud-starter/README.md)
 4. Check signups in Orders. When a customer asks about their order, your agent can find the inquiry through MCP and save a reply draft for you to review.
 
 ## Start another business
@@ -90,7 +90,7 @@ For Cursor, merge this entry into `.cursor/mcp.json` and connect from MCP settin
 }
 ```
 
-The owner signs in and selects a workspace. These snippets register the endpoint. Workspace authorization requires an OAuth client that supports HTTPS Client ID Metadata Documents. For a client without that support, use a supported OAuth connection or prepare the inputs locally with `business prepare`. [Flapbase connection requirements](https://flapbase.com/agents) · [Claude Code setup](https://code.claude.com/docs/en/mcp) · [Cursor setup](https://cursor.com/docs/mcp)
+The owner signs in and selects a workspace. These snippets register the endpoint. Workspace authorization requires an OAuth client that supports HTTPS Client ID Metadata Documents. For a client without that support, use a supported OAuth connection or prepare the inputs locally with `business prepare`. [Flapbase connection requirements](skills/flapbase-connect-mcp/SKILL.md) · [Claude Code setup](https://code.claude.com/docs/en/mcp) · [Cursor setup](https://cursor.com/docs/mcp)
 
 </details>
 
@@ -141,7 +141,7 @@ cd flapbase
 node examples/cloud-starter/run.mjs
 ```
 
-[ローカルプレビュー](http://127.0.0.1:5264/)を開き、[site.base.json](examples/cloud-starter/site.base.json)で告知を編集します。AIエージェントをMCPでCloudにつなぐと、登録した資料をもとに無料商品の準備を任せられます。確認して公開した商品のIDを `productId` に設定すると、告知ページから申込へ進めます。 [MCP接続](https://flapbase.com/agents) · [設定と公開の手順](examples/cloud-starter/README.md)
+[ローカルプレビュー](http://127.0.0.1:5264/)を開き、[site.base.json](examples/cloud-starter/site.base.json)で告知を編集します。AIエージェントをMCPでCloudにつなぐと、登録した資料をもとに無料商品の準備を任せられます。確認して公開した商品のIDを `productId` に設定すると、告知ページから申込へ進めます。 [MCP接続](#agent-quickstart) · [設定と公開の手順](examples/cloud-starter/README.md)
 
 運営者はCloudの「注文」で申込を確認できます。問い合わせが入ったら、AIが該当する注文を照会し、返信案を保存します。返信は運営者が確認します。
 
