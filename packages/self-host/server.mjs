@@ -17,6 +17,8 @@ import { handleBooking } from './booking-http.mjs'
 import { createCaseService } from './cases.mjs'
 import { createCasesPublication } from './cases-publication.mjs'
 import { handleCases } from './cases-http.mjs'
+import { createCourseService } from './course.mjs'
+import { handleCourses } from './course-http.mjs'
 
 const authPaths = new Set(['/api/auth/sign-up/email', '/api/auth/sign-in/email', '/api/auth/sign-out'])
 const files = new Map([
@@ -29,7 +31,7 @@ const files = new Map([
   ['/store.css', ['store.css', 'text/css; charset=utf-8']],
 ])
 
-export function createSelfHostedServer({ origin, pool, adapter, store, lifecycle, payment, delegation, recruitment, recruitmentDelegation, booking, bookingDelegation, cases, casesDelegation }) {
+export function createSelfHostedServer({ origin, pool, adapter, store, lifecycle, payment, delegation, recruitment, recruitmentDelegation, booking, bookingDelegation, cases, casesDelegation, course }) {
   const url = new URL(origin)
   if (url.origin !== origin || url.protocol !== 'http:' || !['localhost', '127.0.0.1'].includes(url.hostname)) {
     throw new Error('The password reference server requires an HTTP loopback origin')
@@ -70,6 +72,9 @@ export function createSelfHostedServer({ origin, pool, adapter, store, lifecycle
       })) return
       if (cases && await handleCases(req, res, {
         route, origin, profile: cases, delegation: casesDelegation, resolveHuman: () => resolveHuman(fromNodeHeaders(req.headers)),
+      })) return
+      if (course && await handleCourses(req, res, {
+        route, origin, course, resolveHuman: () => resolveHuman(fromNodeHeaders(req.headers)),
       })) return
       const file = req.method === 'GET' ? files.get(route.pathname) : undefined
       if (!file) {
@@ -163,7 +168,9 @@ async function start() {
     const recruitment = recruitmentProject || recruitmentDirectory
       ? await createRecruitment({ pool, projectId: recruitmentProject, directory: recruitmentDirectory })
       : undefined
-    const server = createSelfHostedServer({ origin, pool, adapter, store, lifecycle, payment, delegation, recruitment, recruitmentDelegation, booking, bookingDelegation, cases, casesDelegation })
+    const courseProject = process.env.FLAP_COURSE_PROJECT_ID
+    const course = courseProject ? createCourseService({ pool, projectId: courseProject }) : undefined
+    const server = createSelfHostedServer({ origin, pool, adapter, store, lifecycle, payment, delegation, recruitment, recruitmentDelegation, booking, bookingDelegation, cases, casesDelegation, course })
     await new Promise((resolve, reject) => {
       server.once('error', reject)
       server.listen(port, '127.0.0.1', resolve)

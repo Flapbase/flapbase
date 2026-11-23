@@ -9,6 +9,7 @@ const schemaFiles = [
   'schema/000_schema-platform.sql', 'schema/020_workspaces-platform.sql',
   'schema/021_workspace_members-platform.sql', 'schema/050_projects-platform.sql',
   'schema/060_project_memberships-platform.sql', 'schema/080_app_installs-platform.sql', 'schema/090_app_revision_locks-platform.sql',
+  'schema/000_schema-artifact.sql', 'schema/010_artifacts-artifact.sql', 'schema/020_revisions-artifact.sql',
   'schema/000_schema-vdb.sql', 'schema/010_schemas-vdb.sql', 'schema/020_records-vdb.sql', 'schema/040_mutation_receipts-vdb.sql',
   'schema/000_schema-runtime.sql', 'schema/050_idempotency-runtime.sql', 'auth-schema.sql',
 ]
@@ -62,7 +63,7 @@ if (process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url) 
   const pool = createSelfHostedAuthPool(process.env.FLAP_AUTH_DATABASE_URL)
   try {
     if (process.argv[2] === 'project') {
-      const id = await setupProject(pool, {ownerId:process.env.FLAP_STORE_OWNER_ID,projectId:process.env.FLAP_STORE_PROJECT_ID ?? process.env.FLAP_RECRUITMENT_PROJECT_ID ?? process.env.FLAP_BOOKING_PROJECT_ID ?? process.env.FLAP_CASES_PROJECT_ID,
+      const id = await setupProject(pool, {ownerId:process.env.FLAP_STORE_OWNER_ID,projectId:process.env.FLAP_STORE_PROJECT_ID ?? process.env.FLAP_RECRUITMENT_PROJECT_ID ?? process.env.FLAP_BOOKING_PROJECT_ID ?? process.env.FLAP_CASES_PROJECT_ID ?? process.env.FLAP_COURSE_PROJECT_ID,
         name:process.env.FLAP_PROJECT_NAME})
       console.log('Project: ' + id)
     } else {

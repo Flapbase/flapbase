@@ -91,3 +91,19 @@ MCPを使う場合、`FLAP_BOOKING_AGENT_PRINCIPAL_ID` に対象Projectの運営
 持ち込みAIは `FLAP_CASES_AGENT_PRINCIPAL_ID` に運営権限を持つHuman Principalを設定し、サーバーとクライアントに同じ `FLAP_CASES_AGENT_TOKEN` を渡して `mcp.mjs` に接続します。標準の `inbox_list`、`customer_get`、`deal_create_from_inquiry`、`deal_get`、`deal_status_update` を利用できます。問い合わせの本文や連絡先をツール応答に含めません。
 
 初期の納品内容は文面です。ローカルの受付は運営画面で公開し、Cloudの汎用サイト・アプリ編集ツールは別の接続経路です。
+
+### 法人研修のローカルAPI
+
+既存のローカルDBで `pnpm --filter @flapbase/self-host setup` を再実行すると教材の保存先が追加されます。
+`FLAP_COURSE_PROJECT_ID` に非公開ProjectのIDを指定して起動します。ProjectのOwnerまたはEditorが、
+同じオリジンのログインセッションで教材の公開と受講割当を行えます。
+
+| 操作 | API |
+| --- | --- |
+| 教材の公開 | `POST /api/courses/v1/releases` に `course-document/v1` を送信 |
+| 受講割当 | `POST /api/courses/v1/assignments` に `assignmentId`、`learnerId`、`artifactRevisionId` を送信 |
+| 進捗一覧 | `GET /api/courses/v1/assignments` |
+| 本人の教材と進捗 | `GET /api/courses/v1/assignments/{assignmentId}` |
+| 進捗更新 | `POST /api/courses/v1/assignments/{assignmentId}/progress` に `lessonId`、`expectedVersion`、`completed` と `Idempotency-Key` ヘッダーを送信 |
+
+受講者にはProjectの有効なメンバー資格が必要です。割当ごとに教材の公開版が固定されます。
