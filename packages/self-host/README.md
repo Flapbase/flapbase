@@ -78,3 +78,9 @@ With the local PostgreSQL executables on your path, run `pnpm --filter @flapbase
 MCPを使う場合、`FLAP_BOOKING_AGENT_PRINCIPAL_ID` に対象Projectの運営権限を持つHuman Principalを設定し、サーバーとMCPクライアントに同じ `FLAP_BOOKING_AGENT_TOKEN` を設定します。既存の `mcp.mjs` から `booking_offers_list`、`booking_records_list`、`booking_outcome_record` を利用できます。
 
 受付ページは保存した公開版を配信します。空き枠と申込はPostgreSQLで照合し、決済や外部カレンダー・メールへの送信は行いません。確認メールはローカル試験向けで、確認用ディレクトリをWeb公開しないでください。受入は `booking-http.postgres.test.mjs` を実行すると再現できます。
+
+## 定型サービスと顧客・商談管理のローカルDB
+
+通常のセットアップ後に `pnpm --filter @flapbase/self-host setup cases` を実行すると、既存のCRM・案件・見積・納品SQLを導入できます。初期化済みProjectで案件操作が拒否される場合は、運営者IDで `setup project` を再実行すると作成者の会員行を補えます。
+
+`cases.mjs` の共通処理で、問い合わせの再送、顧客への集約、案件化、担当と期限、成約・失注、見積の送付と本人回答、納品の受領を扱います。通知はローカルDBに記録します。公開フォーム、運営・顧客ポータル、MCPへの接続はこの段階の対象外です。動作は `cases.postgres.test.mjs` で確認できます。

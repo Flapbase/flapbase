@@ -34,6 +34,10 @@ export const setupBookingSchema = pool => transaction(pool, async client => {
   await client.query(await readFile(new URL('schema/091_bookings-platform.sql', import.meta.url), 'utf8'))
 })
 
+export const setupCaseSchema = pool => transaction(pool, async client => {
+  await client.query(await readFile(new URL('schema/087_cases-platform.sql', import.meta.url), 'utf8'))
+})
+
 export const setupProject = (pool, { ownerId, projectId, name = '無料資料' }) => transaction(pool, async client => {
   if (!storeId(ownerId) || !storeId(projectId) || !name.trim()) throw new Error('Valid owner and Project IDs are required')
   const owner = await client.query("SELECT 1 FROM identity.principals WHERE principal_id=$1 AND principal_kind='human' AND status='active'", [ownerId])
@@ -41,6 +45,7 @@ export const setupProject = (pool, { ownerId, projectId, name = '無料資料' }
   const existing = await client.query('SELECT created_by_principal_id FROM platform.projects WHERE project_id=$1', [projectId])
   if (existing.rowCount) {
     if (existing.rows[0].created_by_principal_id !== ownerId) throw new Error('Project already exists')
+    await client.query("INSERT INTO platform.project_memberships(project_id,principal_id,member_role) VALUES($1,$2,'owner') ON CONFLICT DO NOTHING", [projectId, ownerId])
     return projectId
   }
   const workspace = randomUUID()
@@ -49,6 +54,7 @@ export const setupProject = (pool, { ownerId, projectId, name = '無料資料' }
   await client.query("INSERT INTO platform.workspace_members(workspace_id,principal_id,member_role) VALUES($1,$2,'owner')", [workspace, ownerId])
   await client.query('INSERT INTO platform.projects(project_id,workspace_id,name,slug,created_by_principal_id) VALUES($1,$2,$3,$4,$5)',
     [projectId, workspace, name, 'downloads', ownerId])
+  await client.query("INSERT INTO platform.project_memberships(project_id,principal_id,member_role) VALUES($1,$2,'owner')", [projectId, ownerId])
   return projectId
 })
 
@@ -61,6 +67,7 @@ if (process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url) 
       console.log('Project: ' + id)
     } else {
       if (process.argv[2] === 'booking') await setupBookingSchema(pool)
+      else if (process.argv[2] === 'cases') await setupCaseSchema(pool)
       else await setupSchema(pool)
       console.log('PostgreSQL schema is ready.')
     }
