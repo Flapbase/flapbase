@@ -21,7 +21,7 @@ ${leadEnabled ? `<section><h2>案内を受け取る</h2><form data-operation="le
 <button>登録する</button><p role="status"></p></form></section>` : ''}`)
 
 function renderDashboard({ orders, products }, operation, paymentAvailable) {
-  const options = products.map(product => `<option value="${product.listing_id}">${escape(product.title)}</option>`).join('')
+  const options = products.filter(product => !product.isCourse).map(product => `<option value="${product.listing_id}">${escape(product.title)}</option>`).join('')
   const productLinks = products.map(product => `<li><a href="/products/${encodeURIComponent(product.listing_id)}">${escape(product.title)}</a></li>`).join('')
   const rows = orders.map(order => {
     const createdAt = new Date(order.created_at)
@@ -52,7 +52,8 @@ ${leads.map(lead => `<form data-operation="follow-up" data-lead="${lead.id}">
 
 function renderReceipt(orderId, release, lifecycle) {
   return html('資料の受取', `<h1>お申し込みを受け付けました</h1><p>${escape(release.title)}</p>
-<p><a href="/receive/orders/${orderId}/download">資料をダウンロード</a></p>
+<p>${release.coursePin ? `<a href="/training/orders/${orderId}">講座を受講する</a>`
+  : `<a href="/receive/orders/${orderId}/download">資料をダウンロード</a>`}</p>
 ${lifecycle ? `<section><h2>問い合わせる</h2><form data-operation="support" data-order="${orderId}">
 <label>問い合わせ内容 <textarea name="body" required maxlength="3000"></textarea></label>
 <button>問い合わせを送る</button><p role="status"></p></form></section>` : ''}`)

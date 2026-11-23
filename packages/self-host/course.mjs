@@ -115,6 +115,19 @@ export function createCourseService({ pool, projectId }) {
     return { pin, artifactRevisionId: entry.artifact_revision_id, document: entry.document }
   }
 
+  async function offerPin(db, actorId, workspaceId, artifactRevisionId) {
+    if (await membership(db, actorId, true) !== workspaceId) throw missing()
+    const entry = await row(db, `
+      SELECT a.artifact_id,ar.revision_number,ar.content_digest
+      FROM artifact.artifact_revisions ar JOIN artifact.artifacts a USING(artifact_id)
+      WHERE ar.artifact_revision_id=$1 AND a.workspace_id=$2 AND a.project_id=$3
+        AND ${courseProfile} AND ar.metadata #>> '{owner,projectRef}'=$3::uuid::text
+        AND ar.metadata #>> '{payload,document,course,status}'='published'
+    `, [artifactRevisionId, workspaceId, projectId])
+    if (!entry) throw missing()
+    return asPin(entry.artifact_id, entry)
+  }
+
   function getDraft(actorId, { artifactRef, revision, digest, beforeRevision }) {
     artifactRef = uuid(artifactRef)
     const pinned = revision !== undefined || digest !== undefined
@@ -426,5 +439,5 @@ export function createCourseService({ pool, projectId }) {
     })
   }
 
-  return { projectId, release, saveDraft, getDraft, publishDraft, assign, learn, assignments, dashboard, learnerHome, invite, accept }
+  return { projectId, offerPin, readPinned, release, saveDraft, getDraft, publishDraft, assign, learn, assignments, dashboard, learnerHome, invite, accept }
 }

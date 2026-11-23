@@ -36,6 +36,7 @@ for (const form of document.querySelectorAll('form[data-training]')) {
         case 'accept': path = api + '/invitations/accept'; body = { token: location.hash.slice(1) }; break
         case 'verify': path = '/api/auth/send-verification-email'; body = { email: fields.email, callbackURL: '/training/join' }; break
         case 'approve': path = api + '/draft-approval'; body = { ...fields, revision: Number(fields.revision) }; break
+        case 'offer': path = api + '/offers'; body = { ...fields, amountMinor: Number(fields.amountMinor) }; break
         case 'assign': path = api + '/assignments'; body = { ...fields, assignmentId: crypto.randomUUID() }; break
         case 'release': {
           path = api + '/releases'
@@ -46,7 +47,7 @@ for (const form of document.querySelectorAll('form[data-training]')) {
           break
         }
         case 'progress': {
-          path = api + '/assignments/' + encodeURIComponent(fields.assignmentId) + '/progress'
+          path = api + '/' + fields.source + '/' + encodeURIComponent(fields.accessId) + '/progress'
           body = { lessonId: fields.lessonId, expectedVersion: Number(fields.expectedVersion), completed: true }
           headers['idempotency-key'] = crypto.randomUUID()
           break
@@ -64,6 +65,7 @@ for (const form of document.querySelectorAll('form[data-training]')) {
       } else if (operation === 'verify') status.textContent = '確認リンクを開いたあと、招待リンクを開き直してください。'
       else if (operation === 'accept') location.replace('/training/my')
       else if (operation === 'approve') location.replace('/training')
+      else if (operation === 'offer') location.assign((await result.json()).purchaseUrl)
       else location.reload()
     } catch {
       status.textContent = '接続を確認してもう一度お試しください。'

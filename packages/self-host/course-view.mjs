@@ -11,7 +11,7 @@ const learnerLink = id => '/training/my/' + encodeURIComponent(id)
 const draftLink = ({ artifactRef, revision, digest }) =>
   '/training/drafts/' + artifactRef + '?' + new URLSearchParams({ revision: String(revision), digest })
 
-function dashboard({ workspaceId, courses, drafts, learners, assignments }) {
+function dashboard({ workspaceId, courses, drafts, learners, assignments }, courseShop) {
   const courseOptions = options(courses, item => item.title + ' 第' + item.revision + '版')
   const learnerOptions = options(learners, item => item.name)
   const rows = assignments.map(item => `<tr><th scope="row">${escape(item.learnerName ?? item.learnerId)}</th>
@@ -24,21 +24,26 @@ function dashboard({ workspaceId, courses, drafts, learners, assignments }) {
     ${review ? '<section><h2>公開前の教材</h2><ul>' + review + '</ul></section>' : ''}
     <section><h2>教材を公開</h2>
     ${form('release', hidden('workspaceId', workspaceId) + '<label>教材名 <input name="title" maxlength="160" required></label><label>本文 <textarea name="markdown" maxlength="50000" rows="6" required></textarea></label>', '確認した教材を公開')}</section>
+    ${courseShop && courseOptions ? `<section><h2>講座を販売する</h2>
+    ${form('offer', '<label>販売する教材 <select name="artifactRevisionId">' + courseOptions +
+      '</select></label><label>商品名 <input name="title" maxlength="160" required></label><label>紹介文 <textarea name="description" maxlength="3000"></textarea></label>' +
+      '<label>価格（円） <input name="amountMinor" type="number" min="50" max="10000000" step="1" required></label>', '販売ページを公開')}
+      <p><a href="/store">商品と注文を確認</a></p></section>` : ''}
     <section><h2>教材を割り当てる</h2>
     ${courseOptions && learnerOptions ? form('assign', '<label>教材 <select name="artifactRevisionId">' + courseOptions +
       '</select></label><label>受講者 <select name="learnerId">' + learnerOptions + '</select></label>', '割り当てる') : '<p>教材を公開し、受講者が招待を受けると割り当てられます。</p>'}</section>
     <section><h2>受講状況</h2>${rows ? '<table><thead><tr><th scope="col">受講者</th><th scope="col">教材</th><th scope="col">完了</th></tr></thead><tbody>' + rows + '</tbody></table>' : '<p>割当はまだありません。</p>'}</section>`)
 }
 
-function reading(assignmentId, { pin, document, completedLessonIds, version }) {
+function reading(id, { pin, document, completedLessonIds, version }, purchase = false) {
   const lessons = new Map(document.course.lessons.map(lesson => [lesson.id, lesson.title]))
   const sections = document.lessonBodies.map(body => {
     const completed = completedLessonIds.includes(body.lessonId)
     return `<section><h2>${escape(lessons.get(body.lessonId))}</h2><p class="description">${escape(body.markdown)}</p>${completed
       ? '<p>受講済み</p>'
-      : form('progress', hidden('assignmentId', assignmentId) + hidden('lessonId', body.lessonId) + hidden('expectedVersion', version), '受講済みにする')}</section>`
+      : form('progress', hidden('source', purchase ? 'orders' : 'assignments') + hidden('accessId', id) + hidden('lessonId', body.lessonId) + hidden('expectedVersion', version), '受講済みにする')}</section>`
   }).join('')
-  return page(document.course.title, `<p><a href="/training/my">自分の教材</a> · 第${pin.revision}版</p>${sections || '<p>現在読める教材はありません。</p>'}`)
+  return page(document.course.title, `<p>${purchase ? `<a href="/receive/orders/${id}">注文の確認</a>` : '<a href="/training/my">自分の教材</a>'} · 第${pin.revision}版</p>${sections || '<p>現在読める教材はありません。</p>'}`)
 }
 
 function draftReview({ pin, document }) {
@@ -52,12 +57,13 @@ function draftReview({ pin, document }) {
     ${form('approve', fields, '確認した版を公開')}`)
 }
 
-export async function renderTraining(res, route, course, resolveHuman) {
+export async function renderTraining(res, route, { course, courseShop, purchases, resolveHuman }) {
   const path = route.pathname
   const assignment = /^\/training\/my\/([^/]+)$/.exec(path)?.[1]
+  const order = purchases && /^\/training\/orders\/([^/]+)$/.exec(path)?.[1]
   const draft = /^\/training\/drafts\/([^/]+)$/.exec(path)?.[1]
-  if (path !== '/training' && path !== '/training/join' && path !== '/training/my' && !assignment && !draft) return false
-  if ((assignment && !storeId(assignment)) || (draft && !storeId(draft))) {
+  if (path !== '/training' && path !== '/training/join' && path !== '/training/my' && !assignment && !draft && !order) return false
+  if ((assignment && !storeId(assignment)) || (draft && !storeId(draft)) || (order && !storeId(order))) {
     res.writeHead(404).end()
     return true
   }
@@ -74,12 +80,13 @@ export async function renderTraining(res, route, course, resolveHuman) {
       send(res, 200, page('研修に参加', human.verifiedEmail
         ? form('accept', '', '招待を受ける')
         : '<p>招待されたメールアドレスを確認してください。</p>' + form('verify', '<label>メールアドレス <input name="email" type="email" required></label>', 'メール確認リンクを発行')))
-    } else if (path === '/training') send(res, 200, dashboard(await course.dashboard(actor)))
+    } else if (path === '/training') send(res, 200, dashboard(await course.dashboard(actor), courseShop))
     else if (draft) {
       const fixed = await course.getDraft(actor, { artifactRef: draft, revision: Number(route.searchParams.get('revision')), digest: route.searchParams.get('digest') })
       if (fixed.document.course.status !== 'draft') { res.writeHead(404).end(); return true }
       send(res, 200, draftReview(fixed))
-    } else if (assignment) send(res, 200, reading(assignment, await course.learn(actor, assignment, { kind: 'read' })))
+    } else if (order) send(res, 200, reading(order, await purchases.learn(actor, order, { kind: 'read' }), true))
+    else if (assignment) send(res, 200, reading(assignment, await course.learn(actor, assignment, { kind: 'read' })))
     else {
       const items = (await course.learnerHome(actor)).map(item => `<li><a href="${learnerLink(item.id)}">${escape(item.title)}</a></li>`).join('')
       send(res, 200, page('自分の教材', items ? '<ul>' + items + '</ul>' : '<p>教材が割り当てられるとここに表示されます。</p>'))

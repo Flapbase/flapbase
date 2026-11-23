@@ -205,7 +205,8 @@ export function createStoreLifecycle({ store, projectId, sendEmail }) {
         if (!release || release.data.listingId !== order.data.listingId) throw missing()
         const paymentStatus = order.data.status ?? 'paid'
         return { orderId: args.orderId, title: release.data.title, paymentStatus,
-          downloadEligible: paymentStatus === 'paid', purchaseInquiryId: null }
+          downloadEligible: paymentStatus === 'paid' && !release.data.coursePin, purchaseInquiryId: null,
+          ...(release.data.coursePin && { learningEligible: paymentStatus === 'paid' }) }
       })
     }
     if (name !== 'support_request_get' && name !== 'support_reply_draft_save') throw forbidden()

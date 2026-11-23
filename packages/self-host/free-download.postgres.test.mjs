@@ -16,6 +16,7 @@ import { createStripePayment } from './payment.mjs'
 import { createStoreLifecycle } from './lifecycle.mjs'
 import { createFreeDownloadStore, sha } from './free-download.mjs'
 import { createSelfHostedServer } from './server.mjs'
+import { createCourseService } from './course.mjs'
 import { renderProduct } from './store-http.mjs'
 import { setupProject } from './setup.mjs'
 import { businessCommand } from '../../bin/business.js'
@@ -28,18 +29,19 @@ const close = server => new Promise(resolve => {
   server.close(resolve)
   server.closeAllConnections?.()
 })
-test('self-host completes the digital product lifecycle through external MCP and signed test payments', { timeout: 35_000 }, async () => {
+test('self-host completes the digital product and paid course flows through external MCP and signed test payments', { timeout: 35_000 }, async () => {
   const db = await startArtifactTestPostgres({ encoding:'UTF8' })
   const pool = createSelfHostedAuthPool(db.connection)
   const directory = await mkdtemp(join(tmpdir(), 'flap-store-test-'))
-  let server
+  let server, purchasedCoursePath
   try {
     const probe = createServer()
     const port = await listen(probe)
     await close(probe)
     const origin = 'http://127.0.0.1:' + port
     const projectId = randomUUID()
-    const store = await createFreeDownloadStore({ pool, projectId, directory,
+    const course = createCourseService({ pool, projectId })
+    const store = await createFreeDownloadStore({ pool, projectId, directory, course,
       renderProduct: product => renderProduct({ ...product, leadEnabled: true }) })
     const emails = []
     const lifecycle = createStoreLifecycle({ store, projectId, sendEmail: async email => { emails.push(email) } })
@@ -54,8 +56,9 @@ test('self-host completes the digital product lifecycle through external MCP and
     })
     const token = randomUUID() + randomUUID()
     const delegation = { tokenDigest: sha('Bearer ' + token) }
-    const adapter = createBetterAuthAdapter(pool, { origin, issuer:'urn:flapbase:self-host:free-test', secret:randomUUID() })
-    server = createSelfHostedServer({ origin, pool, adapter, store, lifecycle, payment, delegation })
+    const authOptions = { issuer:'urn:flapbase:self-host:free-test', secret:randomUUID() }
+    const adapter = createBetterAuthAdapter(pool, { origin, ...authOptions })
+    server = createSelfHostedServer({ origin, pool, adapter, store, lifecycle, payment, delegation, course })
     await listen(server, port)
     const get = (path, cookie) => fetch(origin + path, {headers:cookie ? {cookie} : {}})
     const post = (path, body, cookie, sender=origin) => fetch(origin + path, {
@@ -199,11 +202,11 @@ test('self-host completes the digital product lifecycle through external MCP and
       assert.equal((await mcp.callTool({ name: 'order_support_get', arguments: { projectId: randomUUID(), orderId: reserved.orderId } })).isError, true)
       assert.equal((await get(reserved.receiptUrl, buyer.cookie)).status, 409)
       assert.equal((await get(reserved.receiptUrl + '/download', buyer.cookie)).status, 409)
-      const notification = amount => JSON.stringify({ id: 'evt_trial', object: 'event', type: 'checkout.session.completed', livemode: false,
+      const notification = (amount, orderId) => JSON.stringify({ id: 'evt_trial', object: 'event', type: 'checkout.session.completed', livemode: false,
         data: { object: { object: 'checkout.session', livemode: false, mode: 'payment', status: 'complete', payment_status: 'paid',
-          id: 'cs_test_' + reserved.orderId.replaceAll('-', ''), client_reference_id: reserved.orderId, amount_total: amount, currency: 'jpy' } } })
-      async function webhook(amount, valid = true) {
-        const raw = notification(amount)
+          id: 'cs_test_' + orderId.replaceAll('-', ''), client_reference_id: orderId, amount_total: amount, currency: 'jpy' } } })
+      async function webhook(amount, valid = true, orderId = reserved.orderId) {
+        const raw = notification(amount, orderId)
         const t = Math.floor(Date.now() / 1000)
         const sig = createHmac('sha256', signingSecret).update(t + '.' + raw).digest('hex')
         return fetch(origin + '/api/store/payment/webhook', { method: 'POST', headers: { 'stripe-signature': 't=' + t + ',v1=' + (valid ? sig : '0'.repeat(64)) }, body: raw })
@@ -233,13 +236,82 @@ test('self-host completes the digital product lifecycle through external MCP and
       assert.equal((await mcp.callTool({name:'support_reply_draft_save',arguments:{...draft,body:'古い版の返信'}})).isError,true)
       assert.match(await (await get('/store', owner.cookie)).text(), /最初にキット内の案内をご覧ください/)
       assert.deepEqual(await tool('operations_summary'), { projectId, leads: 1, followUps: 1, orders: 3, downloads: 3, supportPending: 0 })
+      const artifactRef = randomUUID(), chapterId = randomUUID(), lessonId = randomUUID()
+      const courseDocument = { contractVersion: 'course-document/v1', revision: 1,
+        course: { tenantId: workspace, courseId: artifactRef, creatorId: owner.principalId, title: '初めての講座', description: '',
+          status: 'published', opening: { kind: 'immediate' }, chapters: [{ id: chapterId, title: '導入', order: 1 }],
+          lessons: [{ id: lessonId, chapterId, title: '最初の教材', order: 1, kind: 'material', status: 'published',
+            materials: [], required: true, delayDays: 0, requirePrevious: false }], assignments: [] },
+        lessonBodies: [{ lessonId, markdown: '購入者にだけ表示する初版' }] }
+      const courseRelease = await course.release(owner.principalId, courseDocument)
+      const offerBody = { artifactRevisionId: courseRelease.artifactRevisionId, title: '購入して始める講座', description: '購入後に受講できます', amountMinor: 1500 }
+      const offers = '/api/courses/v1/offers'
+      assert.equal((await post(offers, offerBody, other.cookie)).status, 403)
+      assert.equal((await post(offers, { ...offerBody, artifactRevisionId: randomUUID() }, owner.cookie)).status, 404)
+      assert.match(await (await get('/training', owner.cookie)).text(), /販売ページを公開/)
+      const offered = await post(offers, offerBody, owner.cookie)
+      assert.equal(offered.status, 201, await offered.clone().text())
+      const listing = await offered.json()
+      const publicOffer = await (await get(listing.purchaseUrl)).text()
+      assert.match(publicOffer, /1,500円/)
+      assert.doesNotMatch(publicOffer, /購入者にだけ表示する初版/)
+      const purchase = await (await checkout(listing, buyer.cookie)).json()
+      const study = '/training/orders/' + purchase.orderId
+      purchasedCoursePath = study
+      const studyApi = '/api/courses/v1/orders/' + purchase.orderId
+      assert.equal((await get(studyApi, buyer.cookie)).status, 409)
+      assert.equal((await get(studyApi, other.cookie)).status, 404)
+      assert.equal((await webhook(1500, true, purchase.orderId)).status, 200)
+      const [{ paid_at: paidAt }] = await db.sql.query("SELECT data->>'paidAt' AS paid_at FROM vdb.records WHERE record_id=$1", [purchase.orderId])
+      assert.equal((await webhook(1500, true, purchase.orderId)).status, 200)
+      assert.equal((await db.sql.query("SELECT data->>'paidAt' AS paid_at FROM vdb.records WHERE record_id=$1", [purchase.orderId]))[0].paid_at, paidAt)
+      assert.match(await (await get(purchase.receiptUrl, buyer.cookie)).text(), /講座を受講する/)
+      assert.equal((await get(purchase.receiptUrl + '/download', buyer.cookie)).status, 404)
+      assert.equal((await get(study, other.cookie)).status, 404)
+      assert.match(await (await get(study, buyer.cookie)).text(), /購入者にだけ表示する初版/)
+      assert.deepEqual(await tool('order_support_get', { projectId, orderId: purchase.orderId }), {
+        orderId: purchase.orderId, title: offerBody.title, paymentStatus: 'paid', downloadEligible: false, learningEligible: true, purchaseInquiryId: null,
+      })
+      const secondRevision = await course.release(owner.principalId, {
+        ...courseDocument, revision: 2, lessonBodies: [{ lessonId, markdown: '購入者にだけ表示する改訂版' }],
+      })
+      const replacement = await (await post(offers, { ...offerBody, listingId: listing.listingId, artifactRevisionId: secondRevision.artifactRevisionId }, owner.cookie)).json()
+      const secondPurchase = await (await checkout(replacement, other.cookie)).json()
+      assert.equal((await webhook(1500, true, secondPurchase.orderId)).status, 200)
+      assert.match(await (await get('/training/orders/' + secondPurchase.orderId, other.cookie)).text(), /購入者にだけ表示する改訂版/)
+      assert.equal((await checkout(listing, buyer.cookie).then(response => response.json())).orderId, purchase.orderId)
+      assert.match(await (await get(study, buyer.cookie)).text(), /購入者にだけ表示する初版/)
+      const progress = () => fetch(origin + studyApi + '/progress', {
+        method: 'POST', headers: { origin, cookie: buyer.cookie, 'content-type': 'application/json', 'idempotency-key': 'paid-course-progress' },
+        body: JSON.stringify({ lessonId, expectedVersion: 0, completed: true }),
+      })
+      const completed = await progress()
+      assert.equal(completed.status, 200, await completed.clone().text())
+      assert.deepEqual(await (await progress()).json(), await completed.json())
+      assert.match(await (await get(study, buyer.cookie)).text(), /受講済み/)
+      assert.match(await (await get('/store', owner.cookie)).text(), /購入して始める講座/)
       await db.sql.query("UPDATE platform.workspace_members SET status='revoked',revoked_at=now() WHERE workspace_id=$1 AND principal_id=$2", [workspace, owner.principalId])
       assert.equal((await mcp.callTool({ name: 'operations_summary', arguments: {} })).isError, true)
     } finally {
       await mcp.close()
     }
-    assert.equal((await post('/api/auth/sign-out',{},buyer.cookie)).status,204)
-    assert.equal((await get(download,buyer.cookie)).status,401)
+    assert.equal((await businessCommand(['inspect', 'member-ai-course'])).localLaunch.path, '/training')
+    await close(server)
+    const restartProbe = createServer()
+    const restartPort = await listen(restartProbe)
+    await close(restartProbe)
+    const restartOrigin = 'http://127.0.0.1:' + restartPort
+    server = createSelfHostedServer({ origin: restartOrigin, pool,
+      adapter: createBetterAuthAdapter(pool, { origin: restartOrigin, ...authOptions }), store, lifecycle, delegation, course })
+    await listen(server, restartPort)
+    const headers = { cookie: buyer.cookie }
+    const reopened = await fetch(restartOrigin + purchasedCoursePath, { headers })
+    assert.equal(reopened.status, 200)
+    assert.match(await reopened.text(), /受講済み/)
+    assert.equal((await fetch(restartOrigin + '/api/auth/sign-out', {
+      method: 'POST', headers: { ...headers, origin: restartOrigin, 'content-type': 'application/json' }, body: '{}',
+    })).status, 204)
+    assert.equal((await fetch(restartOrigin + download, { headers })).status, 401)
   } finally {
     try { if(server) await close(server); await pool.end() }
     finally { await db.close(); await rm(directory,{recursive:true,force:true}) }

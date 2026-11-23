@@ -127,3 +127,20 @@ OwnerまたはEditorは `/training` から教材を公開し、招待リンク�
 - `course_draft_get` で版履歴を取得できます。版番号とダイジェストを一緒に指定すると、その固定版を取得できます。
 - 担当者は返された `openUrl` または `/training` の「公開前の教材」から内容を確認し、画面で公開します。
   公開版が確定すると、研修の割当候補に表示されます。
+
+
+### 公開した教材を購入者に提供する
+
+`flap business inspect member-ai-course` に表示される `/training` が管理画面です。
+`FLAP_COURSE_PROJECT_ID` と `FLAP_STORE_PROJECT_ID` に同じProjectを指定し、教材と商品それぞれの
+ローカルデータ用フォルダを設定します。`FLAP_STORE_STRIPE_KEY` と `FLAP_STORE_STRIPE_WEBHOOK_SECRET` は
+テスト決済用の値を使います。
+
+1. 教材を公開し、`/training` の「講座を販売する」で教材の版、商品名、紹介文、価格を確認して販売ページを公開します。
+2. 販売ページからログインして購入手続きに進みます。決済後、注文ページの「講座を受講する」から教材を開きます。
+3. 受講者の進捗は注文ごとに保存されます。販売ページを新しい教材で再公開しても、以前の購入者は注文時の版を受講できます。
+   決済設定を外した場合も受講は継続できます。
+
+APIで出品を更新する場合は `POST /api/courses/v1/offers` に既存の `listingId` と新しい公開版の
+`artifactRevisionId` を含めます。決済後に使用する受講APIは `/api/courses/v1/orders/{orderId}` と
+`/api/courses/v1/orders/{orderId}/progress` です。

@@ -23,7 +23,7 @@ export const invalid = () => new StoreError(400, 'invalid_request')
 export const missing = () => new StoreError(404, 'not_found')
 export const forbidden = () => new StoreError(403, 'forbidden')
 
-export async function createFreeDownloadStore({ pool, projectId, directory, renderProduct }) {
+export async function createFreeDownloadStore({ pool, projectId, directory, renderProduct, course }) {
   if (!storeId(projectId) || !directory) throw invalid()
   const pages = join(directory, projectId, 'public-products')
   const blobs = join(directory, projectId, 'protected-files')
@@ -76,18 +76,18 @@ export async function createFreeDownloadStore({ pool, projectId, directory, rend
   }
 
   async function publish(principalId, input) {
-    const { listingId = randomUUID(), title, description, fileName, bytes, amountMinor = 0 } = input
+    const { listingId = randomUUID(), title, description, fileName, bytes, amountMinor = 0, artifactRevisionId } = input
+    const isCourse = artifactRevisionId !== undefined
     if (!Number.isSafeInteger(amountMinor) || amountMinor < 0 || (amountMinor > 0 && amountMinor < 50) || amountMinor > 10_000_000 || !storeId(listingId) || typeof title !== 'string' || !title.trim() || title.length > 160 || title.includes('\0')
-        || typeof description !== 'string' || description.length > 3000 || description.includes('\0')
-        || typeof fileName !== 'string' || !fileName || fileName.length > 160 || !fileName.isWellFormed() || /[\\/\u0000-\u001f\u007f]/u.test(fileName)
-        || !Buffer.isBuffer(bytes) || !bytes.length || bytes.length > 5_242_880) throw invalid()
+        || typeof description !== 'string' || description.length > 3000 || description.includes('\0')) throw invalid()
+    if (isCourse ? (!course || course.projectId !== projectId || !storeId(artifactRevisionId) || !amountMinor)
+      : (typeof fileName !== 'string' || !fileName || fileName.length > 160 || !fileName.isWellFormed() || /[\\/\u0000-\u001f\u007f]/u.test(fileName)
+        || !Buffer.isBuffer(bytes) || !bytes.length || bytes.length > 5_242_880)) throw invalid()
 
     const revisionId = randomUUID()
-    const digest = sha(bytes)
-    const release = { kind: 'release', listingId, title: title.trim(), description, fileName, digest, ...(amountMinor ? { amountMinor } : {}) }
-    const file = join(blobs, digest)
+    const digest = isCourse ? null : sha(bytes)
     const finalPage = join(pages, listingId + '.html')
-    const tempFile = join(blobs, revisionId + '.tmp')
+    const tempFile = isCourse ? null : join(blobs, revisionId + '.tmp')
     const tempPage = join(pages, revisionId + '.tmp')
     const client = await pool.connect()
     try {
@@ -96,13 +96,23 @@ export async function createFreeDownloadStore({ pool, projectId, directory, rend
       try {
         await client.query('BEGIN')
         try {
-          const { schemaId } = await scoped(client, principalId, 'publish')
+          const { schemaId, workspaceId } = await scoped(client, principalId, 'publish')
           const prior = await get(client, schemaId, listingId, 'listing')
           if (!prior && input.listingId !== undefined) throw missing()
-          await writeFile(tempFile, bytes, { mode: 0o600, flag: 'wx' })
-          await link(tempFile, file).catch(error => {
-            if (error.code !== 'EEXIST') throw error
-          })
+          if (prior) {
+            const priorRelease = await get(client, schemaId, prior.data.currentRevisionId, 'release')
+            if (!priorRelease || Boolean(priorRelease.data.coursePin) !== isCourse) throw invalid()
+          }
+          const delivery = isCourse
+            ? { coursePin: await course.offerPin(client, principalId, workspaceId, artifactRevisionId) }
+            : { fileName, digest }
+          const release = { kind: 'release', listingId, title: title.trim(), description, ...delivery, ...(amountMinor ? { amountMinor } : {}) }
+          if (tempFile) {
+            await writeFile(tempFile, bytes, { mode: 0o600, flag: 'wx' })
+            await link(tempFile, join(blobs, digest)).catch(error => {
+              if (error.code !== 'EEXIST') throw error
+            })
+          }
           await writeFile(tempPage, renderProduct({ listingId, revisionId, title: release.title, description, amountMinor }), { mode: 0o600, flag: 'wx' })
           if (prior) {
             await client.query(`
@@ -130,7 +140,7 @@ export async function createFreeDownloadStore({ pool, projectId, directory, rend
       return { listingId, listingRevisionId: revisionId, purchaseUrl: '/products/' + listingId }
     } finally {
       client.release()
-      await Promise.all([rm(tempPage, { force: true }), rm(tempFile, { force: true })])
+      await Promise.all([rm(tempPage, { force: true }), ...(tempFile ? [rm(tempFile, { force: true })] : [])])
     }
   }
 
@@ -183,7 +193,7 @@ export async function createFreeDownloadStore({ pool, projectId, directory, rend
     return transaction(async client => {
       const { schemaId } = await scoped(client, null, 'buyer')
       const { rowCount } = await client.query(`
-        UPDATE vdb.records SET data=jsonb_set(data,'{status}','"paid"')
+        UPDATE vdb.records SET data=data || jsonb_build_object('status','paid','paidAt',coalesce(data->'paidAt',to_jsonb(now())))
         WHERE schema_id=$1 AND project_id=$2 AND record_id=$3 AND data->>'kind'='order'
           AND data->>'paymentSession'=$4 AND data->>'amountMinor'=$5
           AND data->>'status' IN ('pending','paid')`, [schemaId, projectId, orderId, sessionId, String(amountMinor)])
@@ -191,21 +201,29 @@ export async function createFreeDownloadStore({ pool, projectId, directory, rend
     })
   }
 
-  async function receive(principalId, orderId, downloaded = false) {
+  async function paidOrder(client, principalId, orderId, lock = false) {
     if (!storeId(orderId)) throw missing()
+    const { schemaId, workspaceId } = await scoped(client, principalId, 'buyer')
+    const order = schemaId && await get(client, schemaId, orderId, 'order', lock)
+    if (!order || order.owner_principal_id !== principalId) throw missing()
+    if (order.data.status === 'pending') throw new StoreError(409, 'payment_pending')
+    if (order.data.status !== undefined && order.data.status !== 'paid') throw missing()
+    const release = await get(client, schemaId, order.data.revisionId, 'release')
+    if (!release || release.data.listingId !== order.data.listingId) throw missing()
+    return { schemaId, workspaceId, order, release: release.data }
+  }
+
+  async function receive(principalId, orderId, downloaded = false) {
     return transaction(async client => {
-      const { schemaId } = await scoped(client, principalId, 'buyer')
-      const order = schemaId && await get(client, schemaId, orderId, 'order')
-      if (!order || order.owner_principal_id !== principalId) throw missing()
-      if (order.data.status === 'pending') throw new StoreError(409, 'payment_pending')
-      const release = await get(client, schemaId, order.data.revisionId, 'release')
-      if (!release || release.data.listingId !== order.data.listingId || !/^[0-9a-f]{64}$/.test(release.data.digest)) throw missing()
+      const { schemaId, order, release } = await paidOrder(client, principalId, orderId)
+      if (release.coursePin && !downloaded) return release
+      if (release.coursePin || !/^[0-9a-f]{64}$/.test(release.digest)) throw missing()
       if (downloaded && order.data.received !== true) {
         await client.query(`
           UPDATE vdb.records SET data=jsonb_set(data,'{received}','true')
           WHERE schema_id=$1 AND project_id=$2 AND record_id=$3 AND owner_principal_id=$4`, [schemaId, projectId, orderId, principalId])
       }
-      return { ...release.data, path: join(blobs, release.data.digest) }
+      return { ...release, path: join(blobs, release.digest) }
     })
   }
 
@@ -222,7 +240,7 @@ export async function createFreeDownloadStore({ pool, projectId, directory, rend
         WHERE o.schema_id=$1 AND o.project_id=$2 AND o.access='private' AND o.data->>'kind'='order'
         ORDER BY o.created_at DESC,o.record_id LIMIT 100`, [schemaId,projectId])
       const { rows: products } = await client.query(`
-        SELECT l.record_id AS listing_id, r.data->>'title' AS title
+        SELECT l.record_id AS listing_id, r.data->>'title' AS title, r.data ? 'coursePin' AS "isCourse"
         FROM vdb.records l JOIN vdb.records r
           ON r.record_id::text=l.data->>'currentRevisionId' AND r.schema_id=l.schema_id AND r.project_id=l.project_id AND r.data->>'kind'='release'
         WHERE l.schema_id=$1 AND l.project_id=$2 AND l.data->>'kind'='listing'
@@ -239,5 +257,5 @@ export async function createFreeDownloadStore({ pool, projectId, directory, rend
     })
   }
 
-  return { publish, checkout, attachSession, confirmPayment, receive, dashboard, page, transaction, scoped, get }
+  return { projectId, publish, checkout, attachSession, confirmPayment, receive, dashboard, page, paidOrder, transaction, scoped, get }
 }

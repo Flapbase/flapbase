@@ -17,6 +17,7 @@ import { handleBooking } from './booking-http.mjs'
 import { createCaseService } from './cases.mjs'
 import { createCasesPublication } from './cases-publication.mjs'
 import { handleCases } from './cases-http.mjs'
+import { createPurchasedCourse } from './course-purchase.mjs'
 import { createCourseService } from './course.mjs'
 import { handleCourses } from './course-http.mjs'
 
@@ -37,6 +38,9 @@ export function createSelfHostedServer({ origin, pool, adapter, store, lifecycle
   if (url.origin !== origin || url.protocol !== 'http:' || !['localhost', '127.0.0.1'].includes(url.hostname)) {
     throw new Error('The password reference server requires an HTTP loopback origin')
   }
+  const courseStore = course && store?.projectId === course.projectId ? store : undefined
+  const courseShop = payment ? courseStore : undefined
+  const purchases = courseStore ? createPurchasedCourse({ store: courseStore, course }) : undefined
   const resolveHuman = createHumanSessionResolver(pool, adapter)
   const handleAuth = toNodeHandler(adapter.handle)
   return createServer(async (req, res) => {
@@ -75,7 +79,7 @@ export function createSelfHostedServer({ origin, pool, adapter, store, lifecycle
         route, origin, profile: cases, delegation: casesDelegation, resolveHuman: () => resolveHuman(fromNodeHeaders(req.headers)),
       })) return
       if (course && await handleCourses(req, res, {
-        route, origin, course, delegation: courseDelegation, resolveHuman: options => resolveHuman(fromNodeHeaders(req.headers), options),
+        route, origin, course, courseShop, purchases, delegation: courseDelegation, resolveHuman: options => resolveHuman(fromNodeHeaders(req.headers), options),
       })) return
       const file = req.method === 'GET' ? files.get(route.pathname) : undefined
       if (!file) {
@@ -160,7 +164,7 @@ async function start() {
       ? createStripePayment({ secretKey: process.env.FLAP_STORE_STRIPE_KEY, webhookSecret: process.env.FLAP_STORE_STRIPE_WEBHOOK_SECRET, origin })
       : undefined
     const store = projectId || directory
-      ? await createFreeDownloadStore({ pool, projectId, directory, renderProduct: product => renderProduct({ ...product, leadEnabled: true }) })
+      ? await createFreeDownloadStore({ pool, projectId, directory, course, renderProduct: product => renderProduct({ ...product, leadEnabled: true }) })
       : undefined
     let sendEmail
     if (store && process.env.FLAP_STORE_EMAIL_PREVIEW === '1') {
