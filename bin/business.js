@@ -8,6 +8,9 @@ const localWorkflows = {
   'digital-product-sales': 'flapbase:resource-distribution',
   'customer-support': 'flapbase:customer-support',
 }
+const localLaunch = {
+  recruitment: { path: '/recruitment', configuration: 'FLAP_RECRUITMENT_PROJECT_ID' },
+}
 const uuid = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i
 const object = value => value !== null && typeof value === 'object' && !Array.isArray(value)
 const own = (source, key) => object(source) && Object.hasOwn(source, key) ? source[key] : undefined
@@ -26,6 +29,7 @@ export function inspectBusiness(catalog, businessKey) {
   return {
     businessKey, ...business, version: definition.version, definitionDigest,
     localWorkflow: own(localWorkflows, businessKey) ?? null,
+    ...(own(localLaunch, businessKey) && { localLaunch: localLaunch[businessKey] }),
     workflows: Object.fromEntries(business.workflows.map(key => [key, definition.workflows[key]])),
     procedures: Object.fromEntries([...new Set(business.workflows.flatMap(key => definition.workflows[key].flatMap(step => step.procedures)))]
       .map(key => [key, definition.procedures[key]])),
@@ -122,13 +126,14 @@ export async function businessCommand(args, { token, send, read = readFile } = {
   const catalog = await loadBusinessCatalog()
   if (action === 'list' && args.length === 1) {
     return Object.keys(catalog.definition.businesses).map(key => {
-      const { businessKey, title, status, templateId, localWorkflow, executions } = inspectBusiness(catalog, key)
-      return { businessKey, title, status, templateId, localWorkflow, executions: Object.keys(executions) }
+      const { businessKey, title, status, templateId, localWorkflow, localLaunch, executions } = inspectBusiness(catalog, key)
+      return { businessKey, title, status, templateId, localWorkflow, ...(localLaunch && { localLaunch }), executions: Object.keys(executions) }
     })
   }
   if (action === 'inspect' && args.length === 2) return inspectBusiness(catalog, businessKey)
   if (action === 'local-base' && args.length === 2) {
     const business = inspectBusiness(catalog, businessKey)
+    if (business.localLaunch) throw new Error('採用の導入は /recruitment または app_add_recruitment から行います。')
     if (!business.localWorkflow) throw new Error('この事業のセルフホスト実行は未対応です。')
     return {
       version: 1, package: 'member-resources', packageVersion: 1,

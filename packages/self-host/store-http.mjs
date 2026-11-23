@@ -4,11 +4,11 @@ import { timingSafeEqual } from 'node:crypto'
 import { DIGITAL_PRODUCT_TOOLS } from './mcp.mjs'
 import { sha, StoreError } from './free-download.mjs'
 
-const escape = value => String(value).replace(/[&<>"']/g, char => '&#' + char.charCodeAt(0) + ';')
+export const escape = value => String(value).replace(/[&<>"']/g, char => '&#' + char.charCodeAt(0) + ';')
 const orderTime = new Intl.DateTimeFormat('ja-JP', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Tokyo' })
-const html = (title, content) => `<!doctype html><html lang="ja"><head><meta charset="utf-8">
+export const html = (title, content, script = '/store-ui.js') => `<!doctype html><html lang="ja"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1"><title>${escape(title)} | Flapbase</title>
-<link rel="stylesheet" href="/store.css"><script type="module" src="/store-ui.js"></script></head>
+<link rel="stylesheet" href="/store.css"><script type="module" src="${script}"></script></head>
 <body><header><a href="/">Flapbase</a></header><main>${content}</main></body></html>`
 
 export const renderProduct = ({ listingId, revisionId, title, description, amountMinor = 0, leadEnabled = false }) => html(title, `
@@ -58,7 +58,7 @@ ${lifecycle ? `<section><h2>問い合わせる</h2><form data-operation="support
 <button>問い合わせを送る</button><p role="status"></p></form></section>` : ''}`)
 }
 
-function send(res, status, value) {
+export function send(res, status, value) {
   if (typeof value !== 'string' && !Buffer.isBuffer(value)) {
     res.writeHead(status, { 'content-type': 'application/json; charset=utf-8' }).end(JSON.stringify(value))
     return
@@ -80,13 +80,19 @@ async function readBody(req, maxBytes) {
   return Buffer.concat(chunks)
 }
 
-async function input(req, maxBytes) {
+export async function input(req, maxBytes) {
   const raw = await readBody(req, maxBytes)
   try {
     const value = JSON.parse(raw.toString())
     if (value && typeof value === 'object' && !Array.isArray(value)) return value
   } catch { /* Input parsing has the same bounded error response. */ }
   throw new StoreError(400, 'invalid_request')
+}
+
+export function canCallAgent(req, delegation) {
+  return delegation && !req.headers.origin && timingSafeEqual(
+    Buffer.from(sha(req.headers.authorization ?? '')), Buffer.from(delegation.tokenDigest),
+  )
 }
 
 export async function handleStore(req, res, { route, origin, store, lifecycle, payment, delegation, resolveHuman }) {
@@ -98,8 +104,7 @@ export async function handleStore(req, res, { route, origin, store, lifecycle, p
     return true
   }
   if (lifecycle && path === '/api/store/agent' && req.method === 'POST') {
-    const authorization = req.headers.authorization ?? ''
-    if (!delegation || req.headers.origin || !timingSafeEqual(Buffer.from(sha(authorization)), Buffer.from(delegation.tokenDigest))) {
+    if (!canCallAgent(req, delegation)) {
       throw new StoreError(401, 'agent_unauthorized')
     }
     const body = await input(req, 16_000)

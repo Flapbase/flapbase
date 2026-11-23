@@ -8,7 +8,7 @@ async function refresh() {
   form.hidden = response.ok
   logout.hidden = !response.ok
   const next = new URLSearchParams(location.search).get('next')
-  if (response.ok && (next === '/store' || /^\/(?:products|receive\/orders)\/[0-9a-f-]{36}$/.test(next ?? ''))) location.replace(next)
+  if (response.ok && (next === '/store' || next === '/recruitment' || /^\/recruitment\/jobs\/[0-9a-f-]{36}$/.test(next ?? '') || /^\/(?:products|receive\/orders)\/[0-9a-f-]{36}$/.test(next ?? ''))) location.replace(next)
   status.textContent = response.ok ? 'ログイン中' : ''
 }
 

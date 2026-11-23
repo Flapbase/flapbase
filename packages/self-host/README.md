@@ -54,3 +54,14 @@ Flapbaseを手元で起動し、無料のデジタル商品の公開・本人申
 ## Checks
 
 With the local PostgreSQL executables on your path, run `pnpm --filter @flapbase/self-host test`. Tests start and clean up a disposable database and use the stdio MCP protocol.
+
+## 採用・応募管理
+
+同じサーバーで、求人の公開、本人応募、運営者による選考、応募者本人への結果表示を試せます。既存のPostgreSQLを使う場合も `node packages/self-host/setup.mjs` を実行して追加テーブルを作ります。
+
+1. 上の認証手順で運営者としてログインし、`/auth/context` の `principalId` を取得します。
+2. `FLAP_RECRUITMENT_PROJECT_ID` にProjectのUUID、`FLAP_RECRUITMENT_DATA_DIR` に永続ディレクトリを設定します。新規Projectには `FLAP_STORE_OWNER_ID` に運営者ID、必要なら `FLAP_PROJECT_NAME` に事業名を入れ、`node packages/self-host/setup.mjs project` を実行します。商品と採用を同じプロセスで有効化した場合、この初期化コマンドは `FLAP_STORE_PROJECT_ID` を優先します。
+3. サーバーを起動し、`/recruitment` で「採用を始める」を押します。求人原稿を保存・検証し、運営者が承認した版を公開します。公開リンクから別アカウントで応募し、運営画面で選考を進めます。応募者は同じリンクから応募状況を確認できます。
+4. 持ち込みAIから導入する場合は、サーバーに `FLAP_RECRUITMENT_AGENT_PRINCIPAL_ID` と `FLAP_RECRUITMENT_AGENT_TOKEN` を設定します。前者は対象Projectの運営権限を持つHuman Principalです。MCPクライアントは `node packages/self-host/mcp.mjs` を起動し、環境変数で同じトークンを受け取ります。標準事業定義の `app_add_recruitment` と `recruitment_applications_list` を使えます。後者が返すのは応募ID・求人名・状態・版です。
+
+公開求人はデータディレクトリから配信し、閲覧時にPostgreSQLへ接続しません。1プロセスで稼働させ、復旧時はPostgreSQLとデータディレクトリを同じバックアップから戻してください。選考結果は応募者の画面に表示します。

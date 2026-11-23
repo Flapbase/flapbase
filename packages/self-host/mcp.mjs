@@ -35,24 +35,29 @@ export const DIGITAL_PRODUCT_TOOLS = [
   }, ['requestId', 'body']),
 ]
 
-function localEndpoint(origin) {
+export const RECRUITMENT_TOOLS = [
+  tool('app_add_recruitment', 'このProjectに固定版の採用機能を導入します。求人公開は運営画面で行います。', false, { projectId: requestId }),
+  tool('recruitment_applications_list', '対象Projectの応募の状態と版を確認します。応募本文は返しません。', true, { projectId: requestId }),
+]
+
+function localEndpoint(origin, path) {
   const url = new URL(origin)
   if (url.origin !== origin || url.protocol !== 'http:' || !['localhost', '127.0.0.1'].includes(url.hostname)) {
     throw new Error('FLAP_ORIGIN にローカルのHTTPオリジンを指定してください。')
   }
-  return new URL('/api/store/agent', url)
+  return new URL(path, url)
 }
 
 const result = (text, isError = false) => ({ content: [{ type: 'text', text }], ...(isError && { isError }) })
 
-export function createStoreMcpServer({ origin, token }) {
-  const endpoint = localEndpoint(origin)
+function createLocalMcpServer({ origin, token, path, tools }) {
+  const endpoint = localEndpoint(origin, path)
   if (typeof token !== 'string' || !/^[!-~]+$/.test(token)) throw new Error('FLAP_STORE_AGENT_TOKEN を設定してください。')
 
   const server = new Server({ name: 'flapp-self-host', version: '0.1.0' }, { capabilities: { tools: {} } })
-  server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools: DIGITAL_PRODUCT_TOOLS }))
+  server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools }))
   server.setRequestHandler(CallToolRequestSchema, async ({ params }) => {
-    if (!DIGITAL_PRODUCT_TOOLS.some(tool => tool.name === params.name)) {
+    if (!tools.some(tool => tool.name === params.name)) {
       return result('登録されていない操作です。', true)
     }
 
@@ -73,8 +78,18 @@ export function createStoreMcpServer({ origin, token }) {
   return server
 }
 
+export function createStoreMcpServer(options) {
+  return createLocalMcpServer({ ...options, path: '/api/store/agent', tools: DIGITAL_PRODUCT_TOOLS })
+}
+
+export function createRecruitmentMcpServer(options) {
+  return createLocalMcpServer({ ...options, path: '/api/recruitment/agent', tools: RECRUITMENT_TOOLS })
+}
+
 if (process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url) {
   const origin = process.env.FLAP_ORIGIN ?? `http://127.0.0.1:${process.env.FLAP_PORT ?? 5264}`
-  const server = createStoreMcpServer({ origin, token: process.env.FLAP_STORE_AGENT_TOKEN })
+  const server = process.env.FLAP_RECRUITMENT_AGENT_TOKEN
+    ? createRecruitmentMcpServer({ origin, token: process.env.FLAP_RECRUITMENT_AGENT_TOKEN })
+    : createStoreMcpServer({ origin, token: process.env.FLAP_STORE_AGENT_TOKEN })
   await server.connect(new StdioServerTransport())
 }

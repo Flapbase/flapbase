@@ -9,16 +9,19 @@ import { createFreeDownloadStore, sha, storeId, StoreError } from './free-downlo
 import { createStoreLifecycle } from './lifecycle.mjs'
 import { createStripePayment, PaymentError } from './payment.mjs'
 import { handleStore, renderProduct, sendStoreError } from './store-http.mjs'
+import { createRecruitment } from './recruitment.mjs'
+import { handleRecruitment } from './recruitment-http.mjs'
 
 const authPaths = new Set(['/api/auth/sign-up/email', '/api/auth/sign-in/email', '/api/auth/sign-out'])
 const files = new Map([
   ['/', ['index.html', 'text/html; charset=utf-8']],
   ['/auth-ui.js', ['auth-ui.js', 'text/javascript; charset=utf-8']],
+  ['/recruitment-ui.js', ['recruitment-ui.js', 'text/javascript; charset=utf-8']],
   ['/store-ui.js', ['store-ui.js', 'text/javascript; charset=utf-8']],
   ['/store.css', ['store.css', 'text/css; charset=utf-8']],
 ])
 
-export function createSelfHostedServer({ origin, pool, adapter, store, lifecycle, payment, delegation }) {
+export function createSelfHostedServer({ origin, pool, adapter, store, lifecycle, payment, delegation, recruitment, recruitmentDelegation }) {
   const url = new URL(origin)
   if (url.origin !== origin || url.protocol !== 'http:' || !['localhost', '127.0.0.1'].includes(url.hostname)) {
     throw new Error('The password reference server requires an HTTP loopback origin')
@@ -48,6 +51,10 @@ export function createSelfHostedServer({ origin, pool, adapter, store, lifecycle
         return
       }
       if (store && await handleStore(req, res, { route, origin, store, lifecycle, payment, delegation, resolveHuman: () => resolveHuman(fromNodeHeaders(req.headers)) })) return
+      if (recruitment && await handleRecruitment(req, res, {
+        route, origin, recruitment, delegation: recruitmentDelegation,
+        resolveHuman: () => resolveHuman(fromNodeHeaders(req.headers)),
+      })) return
       const file = req.method === 'GET' ? files.get(route.pathname) : undefined
       if (!file) {
         res.writeHead(404).end()
@@ -98,7 +105,18 @@ async function start() {
         JSON.stringify({ ...message, unsubscribeUrl: origin + '/unsubscribe?lead=' + message.leadId }), { mode: 0o600, flag: 'wx' })
     }
     const lifecycle = store && createStoreLifecycle({ store, projectId, sendEmail })
-    const server = createSelfHostedServer({ origin, pool, adapter, store, lifecycle, payment, delegation })
+    const recruitmentProject = process.env.FLAP_RECRUITMENT_PROJECT_ID
+    const recruitmentDirectory = process.env.FLAP_RECRUITMENT_DATA_DIR
+    const recruitmentToken = process.env.FLAP_RECRUITMENT_AGENT_TOKEN
+    const recruitmentPrincipal = process.env.FLAP_RECRUITMENT_AGENT_PRINCIPAL_ID
+    if ((recruitmentToken || recruitmentPrincipal) && (!recruitmentProject || !storeId(recruitmentPrincipal) || !/^[!-~]{32,}$/.test(recruitmentToken ?? ''))) {
+      throw new Error('Set the recruitment Project, operator principal and an agent token of at least 32 characters')
+    }
+    const recruitmentDelegation = recruitmentToken ? { principalId: recruitmentPrincipal, tokenDigest: sha('Bearer ' + recruitmentToken) } : undefined
+    const recruitment = recruitmentProject || recruitmentDirectory
+      ? await createRecruitment({ pool, projectId: recruitmentProject, directory: recruitmentDirectory })
+      : undefined
+    const server = createSelfHostedServer({ origin, pool, adapter, store, lifecycle, payment, delegation, recruitment, recruitmentDelegation })
     await new Promise((resolve, reject) => {
       server.once('error', reject)
       server.listen(port, '127.0.0.1', resolve)

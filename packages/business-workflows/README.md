@@ -22,7 +22,7 @@ The last command returns a pinned MCP request that you can hand to an OAuth-conn
 
 - `business prepare <事業キー> <実行キー> <入力JSON>` は、版とダイジェスト付きのMCP入力を作ります。入力は `projectId`、`parameters`、必要に応じて `stepKey` と `results` です。認可済みの持ち込みエージェントに渡せます。
 - 認可済みのCloud MCPアクセストークンを `FLAPBASE_MCP_ACCESS_TOKEN` に渡せる環境では、`business check-cloud` でCloudが同じ定義と実行キーを提供するか確認できます。`business run` は `prepare` と同じ引数を取り、一工程を実行します。書き込みの再送では入力内の冪等キーを維持します。
-- セルフホスト導入は `business local-base <事業キー>` で作った定義を[既存のローカル起動手順](../self-host/README.md)へ渡します。現行の対象は無料資料、デジタル商品販売のローカル試験、購入者サポートです。残りの事業のセルフホスト実行には対応する業務機能が必要です。
+- セルフホスト導入は `business local-base <事業キー>` で作った定義を[既存のローカル起動手順](../self-host/README.md)へ渡します。現行の対象は無料資料、デジタル商品販売のローカル試験、購入者サポートです。採用・応募管理は同じ起動方法で採用機能を有効化し、運営画面またはMCPの `app_add_recruitment` から導入します。残りの7事業には対応する業務機能が必要です。
 
 予約・イベントで使う[予約枠計算](../booking-slots/README.md)と、業務横断の[ステップ配信エンジン](../step-delivery/README.md)は、単独で組み込めます。予約の確定や配信は、保存・認可・外部接続を担当するHostが行います。
 
