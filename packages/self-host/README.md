@@ -79,8 +79,15 @@ MCPを使う場合、`FLAP_BOOKING_AGENT_PRINCIPAL_ID` に対象Projectの運営
 
 受付ページは保存した公開版を配信します。空き枠と申込はPostgreSQLで照合し、決済や外部カレンダー・メールへの送信は行いません。確認メールはローカル試験向けで、確認用ディレクトリをWeb公開しないでください。受入は `booking-http.postgres.test.mjs` を実行すると再現できます。
 
-## 定型サービスと顧客・商談管理のローカルDB
+## 定型サービスと顧客・商談管理
 
-通常のセットアップ後に `pnpm --filter @flapbase/self-host setup cases` を実行すると、既存のCRM・案件・見積・納品SQLを導入できます。初期化済みProjectで案件操作が拒否される場合は、運営者IDで `setup project` を再実行すると作成者の会員行を補えます。
+通常のセットアップ後に `pnpm --filter @flapbase/self-host setup cases` を実行します。既存の案件・見積・納品SQLと、固定版の事業定義を使います。
 
-`cases.mjs` の共通処理で、問い合わせの再送、顧客への集約、案件化、担当と期限、成約・失注、見積の送付と本人回答、納品の受領を扱います。通知はローカルDBに記録します。公開フォーム、運営・顧客ポータル、MCPへの接続はこの段階の対象外です。動作は `cases.postgres.test.mjs` で確認できます。
+1. `FLAP_CASES_PROJECT_ID` と `FLAP_CASES_DATA_DIR` を設定します。新規Projectの場合は `FLAP_STORE_OWNER_ID` に運営者IDを指定し、`node packages/self-host/setup.mjs project` を実行します。既存Projectに作成者の会員行がなければ、同じコマンドで追加できます。
+2. `FLAP_CASES_BUSINESS` に `standard-service` または `customer-sales` を設定します。運営者が `/cases` で受付の下書きを確認して公開すると、`/service` から問い合わせを送れます。
+3. 運営画面で問い合わせを案件にし、担当と期限・次の対応・成約や失注を記録します。定型サービスでは見積を送付し、追加情報を依頼し、納品内容を顧客用リンクに公開できます。顧客は問い合わせ時のメールを確認した後に、見積への回答や納品の受領を行えます。
+4. メール確認リンクは `FLAP_CASES_DATA_DIR/<ProjectのUUID>/verification-preview/` に書き出されます。外部には送信しません。このローカルプレビューをWeb公開しないでください。
+
+持ち込みAIは `FLAP_CASES_AGENT_PRINCIPAL_ID` に運営権限を持つHuman Principalを設定し、サーバーとクライアントに同じ `FLAP_CASES_AGENT_TOKEN` を渡して `mcp.mjs` に接続します。標準の `inbox_list`、`customer_get`、`deal_create_from_inquiry`、`deal_get`、`deal_status_update` を利用できます。問い合わせの本文や連絡先をツール応答に含めません。
+
+初期の納品内容は文面です。ローカルの受付は運営画面で公開し、Cloudの汎用サイト・アプリ編集ツールは別の接続経路です。

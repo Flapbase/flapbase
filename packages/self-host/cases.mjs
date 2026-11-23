@@ -141,6 +141,90 @@ export function createCaseService({ pool, projectId }) {
     })
   }
 
+  function authorizePublication(actor) {
+    return run(async db => {
+      const scope = await project(db, actor, true)
+      const authorized = await result(db, `
+        SELECT EXISTS(SELECT 1 FROM platform.project_memberships
+        WHERE project_id=$1 AND principal_id=$2 AND status='active' AND revoked_at IS NULL AND member_role='owner') AS result
+      `, [projectId, actor])
+      if (!authorized) throw missing()
+      return scope
+    })
+  }
+
+  function inbox(actor, contactId = null, entrance = null) {
+    if (contactId !== null) id(contactId)
+    if (entrance !== null && (typeof entrance !== 'string' || !/^[a-z][a-z-]{1,40}$/.test(entrance))) throw invalid()
+    return run(async db => {
+      const { workspace_id: workspace } = await project(db, actor)
+      return rows(db, `
+        SELECT i.inquiry_id AS id,i.contact_id AS "contactId",i.stage,i.received_at AS "receivedAt",
+          d.case_id AS "caseId"
+        FROM platform.inquiries i LEFT JOIN platform.cases d ON d.source_inquiry_id=i.inquiry_id AND d.project_id=i.project_id
+        WHERE i.workspace_id=$1 AND i.project_id=$2 AND ($3::uuid IS NULL OR i.contact_id=$3) AND ($4::text IS NULL OR i.entrance=$4)
+        ORDER BY i.received_at DESC LIMIT 100
+      `, [workspace, projectId, contactId, entrance])
+    })
+  }
+
+  function operatorCase(actor, caseId) {
+    return run(async db => {
+      const workspace = await caseScope(db, actor, caseId, false)
+      const entry = await result(db, `
+        SELECT platform.read_case($1,$2,$3) || jsonb_build_object('version',version,'nextAction',next_action) AS result
+        FROM platform.cases WHERE case_id=$3 AND project_id=$4
+      `, [actor, workspace, caseId, projectId])
+      const { quotes } = await result(db, 'SELECT platform.case_quotes_of($1,$2,$3) AS result', [actor, workspace, caseId])
+      const actions = await result(db, 'SELECT platform.case_actions_of($1,$2,$3) AS result', [actor, workspace, caseId])
+      const { requests } = await result(db, 'SELECT platform.case_requests_of($1,$2,$3) AS result', [actor, workspace, caseId])
+      return { entry, quotes, actions, requests }
+    })
+  }
+
+  function customerCase(actor, caseId) {
+    return run(async db => {
+      const portal = await contactScope(db, actor, caseId)
+      const [entry] = await rows(db, 'SELECT title,status FROM platform.cases WHERE case_id=$1 AND project_id=$2', [caseId, projectId])
+      const quotes = await rows(db, `
+        SELECT platform.case_quote_json(q) AS quote FROM platform.case_quotes q
+        JOIN platform.customer_portal_contacts($1,$2) who ON who.contact_id=q.contact_id AND who.workspace_id=q.workspace_id
+        WHERE q.case_id=$3 AND q.status IN ('sent','accepted','declined') ORDER BY q.version DESC
+      `, [actor, portal, caseId])
+      const deliveries = await rows(db, `
+        SELECT a.action_id AS id,a.title,a.body->>'note' AS note,a.status FROM platform.case_actions a
+        JOIN platform.customer_portal_contacts($1,$2) who ON who.contact_id=a.contact_id AND who.workspace_id=a.workspace_id
+        WHERE a.case_id=$3 AND a.kind='deliverable' AND a.status IN ('sent','delivered','received') ORDER BY a.created_at
+      `, [actor, portal, caseId])
+      const requests = await rows(db, `
+        SELECT platform.case_request_json(r,false) AS request FROM platform.case_requests r
+        JOIN platform.customer_portal_contacts($1,$2) who ON who.contact_id=r.contact_id AND who.workspace_id=r.workspace_id
+        WHERE r.case_id=$3 ORDER BY r.created_at
+      `, [actor, portal, caseId])
+      return { entry, quotes: quotes.map(row => row.quote), deliveries, requests: requests.map(row => row.request) }
+    })
+  }
+
+  function askCustomer(actor, caseId, { title, idempotencyKey }) {
+    id(idempotencyKey)
+    return run(async db => {
+      const workspace = await caseScope(db, actor, caseId, true)
+      return result(db, 'SELECT platform.case_request_create($1,$2,$3,$4::jsonb) AS result', [actor, workspace, caseId, {
+        title: text(title, 200), fields: [{key:'reply',label:'回答',type:'long_text',required:true}],
+        idempotencyKey: digest([projectId, actor, idempotencyKey]),
+      }])
+    })
+  }
+
+  function answerRequest(actor, caseId, requestId, reply) {
+    return run(async db => {
+      const portal = await contactScope(db, actor, caseId)
+      if (!(await rows(db, 'SELECT 1 FROM platform.case_requests WHERE request_id=$1 AND case_id=$2', [id(requestId), caseId])).length) throw missing()
+      return result(db, "SELECT platform.customer_request_answer($1,$2,$3,$4::jsonb,'[]'::jsonb) AS result",
+        [actor, portal, requestId, {reply:text(reply,3000)}])
+    })
+  }
+
   function saveQuote(actor, caseId, { lines, validUntil, note, idempotencyKey }) {
     id(idempotencyKey)
     return run(async db => {
@@ -197,5 +281,5 @@ export function createCaseService({ pool, projectId }) {
     })
   }
 
-  return { projectId, receive, convert, read, update, queue, saveQuote, sendQuote, answerQuote, deliver, receiveDelivery }
+  return { projectId, authorizePublication, inbox, operatorCase, customerCase, askCustomer, answerRequest, receive, convert, read, update, queue, saveQuote, sendQuote, answerQuote, deliver, receiveDelivery }
 }

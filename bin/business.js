@@ -9,6 +9,8 @@ const localWorkflows = {
   'customer-support': 'flapbase:customer-support',
 }
 const localLaunch = {
+  'standard-service': { path: '/cases', configuration: 'FLAP_CASES_PROJECT_ID', businessKey: 'standard-service' },
+  'customer-sales': { path: '/cases', configuration: 'FLAP_CASES_PROJECT_ID', businessKey: 'customer-sales' },
   recruitment: { path: '/recruitment', configuration: 'FLAP_RECRUITMENT_PROJECT_ID' },
   'booking-service': { path: '/booking', configuration: 'FLAP_BOOKING_PROJECT_ID' },
   'event-registration': { path: '/booking', configuration: 'FLAP_BOOKING_PROJECT_ID' },
@@ -136,7 +138,7 @@ export async function businessCommand(args, { token, send, read = readFile } = {
   if (action === 'local-base' && args.length === 2) {
     const business = inspectBusiness(catalog, businessKey)
     if (business.businessKey === 'recruitment') throw new Error('採用の導入は /recruitment または app_add_recruitment から行います。')
-    if (business.localLaunch) throw new Error('予約とイベントの受付は /booking から公開します。')
+    if (business.localLaunch) throw new Error('この事業は ' + business.localLaunch.path + ' から公開します。')
     if (!business.localWorkflow) throw new Error('この事業のセルフホスト実行は未対応です。')
     return {
       version: 1, package: 'member-resources', packageVersion: 1,

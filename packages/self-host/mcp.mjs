@@ -50,6 +50,18 @@ export const BOOKING_TOOLS = [
   }),
 ]
 
+export const CASE_TOOLS = [
+  tool('inbox_list', '対象Projectの問い合わせIDと進捗を返します。本文や連絡先は返しません。', true, { projectId: requestId, entrance: text(80) }, ['projectId']),
+  tool('customer_get', '対象Projectの顧客の問い合わせと案件の履歴を返します。', true, { projectId: requestId, contactId: requestId }),
+  tool('deal_create_from_inquiry', '対象Projectの問い合わせを案件にします。', false, { projectId: requestId, inquiryId: requestId, idempotencyKey: requestId }),
+  tool('deal_get', '案件の状態と版を照会します。', true, { projectId: requestId, caseId: requestId }),
+  tool('deal_status_update', '現在の版を指定して案件の状態を更新します。', false, {
+    projectId: requestId, caseId: requestId, idempotencyKey: requestId,
+    expectedVersion: { type: 'integer', minimum: 1 },
+    status: { type: 'string', enum: ['received','estimating','ordered','in_progress','delivered','invoiced','completed','lost'] },
+  }),
+]
+
 function localEndpoint(origin, path) {
   const url = new URL(origin)
   if (url.origin !== origin || url.protocol !== 'http:' || !['localhost', '127.0.0.1'].includes(url.hostname)) {
@@ -100,9 +112,15 @@ export function createBookingMcpServer(options) {
   return createLocalMcpServer({ ...options, path: '/api/booking/agent', tools: BOOKING_TOOLS })
 }
 
+export function createCasesMcpServer(options) {
+  return createLocalMcpServer({ ...options, path: '/api/cases/agent', tools: CASE_TOOLS })
+}
+
 if (process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url) {
   const origin = process.env.FLAP_ORIGIN ?? `http://127.0.0.1:${process.env.FLAP_PORT ?? 5264}`
-  const server = process.env.FLAP_BOOKING_AGENT_TOKEN
+  const server = process.env.FLAP_CASES_AGENT_TOKEN
+    ? createCasesMcpServer({ origin, token: process.env.FLAP_CASES_AGENT_TOKEN })
+    : process.env.FLAP_BOOKING_AGENT_TOKEN
     ? createBookingMcpServer({ origin, token: process.env.FLAP_BOOKING_AGENT_TOKEN })
     : process.env.FLAP_RECRUITMENT_AGENT_TOKEN
     ? createRecruitmentMcpServer({ origin, token: process.env.FLAP_RECRUITMENT_AGENT_TOKEN })
