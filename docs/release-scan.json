@@ -1,7 +1,7 @@
 {
   "version": "flapbase.release-scan/v1",
   "status": "pass",
-  "scannedFiles": 142,
+  "scannedFiles": 226,
   "excluded": [
     ".git",
     "node_modules",
@@ -34,6 +34,26 @@
       "dependencies": 0
     },
     {
+      "path": "packages/apps-recruitment/package.json",
+      "name": "@flapbase/apps-recruitment",
+      "dependencies": 0
+    },
+    {
+      "path": "packages/booking-slots/package.json",
+      "name": "@flapbase/booking-slots",
+      "dependencies": 0
+    },
+    {
+      "path": "packages/business-workflows/package.json",
+      "name": "@flapbase/business-workflows",
+      "dependencies": 0
+    },
+    {
+      "path": "packages/course-engine/package.json",
+      "name": "@flapbase/course-engine",
+      "dependencies": 0
+    },
+    {
       "path": "packages/self-host/package.json",
       "name": "@flapbase/self-host",
       "dependencies": 3
@@ -41,6 +61,11 @@
     {
       "path": "packages/site-check/package.json",
       "name": "@flapbase/site-check",
+      "dependencies": 0
+    },
+    {
+      "path": "packages/step-delivery/package.json",
+      "name": "@flapbase/step-delivery",
       "dependencies": 0
     }
   ],
@@ -51,8 +76,12 @@
       "sha256": "63edb613f4ad0e8fb35ecf08a37c63012efbaafa08012d85b1aa608964606016"
     },
     {
+      "path": "bin/business.js",
+      "sha256": "cb342829221394e26a6172ae2f3587f756edca392384b73422c67762898b86ea"
+    },
+    {
       "path": "bin/flap.js",
-      "sha256": "30a62bcc96d4e818822265d79b18e43453280098aa270a9400e817fa643027e7"
+      "sha256": "8fc0bb07f46e2f3dbe32046e88ba2c76aa25dd96f9a6cf86d52afa6f0fcfb4f2"
     },
     {
       "path": "docs/architecture.md",
@@ -180,7 +209,147 @@
     },
     {
       "path": "package.json",
-      "sha256": "1aebb4afe20c11634c27d6640150c3132090620beca32ab32960ab05f5770711"
+      "sha256": "78b2434b9e23f25f5ddaf77b7801a480d5f1940fc15a7e24bf4f6729155a0c60"
+    },
+    {
+      "path": "packages/apps-recruitment/LICENSE",
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+    },
+    {
+      "path": "packages/apps-recruitment/package.json",
+      "sha256": "2de5e5f66005b56472fa158f2a547f0edfaeac73e4f8d603a053a979571a08c3"
+    },
+    {
+      "path": "packages/apps-recruitment/README.md",
+      "sha256": "ed34d6a7f7a79e6deede6df92438ab33bd024d5b77b8745d9622ddb39438bc67"
+    },
+    {
+      "path": "packages/apps-recruitment/src/persistence.d.ts",
+      "sha256": "a5afedf5ed964bee3ce9eaf8181e532904341ad295c48fc75d944b801010ada3"
+    },
+    {
+      "path": "packages/apps-recruitment/src/persistence.js",
+      "sha256": "a1af61c033c71f34eb0fab20af7a70d98d39c3000f989dcad9d4510efcdaa619"
+    },
+    {
+      "path": "packages/apps-recruitment/src/shared.d.ts",
+      "sha256": "75aa8078e5968b5a20f155c961e5eea45c78393d458e071527beb1a240a22b01"
+    },
+    {
+      "path": "packages/apps-recruitment/src/shared.js",
+      "sha256": "b696d27c384a382e3d4174012bf4b73de929a8f025ea63228a32225be2fe5c3e"
+    },
+    {
+      "path": "packages/booking-slots/LICENSE",
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+    },
+    {
+      "path": "packages/booking-slots/package.json",
+      "sha256": "6db56bc92872688d1ef3f07650297876c66783747d3bbad360f1cd568cb089f1"
+    },
+    {
+      "path": "packages/booking-slots/README.md",
+      "sha256": "3c824c73a196630111ebd82c72b37861830244470400356bd33106c7a5580038"
+    },
+    {
+      "path": "packages/booking-slots/src/notices.d.ts",
+      "sha256": "29bd2a20ce3348c1f418b4a3974e59626a50828aeedc45b06af1b0a3c472246a"
+    },
+    {
+      "path": "packages/booking-slots/src/notices.js",
+      "sha256": "66b71af57dd70cfdef5b306ac055881d78ffd0689c7083e349112880b2f48267"
+    },
+    {
+      "path": "packages/booking-slots/src/slots.d.ts",
+      "sha256": "5406ada690f417886e8cb81407745907e7becc4513bfe8692f0080f0b2636c77"
+    },
+    {
+      "path": "packages/booking-slots/src/slots.js",
+      "sha256": "3bc4b9d166a24a0840d7260780a0ad50c44c20ad1a17e1c3a45906894addeb11"
+    },
+    {
+      "path": "packages/business-workflows/.base/business-workflows.json",
+      "sha256": "23ad6be7879623ca9f84281a889b852ffcc3c52764687c6ce3c9a39ad7baf6c5"
+    },
+    {
+      "path": "packages/business-workflows/LICENSE",
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+    },
+    {
+      "path": "packages/business-workflows/package.json",
+      "sha256": "9540274a3b8fddc5a003eb05fb9597caf68a94fd272ff4f21048cbcf8257ecc2"
+    },
+    {
+      "path": "packages/business-workflows/README.md",
+      "sha256": "1340994fd6e9d076b07fc50d7f7074fe6d8c47babfe84c85a6be136ca23a86ed"
+    },
+    {
+      "path": "packages/course-engine/LICENSE",
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+    },
+    {
+      "path": "packages/course-engine/package.json",
+      "sha256": "286044b56158b689b1ef1cedb0f522e010a99833497a1976b19c5df80356ee64"
+    },
+    {
+      "path": "packages/course-engine/README.md",
+      "sha256": "24a89865a0363de62aa8d9192bc1775a14a1387ad36fb13e5d9a7f5cf90691c0"
+    },
+    {
+      "path": "packages/course-engine/src/document.d.ts",
+      "sha256": "b8e9d2b8b8d890e61822a1491a8540fda321281d530ee951d3655d9c44581e80"
+    },
+    {
+      "path": "packages/course-engine/src/document.js",
+      "sha256": "74df667fd0167bce0bcfe14b42eaa071cf83ab43fceec1e7af53cea7b14e538b"
+    },
+    {
+      "path": "packages/course-engine/src/index.d.ts",
+      "sha256": "d21eeaa5db871a52c0fe76c0832db44edae27f0af1590f6a854c4655057510b8"
+    },
+    {
+      "path": "packages/course-engine/src/index.js",
+      "sha256": "d21eeaa5db871a52c0fe76c0832db44edae27f0af1590f6a854c4655057510b8"
+    },
+    {
+      "path": "packages/course-engine/src/knowledge.d.ts",
+      "sha256": "96a08864298302ceba944b292a03b760ba51fa4ed2f3a3798d1dcce6536f6ea8"
+    },
+    {
+      "path": "packages/course-engine/src/knowledge.js",
+      "sha256": "524c874fab907f47275f7de3edec4bf352868b4086d087fb32b76c1a7eb5ebcb"
+    },
+    {
+      "path": "packages/course-engine/src/learning-access.d.ts",
+      "sha256": "13bf13574ec1d701faaeb5bd5dcd039218437a5198527e6dec2cc339708aec38"
+    },
+    {
+      "path": "packages/course-engine/src/learning-access.js",
+      "sha256": "a410b1971110bfd27b804e145c9315f67955f97b2a74b40737f1e58a30da4a2a"
+    },
+    {
+      "path": "packages/course-engine/src/personal-data-mask.d.ts",
+      "sha256": "a89770fa19086b694422a75986bd565204fbeacdc6951e2a159ff1f2acc503e4"
+    },
+    {
+      "path": "packages/course-engine/src/personal-data-mask.js",
+      "sha256": "26c6cac4e4fc80ad043845dcfa820d94b8f058e36377c9150f1c4ff6f05a3aff"
+    },
+    {
+      "path": "packages/course-engine/src/rules.d.ts",
+      "sha256": "0e5d373ffa7c8187f51cfa58af298c5a4a9f3a2504e11b14816b98c45562185c"
+    },
+    {
+      "path": "packages/course-engine/src/rules.js",
+      "sha256": "5f7a7a1027af12174daaea1e9be4c96f8c7aa6486afbdf401a84bb64d6e238dc"
+    },
+    {
+      "path": "packages/course-engine/src/types.d.ts",
+      "sha256": "293b6bb6f6a90c2246e7e66c818d007c5eac0e323aaa3397153b81823d9b76d3"
+    },
+    {
+      "path": "packages/course-engine/src/types.js",
+      "sha256": "8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881"
     },
     {
       "path": "packages/self-host/auth-schema.sql",
@@ -188,19 +357,95 @@
     },
     {
       "path": "packages/self-host/auth-ui.js",
-      "sha256": "58077af9728e3a0a533c27c9ee829717b9599db6b26addb1935217ee7c98deb8"
+      "sha256": "8042c11e61a5f5ead2004aa3c34594370ff88a6e4b721862e727286039dcdfcf"
     },
     {
       "path": "packages/self-host/auth.mjs",
-      "sha256": "9b9ceb9dc1009731230a8ad22b2d9039d77f1e31405127f6b9cb556ddbf8ba41"
+      "sha256": "8eab5e4f7641a220e3569900d91ee5fcca1ff05b3bf0b6324dee5cc26d8e6e17"
     },
     {
       "path": "packages/self-host/auth.postgres.test.mjs",
       "sha256": "25050043f43656f97d0c3866cd99b1d2a2fca1f2f796327b058202c9b496702c"
     },
     {
+      "path": "packages/self-host/booking-http.mjs",
+      "sha256": "4aae540b9015e939231b4c9f3a2611817a35bf3a6587ba33847aaaae3388ad36"
+    },
+    {
+      "path": "packages/self-host/booking-http.postgres.test.mjs",
+      "sha256": "870b45d6090d459ff0106e9e2fd2b5dfc51070c3fbfbf3c2b0536491f4f0e27e"
+    },
+    {
+      "path": "packages/self-host/booking-notices.mjs",
+      "sha256": "f04c4abdbbd69bc3e6c957c5f6d41ded1cc970cec2b9a8d57a6e8d4632f51017"
+    },
+    {
+      "path": "packages/self-host/booking-ui.js",
+      "sha256": "1196873e7c591e43c051ccd68a627269cafefcedeef2989e8f0624fa7a33c925"
+    },
+    {
+      "path": "packages/self-host/booking.mjs",
+      "sha256": "0c07a236d8d046c322abf1a5e204399480a70bf12bd64c1a72fea7ce8167a18a"
+    },
+    {
+      "path": "packages/self-host/booking.postgres.test.mjs",
+      "sha256": "ba8a78333326538caf08eb6fe46fca0dbb2878d591a8f746c04b1dee084d24c9"
+    },
+    {
+      "path": "packages/self-host/cases-http.mjs",
+      "sha256": "5619490234f8b7c13475b2f83d22f76dc44de4eb24120ef814f1ef614bae87ff"
+    },
+    {
+      "path": "packages/self-host/cases-http.postgres.test.mjs",
+      "sha256": "ae3f9515648b5f72152b3c286d0182874df9f77f39a1051d64c69e72f699a64f"
+    },
+    {
+      "path": "packages/self-host/cases-publication.mjs",
+      "sha256": "9bc15aa383dd0e1029ce080522178cf7cfe25a4cd81a925b2649f3186b3eaa5f"
+    },
+    {
+      "path": "packages/self-host/cases-ui.js",
+      "sha256": "76b1acb0fe965387d8b6cae8a7937dc8a578e5710e70149932a13eb201bc1d66"
+    },
+    {
+      "path": "packages/self-host/cases.mjs",
+      "sha256": "54ae517e3b9663883c946fc6e925af20be3b67bfa3f54ec1d1381b62dd90e6d0"
+    },
+    {
+      "path": "packages/self-host/cases.postgres.test.mjs",
+      "sha256": "15beeef28838be6fa446527962b4851ea3edbb5a0d3915e1a20821798eb6d134"
+    },
+    {
+      "path": "packages/self-host/course-http.mjs",
+      "sha256": "f7e6ba0dcd39ec9aa5aab681f1060b02b2f6d814ee19397f0dd9f6b8ffe3bb59"
+    },
+    {
+      "path": "packages/self-host/course-knowledge.mjs",
+      "sha256": "eeff591f02be8f4c0b2ca32806d9f7944b1ecb31502b0ebee4b6057a542d92db"
+    },
+    {
+      "path": "packages/self-host/course-purchase.mjs",
+      "sha256": "b9bb41f2bbf0baf811e24f27e20594847d5b02cb293622f8594d1b184570d74d"
+    },
+    {
+      "path": "packages/self-host/course-ui.js",
+      "sha256": "7c4639b4e829391782de344925e4670d1a1ee129e3043995892b344563a686a8"
+    },
+    {
+      "path": "packages/self-host/course-view.mjs",
+      "sha256": "1c069b9e841c157461c370a607c64fe89c848bcf8430b2b4184854381f145053"
+    },
+    {
+      "path": "packages/self-host/course.mjs",
+      "sha256": "8ca0bee49b235b3b15e19e97061ccda11e3fc4d850505492a50d94a7c5dd73f6"
+    },
+    {
+      "path": "packages/self-host/course.postgres.test.mjs",
+      "sha256": "a99fe78bcfe5200d9240c3d234aad47fe16f3bd3982c03fdc14d961ee92bfaa8"
+    },
+    {
       "path": "packages/self-host/digital-product-base.mjs",
-      "sha256": "9fff3020f3ded8ff78f4801e2a9bbdef480031c16d7417b9bd1c908d0ce831cc"
+      "sha256": "5ecae6fc61e1eb9a04d202da96cf18ca3eabf0367f2ebb65462c47c7461def66"
     },
     {
       "path": "packages/self-host/digital-product.base",
@@ -208,11 +453,11 @@
     },
     {
       "path": "packages/self-host/free-download.mjs",
-      "sha256": "04aa5e9742d6531cd080cbadf03dc0589476c903c562402eabe532cd3ce7daa1"
+      "sha256": "45ac234bef20da1b866385012f0dc0202541ef6aa66324aa1d45a6fc6e5b5be6"
     },
     {
       "path": "packages/self-host/free-download.postgres.test.mjs",
-      "sha256": "b74cf6777e768045de0a1427c4aee3df700d37524e60abaa972b6aea6e9e418b"
+      "sha256": "31e0f52f4580d88eacf4f1c647d1ecf4d2844f04655b46fe4d8887715f1b0139"
     },
     {
       "path": "packages/self-host/index.html",
@@ -224,15 +469,31 @@
     },
     {
       "path": "packages/self-host/lifecycle.mjs",
-      "sha256": "1e28801909f0fa251d0a4a4cb234913475facc81b2c414776d589485e9474d27"
+      "sha256": "a6d7a2abebf96a31347bf509b96b6252e855069029a43bbd7afac2b374b44c17"
     },
     {
       "path": "packages/self-host/mcp.mjs",
-      "sha256": "ae3c1f48ae71558e2d12cc69d27d37b671c894847511075a2d9849bc882997e8"
+      "sha256": "45b6e6329a7036461c0cff8408fa8a95ea157eac5803c5577db95108a2ae2a95"
     },
     {
       "path": "packages/self-host/mcp.test.mjs",
-      "sha256": "055b532a763497eb1f3dbd3f1954ec276ed0070aa367d6aea513cd5e9565a588"
+      "sha256": "2aab291eb53071f2b8f1192ce9c3e9329e475e94efd81277772edab9efe73143"
+    },
+    {
+      "path": "packages/self-host/membership-http.mjs",
+      "sha256": "ecea0f5d117032fcce12f49c3c7c3854aad9b0171273a95bb8007a1d52dac40b"
+    },
+    {
+      "path": "packages/self-host/membership-state.mjs",
+      "sha256": "4dd5929f96a5c1eb94835091d4e0a7b11361a8f6198148a9b01da1d55f6e658d"
+    },
+    {
+      "path": "packages/self-host/membership-ui.js",
+      "sha256": "8bd6911bc80ac13c035d98e9f9066b649e92e50b3068a2da80a0b49e4c976105"
+    },
+    {
+      "path": "packages/self-host/membership.postgres.test.mjs",
+      "sha256": "bc149d86f79027f1d3bac61ab9140a7a624ec4ff08309ba4ccaf52dd80099314"
     },
     {
       "path": "packages/self-host/package.json",
@@ -240,7 +501,7 @@
     },
     {
       "path": "packages/self-host/payment.mjs",
-      "sha256": "bac2642f92e71ada196a240d4d5f31783be51f81b0bcec5b4624003ebe4e6eb5"
+      "sha256": "bca8b964abb7d463a72c95c23f59165994bdd0eff10acde43061911285379504"
     },
     {
       "path": "packages/self-host/payment.test.mjs",
@@ -252,7 +513,27 @@
     },
     {
       "path": "packages/self-host/README.md",
-      "sha256": "ef9c782341a9652edb24dd26955cab8e6cc4a09725df24dcce616f59fc68448d"
+      "sha256": "cdaa8ce72ba13f8e50cbfa8d5a43d950f7b819e8d205ce297a802e3dddd4c4d0"
+    },
+    {
+      "path": "packages/self-host/recruitment-http.mjs",
+      "sha256": "338da92d29f78a59570a6e5df1a682d4b4815dfa8476dba52068892d1c95bb07"
+    },
+    {
+      "path": "packages/self-host/recruitment-ui.js",
+      "sha256": "7ac9ac3d819f6489591b30f3c9b1e27b5a7427625943eeed5f1a5bcd3f8f3289"
+    },
+    {
+      "path": "packages/self-host/recruitment.mjs",
+      "sha256": "199dff99da9b6565f265614bc70b2c085fdbbb0549f85391fc6d8fae2370af99"
+    },
+    {
+      "path": "packages/self-host/recruitment.postgres.test.mjs",
+      "sha256": "a24d6d879ae1aa2c0013bcb0acea285e3e84b9b0fe25f092ef06dba6e2a4e29e"
+    },
+    {
+      "path": "packages/self-host/schema/000_schema-artifact.sql",
+      "sha256": "15a4c0989bebc7b95c4f494782472bbf44a2d8012db96b196cc4ff25ce5d50b4"
     },
     {
       "path": "packages/self-host/schema/000_schema-identity.sql",
@@ -263,12 +544,24 @@
       "sha256": "2d51e6e0974528f6908eaff8200ee2a4b74c893fa3f0b5d63de86070ea84bc59"
     },
     {
+      "path": "packages/self-host/schema/000_schema-runtime.sql",
+      "sha256": "bc62fe223868ee68febb360a9a8fae26bc7b98231398e1d8f889be93adb5c1df"
+    },
+    {
       "path": "packages/self-host/schema/000_schema-vdb.sql",
       "sha256": "cdc2d4f72f1ef90591896633fa641e832b3e29458f6a0ad4cf845cd0494b7c99"
     },
     {
+      "path": "packages/self-host/schema/010_artifacts-artifact.sql",
+      "sha256": "b8df833d507a8c4252fb0336ad2f542c30bd3b459d853ceeed2b05ab1ed26fc6"
+    },
+    {
       "path": "packages/self-host/schema/010_principals-identity.sql",
       "sha256": "6d1488e8de16a3607734eb3f7d1c9bf4c58210108ec8578e124a2fafd614fcfa"
+    },
+    {
+      "path": "packages/self-host/schema/010_runs-runtime.sql",
+      "sha256": "c970f2892370da555734db39226a93b901cfd1fd36ca06195fc3a74f5bbc2e95"
     },
     {
       "path": "packages/self-host/schema/010_schemas-vdb.sql",
@@ -283,6 +576,10 @@
       "sha256": "2f257d9f4d4e7d55f034598b65cc2c89513be5e85a47804f05e766ab406207be"
     },
     {
+      "path": "packages/self-host/schema/020_revisions-artifact.sql",
+      "sha256": "753cc84459dd6d861773db41fcd3c75e5f99d0a6568386d91f214c6d5a827df6"
+    },
+    {
       "path": "packages/self-host/schema/020_workspaces-platform.sql",
       "sha256": "602d0b55b26bd16946c4255b02f99ef17e9955a7a8c30297ad1f23eb837fe7a5"
     },
@@ -291,24 +588,60 @@
       "sha256": "576725731563ea6578db1d7d3533df33d606bd89eaf356a3193cbb615c984a5a"
     },
     {
+      "path": "packages/self-host/schema/025_workspace_reviewer_invitations-platform.sql",
+      "sha256": "fc86d55470d02eb3d8a560aa31d054ac514f064852d498495ea12a7b00129f57"
+    },
+    {
+      "path": "packages/self-host/schema/040_mutation_receipts-vdb.sql",
+      "sha256": "920e71a75bdc01bb39b4d7e17dce67368910443ab47c46dc6301f2f34fa9a346"
+    },
+    {
+      "path": "packages/self-host/schema/050_idempotency-runtime.sql",
+      "sha256": "a9f2112c45108f3a2756e90eddaf60ffaeee8165dd42843cb29ef69a9588435d"
+    },
+    {
       "path": "packages/self-host/schema/050_projects-platform.sql",
       "sha256": "cc5d1628cae2f5a27d070ac5195fa9bfc4aafb47f43dd8fd6048f4f9869155ba"
     },
     {
+      "path": "packages/self-host/schema/060_project_memberships-platform.sql",
+      "sha256": "2a8844d963123bc24f703b32d9967867ff74df689fe21f1758d094f2bd2e9558"
+    },
+    {
+      "path": "packages/self-host/schema/069_workflows-platform.sql",
+      "sha256": "2c4a5f651dbb5c3f75127a0292a612fa704afa08df0d0d3347aced433a903e7f"
+    },
+    {
+      "path": "packages/self-host/schema/080_app_installs-platform.sql",
+      "sha256": "4494048c0267f8016357bc128d6d7c1ba29844e0dd700fba535c950a49080f0e"
+    },
+    {
+      "path": "packages/self-host/schema/087_cases-platform.sql",
+      "sha256": "ce525c917000c00a81bee34965e55f062f1c174987d713a5d4aeaed03cec2daa"
+    },
+    {
+      "path": "packages/self-host/schema/090_app_revision_locks-platform.sql",
+      "sha256": "40cfe914e44752489db97fd8f6dba22b0ee744b528ff165e2c8ecb8d6db9b0bc"
+    },
+    {
+      "path": "packages/self-host/schema/091_bookings-platform.sql",
+      "sha256": "13f380db12fea4c9816dca413e75d993bd6a1916a1734c2dc45fbfd2fe43cc5e"
+    },
+    {
       "path": "packages/self-host/server.mjs",
-      "sha256": "bfaff1226560a6481bf86a788f48ea33b8970a4aa99c1f444a8d6e82cacdd6c5"
+      "sha256": "100288f96f3f698dda689641ee5fc8f28e131c99e69b4d1e7f2ae2021fec6994"
     },
     {
       "path": "packages/self-host/setup.mjs",
-      "sha256": "a8eea54802be87e11aa9885d270a8c31f387ba029931eec2826ef15557ed08f9"
+      "sha256": "30f3a7bfa2edc06c5654d3922a97dd7831b0e8c058b431bce9d8ef7f0c8503ca"
     },
     {
       "path": "packages/self-host/store-http.mjs",
-      "sha256": "5529f97e362fac597777b75e24f63588a819515a215e29cd0162b048837d6c5c"
+      "sha256": "07f0bdd9d6c3fd7bc3eb41549ce80a762578efd955ab9a6741fd0aa8f7ae4064"
     },
     {
       "path": "packages/self-host/store-ui.js",
-      "sha256": "9635d668c49eff6d3d09c773b87ac3e1393a3a64346aad89580e894d677f000f"
+      "sha256": "d8ceee5a32e26c033da5104f9e5fa4812d218211880967a304f4865b6ab6a55e"
     },
     {
       "path": "packages/self-host/store.css",
@@ -399,8 +732,28 @@
       "sha256": "1ab7647c42b77aa7b76c4b4b9fdaf090a6093cfc043ffaa95ddd507f1c77ec1b"
     },
     {
+      "path": "packages/step-delivery/LICENSE",
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+    },
+    {
+      "path": "packages/step-delivery/package.json",
+      "sha256": "9a21879dbe93699e6703650e9d80ff3743e0c05872d1058cff023525abc87c16"
+    },
+    {
+      "path": "packages/step-delivery/README.md",
+      "sha256": "85a3187346b4eccc0b387f47966b55660717b65869018ca40dd4d3e6bdf28793"
+    },
+    {
+      "path": "packages/step-delivery/src/step-delivery.d.ts",
+      "sha256": "251f8871e83252d8fd062c9a1d5b5657ab45e748fd3ec1eaaeeb903e43e66833"
+    },
+    {
+      "path": "packages/step-delivery/src/step-delivery.js",
+      "sha256": "f5dccdfefa6a1145b2051ecf3b1d5e43f0b51c3931048f135e35ff7aa01f49b1"
+    },
+    {
       "path": "pnpm-lock.yaml",
-      "sha256": "b45770a15148c216deb867522a1332cbcea75a90cdb43625ca116768248bfa84"
+      "sha256": "dfc1970e4ca9055c46f5d4669bdad088d37db2a737145988b5713b07dc811c61"
     },
     {
       "path": "pnpm-workspace.yaml",
@@ -408,15 +761,15 @@
     },
     {
       "path": "README.md",
-      "sha256": "36d31b7e407c5a2936e48771fcde4230eca7856e46c135f4ee91ee1f46d723a4"
+      "sha256": "ab557d0f178dc55ed8c375baf97da08bafd9d0d5f255bc864b267c7bf7b19766"
     },
     {
       "path": "scripts/check-pack.mjs",
-      "sha256": "24e7395f2887098eec27d110d8c3c953766017490fb245f2fad4616997502a7c"
+      "sha256": "00ef8789ecce1c00df2f33506d0504360fa2c345559bd1070f2b714058435fab"
     },
     {
       "path": "scripts/check-release.mjs",
-      "sha256": "5d45f26b6d0865d04c731d43282b04875c9023d374b713cb9a0a6d30bd12b725"
+      "sha256": "e09065a876c12984019ba4dc4c60c323f1ad839f79caa2975f7ed33e42361012"
     },
     {
       "path": "scripts/compare-cloud.mjs",
@@ -553,6 +906,14 @@
     {
       "path": "skills/flapbase-workflow/SKILL.md",
       "sha256": "c685191f2a30c8e062df589b2abe6803bcc03aeeebd65d5e0113ba5e10e7052c"
+    },
+    {
+      "path": "tests/business-primitives.test.js",
+      "sha256": "0f573e28e4c02e3520207192e1efd3fee33004392cc31309909ed21d47f9997b"
+    },
+    {
+      "path": "tests/business.test.js",
+      "sha256": "7b9d2e79526faa8ad77bbbc82a441f621134395e9f0532da7144a03b4379e62e"
     },
     {
       "path": "tests/cloud-fixtures.test.js",

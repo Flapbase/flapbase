@@ -23,7 +23,11 @@ const exampleEnv = 'examples/travel-broken/.env'
 const selfHostPath = 'packages/self-host/'
 const selfHostSqlAssets = new Set([
   selfHostPath + 'schema/091_bookings-platform.sql',
+  selfHostPath + 'schema/000_schema-artifact.sql',
   selfHostPath + 'schema/000_schema-runtime.sql',
+  selfHostPath + 'schema/010_artifacts-artifact.sql',
+  selfHostPath + 'schema/010_runs-runtime.sql',
+  selfHostPath + 'schema/020_revisions-artifact.sql',
   selfHostPath + 'schema/050_idempotency-runtime.sql',
 ])
 const selfHostDependencies = new Map([['@modelcontextprotocol/sdk', '1.32.0'], ['better-auth', '1.7.7'], ['pg', '8.16.3']])
