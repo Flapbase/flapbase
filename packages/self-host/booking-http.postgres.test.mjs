@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { randomUUID } from 'node:crypto'
 import { once } from 'node:events'
-import { mkdtemp, rm } from 'node:fs/promises'
+import { mkdtemp, readFile, readdir, rm } from 'node:fs/promises'
 import { createServer } from 'node:net'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -49,7 +49,7 @@ test('verified applicants can book a recurring slot or fixed event and operators
     })
     const start = async () => {
       server = createSelfHostedServer({
-        origin, pool, adapter, booking: createBooking({ pool, projectId, directory }), bookingDelegation,
+        origin, pool, adapter, booking: createBooking({ pool, projectId, directory, noticeOrigin: origin }), bookingDelegation,
       })
       await listen(server, port)
     }
@@ -103,14 +103,29 @@ test('verified applicants can book a recurring slot or fixed event and operators
     assert.ok((await listSlots(consultation.offerId, 10)).length)
     const claim = (person, id, startsAt) => post('/api/booking/reserve', { offerId: id, startsAt, idempotencyKey: randomUUID() }, person.cookie)
     assert.equal((await claim(first, event.offerId, firstSlot)).status, 403)
-    for (const person of [first, other]) {
+    for (const person of [owner, first, other]) {
       const sent = await post('/api/auth/send-verification-email', { email: person.email, callbackURL: publicPath }, person.cookie)
       assert.equal(sent.status, 204, await sent.text())
       const link = new URL(previews.get(person.email))
       assert.equal(link.origin, origin)
       assert.equal((await request(link, { headers: { connection: 'close', cookie: person.cookie }, redirect: 'manual' })).status, 302)
+      assert.equal((await get('/auth/context', person.cookie)).status, 200)
     }
-    const firstBooking = await json(await claim(first, event.offerId, firstSlot))
+    const firstInput = { offerId: event.offerId, startsAt: firstSlot, idempotencyKey: randomUUID() }
+    const reserve = () => post('/api/booking/reserve', firstInput, first.cookie)
+    const firstBooking = await json(await reserve())
+    const inbox = join(directory, projectId, 'booking-notice-preview')
+    const received = async () => Promise.all((await readdir(inbox)).map(async name => JSON.parse(await readFile(join(inbox, name), 'utf8'))))
+    const initialNotices = await received()
+    assert.equal(initialNotices.length, 2)
+    assert.equal(initialNotices.find(item => item.kind === 'booking.confirmed' && item.recipient === 'host').to, owner.email)
+    const customerNotice = initialNotices.find(item => item.kind === 'booking.confirmed' && item.recipient === 'customer')
+    assert.equal(customerNotice.to, first.email)
+    assert.match(customerNotice.subject, /ご予約を承りました/)
+    assert.match(customerNotice.text, new RegExp('/booking/receipts/' + firstBooking.bookingId))
+    assert.match(customerNotice.text, /説明会/)
+    assert.deepEqual(await json(await reserve()), firstBooking)
+    assert.deepEqual(await received(), initialNotices)
     await json(await claim(other, event.offerId, firstSlot))
     assert.ok(!(await listSlots(event.offerId, 3)).includes(firstSlot))
     assert.equal((await claim(first, event.offerId, new Date(Date.parse(firstSlot) + 7 * day).toISOString())).status, 409)
@@ -122,6 +137,16 @@ test('verified applicants can book a recurring slot or fixed event and operators
     const weekly = await json(await claim(first, consultation.offerId, consultationTime))
     await json(await post('/api/booking/cancel', { bookingId: weekly.bookingId }, first.cookie))
     assert.match(await (await get('/booking/receipts/' + weekly.bookingId, first.cookie)).text(), /取消済み/)
+    const delivered = await received()
+    const changeNotice = delivered.find(item => item.kind === 'booking.rescheduled' && item.recipient === 'customer')
+    assert.equal(changeNotice.bookingId, firstBooking.bookingId)
+    assert.match(changeNotice.text, /新しい日時/)
+    assert.equal(delivered.filter(item => item.kind === 'booking.cancelled' && item.bookingId === weekly.bookingId).length, 2)
+    assert.equal(delivered.length, 10)
+    assert.deepEqual((await fixture.sql.query(`
+      SELECT state,count(*)::int AS count FROM platform.booking_notices WHERE booking_id=ANY($1::uuid[])
+        AND kind IN ('booking.confirmed','booking.rescheduled','booking.cancelled') GROUP BY state
+    `, [[firstBooking.bookingId, weekly.bookingId]])).map(row=>[row.state,row.count]), [['sent',8]])
 
     client = new Client({ name: 'booking-local-test', version: '1.0.0' })
     await client.connect(new StdioClientTransport({
@@ -151,6 +176,7 @@ test('verified applicants can book a recurring slot or fixed event and operators
     await start()
     assert.match(await (await get(publicPath)).text(), /説明会/)
     assert.match(await (await get(receiptPath, first.cookie)).text(), /説明会 · 参加/)
+    assert.equal((await received()).length, 10)
   } finally {
     await client?.close()
     if (server?.listening) await close(server)

@@ -860,6 +860,44 @@ BEGIN
  RETURN jsonb_build_object('bookingId',b.booking_id,'outcome',p_outcome,'changed',true,'workspaceId',b.workspace_id);
 END $$;
 
+CREATE OR REPLACE FUNCTION platform.booking_notice_claim(p_ids uuid[], p_limit integer)
+RETURNS TABLE(notice_id uuid, kind text, recipient_kind text, recipient text, booking_id uuid, status text, starts_at timestamptz, ends_at timestamptz, time_zone text,
+ offer_title text, host_name text, product_key text, meet_url text, amount bigint, refund_amount bigint, cancel_deadline timestamptz, hold_expires_at timestamptz, cancelled_by text,
+ dispute_state text, dispute_due_by timestamptz)
+LANGUAGE plpgsql SECURITY DEFINER SET search_path TO '' AS $$
+#variable_conflict use_column
+BEGIN
+ RETURN QUERY WITH picked AS (
+  SELECT n.notice_id FROM platform.booking_notices n
+  WHERE (n.state='pending' OR (n.state='sending' AND n.claimed_at<clock_timestamp()-interval '10 minutes')) AND n.due_at<=clock_timestamp()
+   AND (p_ids IS NULL OR n.notice_id=ANY(p_ids))
+  ORDER BY n.due_at LIMIT least(greatest(coalesce(p_limit,20),1),100) FOR UPDATE SKIP LOCKED
+ ), claimed AS (
+  UPDATE platform.booking_notices n SET state='sending',claimed_at=clock_timestamp(),attempts=n.attempts+1 FROM picked WHERE n.notice_id=picked.notice_id
+  RETURNING n.*
+ )
+ SELECT c.notice_id,c.kind,c.recipient,CASE c.recipient WHEN 'customer' THEN cu.email ELSE ho.email END,b.booking_id,b.status,b.starts_at,b.ends_at,h.time_zone,
+  o.title,h.display_name,h.product_key,coalesce(b.meet_url,r.meeting_url),b.amount,b.refund_amount,b.starts_at-make_interval(mins=>r.cancel_deadline_minutes),
+  b.hold_expires_at,b.cancelled_by,b.dispute_state,b.dispute_due_by
+ FROM claimed c JOIN platform.bookings b ON b.booking_id=c.booking_id JOIN platform.booking_hosts h ON h.host_id=b.host_id
+ JOIN platform.booking_offers o ON o.offer_id=b.offer_id JOIN platform.booking_offer_revisions r ON r.offer_id=b.offer_id AND r.revision=b.offer_revision
+ LEFT JOIN identity.principals cu ON cu.principal_id=b.customer_principal_id AND cu.status='active'
+ LEFT JOIN identity.principals ho ON ho.principal_id=h.principal_id AND ho.status='active';
+END $$;
+
+CREATE OR REPLACE FUNCTION platform.booking_notice_finish(p_notice uuid, p_result text, p_reason text DEFAULT NULL) RETURNS text
+LANGUAGE plpgsql SECURITY DEFINER SET search_path TO '' AS $$
+DECLARE n platform.booking_notices; next_state text;
+BEGIN
+ IF p_result NOT IN ('sent','held','retry') THEN RAISE EXCEPTION 'BOOKING_INPUT_INVALID' USING ERRCODE='22023'; END IF;
+ SELECT * INTO n FROM platform.booking_notices x WHERE x.notice_id=p_notice AND x.state='sending' FOR UPDATE;
+ IF NOT FOUND THEN RETURN NULL; END IF;
+ next_state:=CASE WHEN p_result='retry' AND n.attempts>=5 THEN 'failed' WHEN p_result='retry' THEN 'pending' ELSE p_result END;
+ UPDATE platform.booking_notices SET state=next_state,held_reason=CASE WHEN next_state='held' THEN coalesce(p_reason,'sender_unconfigured') END,
+  sent_at=CASE WHEN next_state='sent' THEN clock_timestamp() END WHERE notice_id=p_notice;
+ RETURN next_state;
+END $$;
+
 -- Booking-owned meeting projection. Project identity is captured at allocation, not at payment/calendar completion.
 ALTER TABLE platform.booking_offers ADD COLUMN IF NOT EXISTS project_id uuid;
 ALTER TABLE platform.bookings ADD COLUMN IF NOT EXISTS project_id uuid;
@@ -944,6 +982,10 @@ REVOKE ALL ON FUNCTION platform.booking_cancel(uuid,uuid,text) FROM PUBLIC;
 REVOKE ALL ON FUNCTION platform.booking_reschedule(uuid,uuid,text,timestamptz) FROM PUBLIC;
 
 REVOKE ALL ON FUNCTION platform.booking_set_outcome(uuid,uuid,text) FROM PUBLIC;
+
+REVOKE ALL ON FUNCTION platform.booking_notice_claim(uuid[],integer) FROM PUBLIC;
+
+REVOKE ALL ON FUNCTION platform.booking_notice_finish(uuid,text,text) FROM PUBLIC;
 
 REVOKE ALL ON FUNCTION platform.booking_offer_project_set(uuid,uuid,uuid,uuid) FROM PUBLIC;
 

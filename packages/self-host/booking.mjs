@@ -3,6 +3,7 @@ import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { computeSlots, localDate } from '../booking-slots/src/slots.js'
 import { forbidden, invalid, missing, sha, StoreError, storeId } from './free-download.mjs'
+import { createBookingNoticePreview } from './booking-notices.mjs'
 import { transaction } from './setup.mjs'
 
 const day = 86_400_000
@@ -34,10 +35,17 @@ const evaluatedErrors = new Map([
   ['BOOKING_PAYMENT_UNAVAILABLE', invalid],
 ])
 
-export function createBooking({ pool, projectId, directory }) {
+export function createBooking({ pool, projectId, directory, noticeOrigin }) {
   requiredId(projectId)
   const pages = directory && join(directory, projectId, 'public-bookings')
+  const notify = directory && noticeOrigin ? createBookingNoticePreview({ pool, projectId, directory, origin: noticeOrigin }) : null
   let publication = Promise.resolve()
+
+  async function afterChange(change, bookingId) {
+    const booking = await change
+    if (notify) await notify(bookingId ?? booking.bookingId).catch(() => console.error('booking_notice_preview_unavailable'))
+    return booking
+  }
 
   const run = fn => transaction(pool, fn).catch(error => {
     const translated = evaluatedErrors.get(error.message)
@@ -197,7 +205,7 @@ export function createBooking({ pool, projectId, directory }) {
   function reserve(actor, offerId, { startsAt, idempotencyKey }) {
     const start = instant(startsAt).toISOString()
     requiredId(idempotencyKey)
-    return run(async client => {
+    return afterChange(run(async client => {
       await customer(client, actor, true)
       const { workspace_id: workspaceId, revision } = await offerInProject(client, offerId)
       const key = scopedKey(['booking.hold', projectId, actor, idempotencyKey])
@@ -220,7 +228,7 @@ export function createBooking({ pool, projectId, directory }) {
         VALUES($1,$2,$3,$4,$5)
       `, [workspaceId, key, fingerprint, scopedKey(booking), booking])
       return booking
-    })
+    }))
   }
 
   function customerBooking(actor, bookingId) {
@@ -234,15 +242,15 @@ export function createBooking({ pool, projectId, directory }) {
   }
 
   function cancel(actor, bookingId) {
-    return run(async client => {
+    return afterChange(run(async client => {
       await customer(client, actor)
       await bookingInProject(client, bookingId)
       return result(client, "SELECT platform.booking_cancel($1,$2,'customer') AS result", [actor, bookingId])
-    })
+    }), bookingId)
   }
 
   function reschedule(actor, bookingId, startsAt) {
-    return run(async client => {
+    return afterChange(run(async client => {
       await customer(client, actor)
       await bookingInProject(client, bookingId)
       const start = instant(startsAt)
@@ -251,7 +259,7 @@ export function createBooking({ pool, projectId, directory }) {
       const date = await fixedDate(client, original.offerId, original.offerRevision)
       if (date && localDate(+start, 'Asia/Tokyo') !== date) throw conflict()
       return result(client, "SELECT platform.booking_reschedule($1,$2,'customer',$3) AS result", [actor, bookingId, start])
-    })
+    }), bookingId)
   }
 
   function records(actor, bookingId = null, limit = 50) {

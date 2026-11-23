@@ -139,7 +139,8 @@ async function start() {
     let booking, sendVerificationEmail
     if (bookingProject || bookingDirectory) {
       if (!bookingDirectory) throw new Error('Set FLAP_BOOKING_DATA_DIR for booking publications and verification previews')
-      booking = createBooking({ pool, projectId: bookingProject, directory: bookingDirectory })
+      booking = createBooking({ pool, projectId: bookingProject, directory: bookingDirectory,
+        noticeOrigin: origin })
     }
     const courseProject = process.env.FLAP_COURSE_PROJECT_ID
     const course = courseProject ? createCourseService({ pool, projectId: courseProject }) : undefined

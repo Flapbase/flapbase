@@ -33,8 +33,8 @@ The last command returns a pinned MCP request that you can hand to an OAuth-conn
 | `digital-product-sales` | `local-base`、`/store` | デジタル商品の公開、テスト決済、提供、フォロー |
 | `customer-support` | `local-base`、`/store` | 本人の注文への問い合わせ、担当割当、MCPの返信案、確認後の本人向け公開 |
 | `recruitment` | `/recruitment` | 求人公開、応募、選考、本人への結果表示 |
-| `booking-service` | `/booking` | 受付枠の公開、予約、振替・取消、出欠 |
-| `event-registration` | `/booking` | 開催日時の公開、参加申込、参加結果 |
+| `booking-service` | `/booking` | 受付枠の公開、予約、確定・変更・取消の通知プレビュー、出欠 |
+| `event-registration` | `/booking` | 開催日時の公開、定員付き申込、確定通知プレビュー、参加結果 |
 | `standard-service` | `/cases` | 問い合わせ、案件化、見積、顧客の回答、納品 |
 | `customer-sales` | `/cases` | 問い合わせ、案件化、顧客と営業の進捗管理 |
 | `member-ai-course` | `/training` | MCPの教材下書き、販売、本人受講、版固定の教材対話と未回答 |
