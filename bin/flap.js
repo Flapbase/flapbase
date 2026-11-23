@@ -17,6 +17,7 @@ Examples:
   flap check examples/travel --base-url https://example.com/
 
 Language: --lang overrides LANG; Japanese for ja, English otherwise.
+Business workflows: flap business list | inspect/local-base <business key> | prepare/run <business key> <execution key> <JSON file> | check-cloud
 Exit codes: 0 check complete, 1 input or fetch error
 ` : `使い方: flap check <URL|HTML ファイル|フォルダ> [--lang en|ja] [--json] [--base-url <公開 URL>] [--facts price,area,booking] [--baseline <前回の json>]
 
@@ -26,10 +27,22 @@ Exit codes: 0 check complete, 1 input or fetch error
   flap check examples/travel --base-url https://example.com/
 
 言語: --lang を優先。LANG が ja なら日本語、それ以外は英語。
+事業ワークフロー: flap business list | inspect/local-base <事業キー> | prepare/run <事業キー> <実行キー> <入力JSON> | check-cloud
 終了コード: 0 点検完了、1 取得や入力のエラー
 `
 try {
-  if (args.length === 0 || args.includes('--help') || args.includes('-h')) process.stdout.write(help())
+  if (args[0] === 'business' && !args.includes('--help') && !args.includes('-h')) {
+    const { businessCommand } = await import('./business.js')
+    const businessArgs = args.slice(1)
+    if (languageAt >= 1) {
+      if (!['en', 'ja'].includes(args[languageAt + 1])) throw new Error('--lang は en または ja を指定してください。')
+      businessArgs.splice(languageAt - 1, 2)
+    }
+    const output = await businessCommand(businessArgs.filter(arg => arg !== '--json'), {
+      token: process.env.FLAPBASE_MCP_ACCESS_TOKEN,
+    })
+    process.stdout.write(JSON.stringify(output, null, 2) + '\n')
+  } else if (args.length === 0 || args.includes('--help') || args.includes('-h')) process.stdout.write(help())
   else if (args.length === 1 && args[0] === '--version') process.stdout.write('0.1.0\n')
   else {
     const [command, input, ...options] = args
@@ -62,9 +75,9 @@ try {
       : formatReport(result, { lang }))
   }
 } catch (error) {
-  const code = error.code ?? 'input.invalid'
+  const code = error.code ?? (args[0] === 'business' ? 'business.command_failed' : 'input.invalid')
   const message = code === 'ENOENT' ? '指定したファイルかフォルダが見つかりません。'
-    : error.code?.startsWith('file.') || error.code?.startsWith('folder.') || error.code?.startsWith('url.') || !error.code
+    : args[0] === 'business' || error.code?.startsWith('file.') || error.code?.startsWith('folder.') || error.code?.startsWith('url.') || !error.code
       ? error.message : '点検を完了できませんでした。'
   const localized = lang === 'en' ? translate(message) : message
   if (json) process.stdout.write(JSON.stringify({ version: 'flapbase.site-check-error/v1', error: { code, message: localized } }) + '\n')

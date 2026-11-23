@@ -18,6 +18,7 @@ import { createFreeDownloadStore, sha } from './free-download.mjs'
 import { createSelfHostedServer } from './server.mjs'
 import { renderProduct } from './store-http.mjs'
 import { setupProject } from './setup.mjs'
+import { businessCommand } from '../../bin/business.js'
 
 const listen = (server, port=0) => new Promise((resolve, reject) => {
   server.once('error', reject)
@@ -77,6 +78,17 @@ test('self-host completes the digital product lifecycle through external MCP and
     const [{ workspace_id:workspace }] = await db.sql.query('SELECT workspace_id FROM platform.projects WHERE project_id=$1', [projectId])
     const baseFile = fileURLToPath(new URL('./digital-product.base', import.meta.url))
     const definition = JSON.parse(await readFile(baseFile, 'utf8'))
+    for (const businessKey of ['free-resource', 'digital-product-sales', 'customer-support']) {
+      const id = randomUUID()
+      await setupProject(pool, { ownerId: owner.principalId, projectId: id, name: businessKey })
+      const testStore = await createFreeDownloadStore({ pool, projectId: id, directory })
+      const testHost = createStoreLifecycle({ store: testStore, projectId: id })
+      const base = await businessCommand(['local-base', businessKey])
+      const installed = await testHost.installBase(owner.principalId, base)
+      assert.deepEqual(installed.base, base)
+      assert.deepEqual(await testHost.installBase(owner.principalId, base), installed)
+      await assert.rejects(testHost.installBase(other.principalId, base), { status: 403 })
+    }
     const install = async principalId => {
       const { stdout } = await promisify(execFile)(process.execPath, [
         fileURLToPath(new URL('./install-base.mjs', import.meta.url)), baseFile,

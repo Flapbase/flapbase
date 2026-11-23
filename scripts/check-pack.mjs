@@ -33,6 +33,9 @@ try {
   run('npm', ['install', '--ignore-scripts', '--no-audit', '--no-fund', '--package-lock=false', join(output, cli.filename), join(output, core.filename)], install)
   await cp(join(root, 'examples/cosmetics/index.html'), join(install, 'sample.html'))
   const checked = JSON.parse(run('npx', ['--offline', '--no-install', '@flapbase/cli', 'check', 'sample.html', '--lang', 'en', '--json'], install))
+  const businesses = JSON.parse(run('npx', ['--offline', '--no-install', '@flapbase/cli', 'business', 'list'], install))
+  assert.equal(businesses.length, 11)
+  assert.ok(businesses.every(item => item.executions.length))
   assert.equal(checked.checks.length, 11)
   assert.ok(checked.checks.every(item => item.pass))
   const moduleUrl = pathToFileURL(join(install, 'node_modules/@flapbase/site-check/src/index.js')).href

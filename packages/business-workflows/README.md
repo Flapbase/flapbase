@@ -4,11 +4,25 @@
 
 Flapbase Cloud executes available actions through the authenticated MCP connection. Use `app_template_get` with `business-app` to discover current operations and `business_workflow_step_run` to run one stage. A listed business can still have individual operations pending. Publication, delivery, and payments follow the project's permissions and approvals.
 
+## Start from the CLI
+
+```sh
+node bin/flap.js business list
+node bin/flap.js business inspect booking-service
+node bin/flap.js business prepare booking-service booking-offers input.json
+```
+
+The last command returns a pinned MCP request that you can hand to an OAuth-connected agent. For a direct CLI call, make a short-lived, authorized Cloud MCP access token available as `FLAPBASE_MCP_ACCESS_TOKEN`. Run `business check-cloud` to confirm that Cloud exposes the same 11 definitions, then use `business run` with the same arguments as `business prepare`. Each run performs one registered step. For another step, use the returned `nextStepKey` and put the preceding `result` under its step key in `results`.
+
 ## 日本語
 
 [標準定義](.base/business-workflows.json)には、11事業の工程、完了条件と既存操作への結線を収録しています。屋号や商品IDなどは導入先のProjectで設定し、利用する定義の版を固定します。実行はFlapbase Cloudの認証済みMCPに接続します。`app_template_get` の `business-app` で現在使える操作を取得し、`business_workflow_step_run` で一工程ずつ実行します。事業ごとの提供状況はカタログに記載しています。
 
-導入する定義はカタログ上のキーと版で選びます。ディレクトリ名は導入可否を決めません。
+導入する定義はカタログ上のキーと版で選びます。リポジトリ直下で `node bin/flap.js business list` を実行すると11事業が出ます。`business inspect <事業キー>` で人が行う手順、実行キー、入力の対応を確認できます。
+
+- `business prepare <事業キー> <実行キー> <入力JSON>` は、版とダイジェスト付きのMCP入力を作ります。入力は `projectId`、`parameters`、必要に応じて `stepKey` と `results` です。認可済みの持ち込みエージェントに渡せます。
+- 認可済みのCloud MCPアクセストークンを `FLAPBASE_MCP_ACCESS_TOKEN` に渡せる環境では、`business check-cloud` でCloudが同じ定義と実行キーを提供するか確認できます。`business run` は `prepare` と同じ引数を取り、一工程を実行します。書き込みの再送では入力内の冪等キーを維持します。
+- セルフホスト導入は `business local-base <事業キー>` で作った定義を[既存のローカル起動手順](../self-host/README.md)へ渡します。現行の対象は無料資料、デジタル商品販売のローカル試験、購入者サポートです。残りの事業のセルフホスト実行には対応する業務機能が必要です。
 
 ### 購入者サポート
 

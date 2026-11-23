@@ -18,6 +18,7 @@
   "files": [
     "bin/",
     "packages/site-check/src/",
+    "packages/business-workflows/.base/business-workflows.json",
     "skills/",
     "LICENSE",
     "NOTICE",

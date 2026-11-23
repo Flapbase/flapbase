@@ -101,6 +101,15 @@ Apache-2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
 
 ---
 
+### Start a standard business
+
+```sh
+node bin/flap.js business list
+node bin/flap.js business inspect free-resource
+```
+
+Choose from the eleven definitions and use the [business workflow guide](packages/business-workflows/README.md) to prepare a pinned request for your Cloud MCP connection. The guide also lists the business flows that can run with the local PostgreSQL host.
+
 ## 日本語
 
 [11事業の標準 .base と使い方](packages/business-workflows/README.md)
@@ -112,6 +121,15 @@ Apache-2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
 ### はじめる
 
 Node.js 22以上で `node examples/cloud-starter/run.mjs` を実行します。[ローカルのプレビュー](http://127.0.0.1:5264/) を開き、告知ページを編集します。公開済みの無料商品をつなぐと、Flap IDでの申込・本人受取とCloudの注文確認を使えます。 [設定と公開の手順](examples/cloud-starter/README.md)
+
+### 標準事業を始める
+
+```sh
+node bin/flap.js business list
+node bin/flap.js business inspect free-resource
+```
+
+11事業から選び、[事業ワークフローの手順](packages/business-workflows/README.md#日本語)でCloud MCPへの入力を作れます。PostgreSQLで動かせる事業の範囲も同じ手順から確認できます。
 
 ### サイトの点検
 
