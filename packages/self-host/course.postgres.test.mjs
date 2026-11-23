@@ -3,7 +3,11 @@ import { randomUUID } from 'node:crypto'
 import { createServer } from 'node:net'
 import { once } from 'node:events'
 import { test } from 'node:test'
+import { fileURLToPath } from 'node:url'
+import { Client } from '@modelcontextprotocol/sdk/client/index.js'
+import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
 import { createBetterAuthAdapter, createSelfHostedAuthPool } from './auth.mjs'
+import { sha } from './free-download.mjs'
 import { createCourseService } from './course.mjs'
 import { startArtifactTestPostgres } from './postgres-fixture.mjs'
 import { setupProject } from './setup.mjs'
@@ -23,7 +27,7 @@ const close = server => new Promise(resolve => {
 test('private training pins the published revision, protects progress, and stops revoked access', { timeout: 20_000 }, async () => {
   const fixture = await startArtifactTestPostgres()
   const pool = createSelfHostedAuthPool(fixture.connection)
-  let server
+  let server, mcp
   try {
     const probe = createServer()
     const port = await listen(probe)
@@ -34,7 +38,9 @@ test('private training pins the published revision, protects progress, and stops
       sendVerificationEmail: async message => { mail.push(message) } })
     const projectId = randomUUID(), otherProjectId = randomUUID()
     const training = createCourseService({ pool, projectId })
-    server = createSelfHostedServer({ origin, pool, adapter, course: training })
+    const tokenForMcp = randomUUID()
+    const courseDelegation = { tokenDigest: sha('Bearer ' + tokenForMcp) }
+    server = createSelfHostedServer({ origin, pool, adapter, course: training, courseDelegation })
     await listen(server, port)
     const request = (path, cookie, body, extra = {}) => fetch(origin + path, {
       method: body ? 'POST' : 'GET',
@@ -51,6 +57,7 @@ test('private training pins the published revision, protects progress, and stops
     }
     const manager = await account('owner'), member = await account('learner')
     const owner = manager.id, learner = member.id
+    courseDelegation.principalId = owner
     const [next, stranger] = (await fixture.sql.query(
       `INSERT INTO identity.principals(principal_kind,email,created_by)
        VALUES('human','next@example.test','local-course-test'),('human','other@example.test','local-course-test') RETURNING principal_id`,
@@ -147,9 +154,57 @@ test('private training pins the published revision, protects progress, and stops
     await assert.rejects(training.assignments(learner), { status: 404 })
     await assert.rejects(other.learn(learner, assignmentId, read), { status: 404 })
     await assert.rejects(training.learn(next, assignmentId, read), { status: 404 })
+    mcp = new Client({ name: 'training-course-test', version: '1.0.0' })
+    await mcp.connect(new StdioClientTransport({
+      command: process.execPath, args: [fileURLToPath(new URL('./mcp.mjs', import.meta.url))],
+      env: { FLAP_ORIGIN: origin, FLAP_COURSE_AGENT_TOKEN: tokenForMcp },
+    }))
+    assert.deepEqual((await mcp.listTools()).tools.map(tool => tool.name), ['course_draft_get', 'course_draft_save'])
+    const artifactRef = randomUUID()
+    const draft = { ...first, course: { ...course, courseId: artifactRef, status: 'draft', title: 'エージェント作成の教材',
+      tenantId: undefined, creatorId: undefined } }
+    const save = (args = {}) => mcp.callTool({ name: 'course_draft_save', arguments: {
+      projectId, artifactRef, document: draft, idempotencyKey: 'course-create-first', ...args,
+    } })
+    const readResult = result => JSON.parse(result.content[0].text)
+    assert.equal((await save({ projectId: otherProjectId })).isError, true)
+    assert.equal((await save({ document: { ...draft, course: { ...draft.course, status: 'published' } } })).isError, true)
+    const saved = readResult(await save())
+    assert.equal(saved.course.pin.revision, 1)
+    assert.deepEqual(readResult(await save()), saved)
+    const changed = { ...draft, revision: 2, course: { ...draft.course, creatorId: owner },
+      lessonBodies: [{ lessonId, markdown: '確認対象の更新版' }] }
+    assert.equal(readResult(await save({ document: changed })).error, 'IDEMPOTENCY_CONFLICT')
+    const edited = readResult(await save({ document: changed, prior: saved.course.pin, idempotencyKey: 'course-save-second' }))
+    assert.equal(edited.course.pin.revision, 2)
+    const pinned = readResult(await mcp.callTool({ name: 'course_draft_get', arguments: { projectId, ...edited.course.pin } }))
+    assert.equal(pinned.course.document.lessonBodies[0].markdown, '確認対象の更新版')
+    const history = readResult(await mcp.callTool({ name: 'course_draft_get', arguments: { projectId, artifactRef } }))
+    assert.deepEqual(history.course.revisions.map(entry => entry.pin.revision), [2, 1])
+    const review = await request(edited.openUrl, manager.cookie)
+    assert.equal(review.status, 200)
+    assert.match(await review.text(), /確認対象の更新版/)
+    assert.equal((await request(edited.openUrl, member.cookie)).status, 404)
+    const approve = '/api/courses/v1/draft-approval'
+    assert.equal((await request(approve, member.cookie, edited.course.pin)).status, 404)
+    assert.equal((await request(approve, manager.cookie, saved.course.pin)).status, 409)
+    assert.equal((await request(assignments, manager.cookie, { ...assignment, assignmentId: randomUUID(), artifactRevisionId: edited.course.artifactRevisionId })).status, 404)
+    const approved = await request(approve, manager.cookie, edited.course.pin)
+    assert.equal(approved.status, 200, await approved.clone().text())
+    const published = await approved.json()
+    assert.equal(published.revision, 3)
+    assert.deepEqual(await (await request(approve, manager.cookie, edited.course.pin)).json(), published)
+    const newAllocation = { assignmentId: randomUUID(), learnerId: learner, artifactRevisionId: published.artifactRevisionId }
+    assert.equal((await request(assignments, manager.cookie, newAllocation)).status, 200)
+    assert.match(await (await request('/training/my/' + newAllocation.assignmentId, member.cookie)).text(), /確認対象の更新版/)
+    assert.match(await (await request('/training/my/' + assignmentId, member.cookie)).text(), /初版の教材/)
     await fixture.sql.query("UPDATE platform.project_memberships SET status='revoked',revoked_at=now() WHERE project_id=$1 AND principal_id=$2", [projectId, learner])
     await assert.rejects(training.learn(learner, assignmentId, read), { status: 404 })
+    await fixture.sql.query("UPDATE platform.project_memberships SET status='revoked',revoked_at=now() WHERE project_id=$1 AND principal_id=$2", [projectId, owner])
+    assert.equal((await save()).isError, true)
+    assert.equal((await mcp.callTool({ name: 'course_draft_get', arguments: { projectId, artifactRef } })).isError, true)
   } finally {
+    if (mcp) await mcp.close()
     if (server) await close(server)
     await pool.end()
     await fixture.close()

@@ -40,6 +40,20 @@ export const RECRUITMENT_TOOLS = [
   tool('recruitment_applications_list', '対象Projectの応募の状態と版を確認します。応募本文は返しません。', true, { projectId: requestId }),
 ]
 
+const courseDigest = { type: 'string', pattern: '^sha256:[a-f0-9]{64}$' }
+const courseRevision = { type: 'integer', minimum: 1 }
+export const COURSE_TOOLS = [
+  tool('course_draft_get', '講座の版履歴または固定版の内容を読みます。', true, {
+    projectId: requestId, artifactRef: requestId, revision: courseRevision, digest: courseDigest, beforeRevision: courseRevision,
+  }, ['projectId', 'artifactRef']),
+  tool('course_draft_save', '講座の下書きを保存します。公開には運営者の確認が必要です。', false, {
+    projectId: requestId, artifactRef: requestId, document: { type: 'object' },
+    prior: { type: 'object', properties: { artifactRef: requestId, revision: courseRevision, digest: courseDigest },
+      required: ['artifactRef', 'revision', 'digest'], additionalProperties: false },
+    idempotencyKey: text(128),
+  }, ['projectId', 'artifactRef', 'document', 'idempotencyKey']),
+]
+
 const bookingLimit = { type: 'integer', minimum: 1, maximum: 100 }
 export const BOOKING_TOOLS = [
   tool('booking_offers_list', '対象Projectの公開中の予約メニューと定員を取得します。', true, { projectId: requestId, limit: bookingLimit }, ['projectId']),
@@ -116,9 +130,15 @@ export function createCasesMcpServer(options) {
   return createLocalMcpServer({ ...options, path: '/api/cases/agent', tools: CASE_TOOLS })
 }
 
+export function createCourseMcpServer(options) {
+  return createLocalMcpServer({ ...options, path: '/api/courses/v1/agent', tools: COURSE_TOOLS })
+}
+
 if (process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url) {
   const origin = process.env.FLAP_ORIGIN ?? `http://127.0.0.1:${process.env.FLAP_PORT ?? 5264}`
-  const server = process.env.FLAP_CASES_AGENT_TOKEN
+  const server = process.env.FLAP_COURSE_AGENT_TOKEN
+    ? createCourseMcpServer({ origin, token: process.env.FLAP_COURSE_AGENT_TOKEN })
+    : process.env.FLAP_CASES_AGENT_TOKEN
     ? createCasesMcpServer({ origin, token: process.env.FLAP_CASES_AGENT_TOKEN })
     : process.env.FLAP_BOOKING_AGENT_TOKEN
     ? createBookingMcpServer({ origin, token: process.env.FLAP_BOOKING_AGENT_TOKEN })

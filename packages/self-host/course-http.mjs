@@ -1,18 +1,35 @@
 import { LearnerError } from '../course-engine/src/learning-access.js'
-import { invalid, StoreError, storeId } from './free-download.mjs'
-import { input, send } from './store-http.mjs'
+import { forbidden, invalid, StoreError, storeId } from './free-download.mjs'
+import { canCallAgent, input, send } from './store-http.mjs'
 import { renderTraining } from './course-view.mjs'
+import { COURSE_TOOLS } from './mcp.mjs'
 
-export async function handleCourses(req, res, { route, origin, course, resolveHuman }) {
+export async function handleCourses(req, res, { route, origin, course, delegation, resolveHuman }) {
   if (req.method === 'GET' && await renderTraining(res, route, course, resolveHuman)) return true
+  if (route.pathname === '/api/courses/v1/agent' && req.method === 'POST') {
+    if (!canCallAgent(req, delegation)) throw new StoreError(401, 'agent_unauthorized')
+    const rpc = await input(req, 1024 * 1024)
+    const definition = COURSE_TOOLS.find(tool => tool.name === rpc.name)
+    const args = rpc.arguments
+    if (!definition || args?.projectId !== course.projectId) throw forbidden()
+    if (Object.keys(args).some(key => !Object.hasOwn(definition.inputSchema.properties, key))) throw invalid()
+    const result = definition.annotations.readOnlyHint
+      ? await course.getDraft(delegation.principalId, args)
+      : await course.saveDraft(delegation.principalId, args)
+    const openUrl = result.pin && '/training/drafts/' + result.pin.artifactRef + '?' +
+      new URLSearchParams({ revision: String(result.pin.revision), digest: result.pin.digest })
+    send(res, 200, { title: '講座', course: result, ...(openUrl && { openUrl }) })
+    return true
+  }
+  const approve = route.pathname === '/api/courses/v1/draft-approval'
   const invite = route.pathname === '/api/courses/v1/invitations'
   const accept = route.pathname === '/api/courses/v1/invitations/accept'
   const release = route.pathname === '/api/courses/v1/releases'
   const assignments = route.pathname === '/api/courses/v1/assignments'
   const learner = /^\/api\/courses\/v1\/assignments\/([^/]+)(\/progress)?$/.exec(route.pathname)
-  if (!release && !assignments && !learner && !invite && !accept) return false
+  if (!release && !assignments && !learner && !invite && !accept && !approve) return false
   const post = req.method === 'POST'
-  if (assignments ? !post && req.method !== 'GET' : req.method !== (release || invite || accept || learner[2] ? 'POST' : 'GET')) {
+  if (assignments ? !post && req.method !== 'GET' : req.method !== (release || invite || accept || approve || learner[2] ? 'POST' : 'GET')) {
     send(res, 405, { error: 'method_not_allowed' })
     return true
   }
@@ -30,7 +47,8 @@ export async function handleCourses(req, res, { route, origin, course, resolveHu
     } else if (accept) {
       const { token } = await input(req, 2048)
       send(res, 200, await course.accept(human, token))
-    } else if (release) send(res, 200, await course.release(actor, await input(req, 1024 * 1024)))
+    } else if (approve) send(res, 200, await course.publishDraft(actor, await input(req, 2048)))
+    else if (release) send(res, 200, await course.release(actor, await input(req, 1024 * 1024)))
     else if (assignments) send(res, 200, post ? await course.assign(actor, await input(req, 2048)) : { assignments: await course.assignments(actor) })
     else {
       let command = { kind: 'read' }

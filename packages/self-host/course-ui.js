@@ -5,6 +5,7 @@ const messages = {
   forbidden: '招待されたメールアドレスのアカウントでログインしてください。',
   invitation_unavailable: 'この招待リンクは無効です。研修の担当者にご連絡ください。',
   email_verification_required: 'メールアドレスの確認を完了してください。',
+  REVISION_CONFLICT: '新しい下書きがあります。研修画面から最新の版を開いてください。',
   progress_conflict: '進捗が更新されました。ページを読み直してください。',
 }
 function prepareDocument({ workspaceId: tenantId, title, markdown }) {
@@ -34,6 +35,7 @@ for (const form of document.querySelectorAll('form[data-training]')) {
         case 'invite': path = api + '/invitations'; body = fields; break
         case 'accept': path = api + '/invitations/accept'; body = { token: location.hash.slice(1) }; break
         case 'verify': path = '/api/auth/send-verification-email'; body = { email: fields.email, callbackURL: '/training/join' }; break
+        case 'approve': path = api + '/draft-approval'; body = { ...fields, revision: Number(fields.revision) }; break
         case 'assign': path = api + '/assignments'; body = { ...fields, assignmentId: crypto.randomUUID() }; break
         case 'release': {
           path = api + '/releases'
@@ -61,6 +63,7 @@ for (const form of document.querySelectorAll('form[data-training]')) {
         output.querySelector('input').select()
       } else if (operation === 'verify') status.textContent = '確認リンクを開いたあと、招待リンクを開き直してください。'
       else if (operation === 'accept') location.replace('/training/my')
+      else if (operation === 'approve') location.replace('/training')
       else location.reload()
     } catch {
       status.textContent = '接続を確認してもう一度お試しください。'

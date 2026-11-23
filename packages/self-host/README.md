@@ -112,3 +112,18 @@ OwnerまたはEditorは `/training` から教材を公開し、招待リンク�
 | 進捗更新 | `POST /api/courses/v1/assignments/{assignmentId}/progress` に `lessonId`、`expectedVersion`、`completed` と `Idempotency-Key` ヘッダーを送信 |
 
 受講者にはProjectの有効なメンバー資格が必要です。割当ごとに教材の公開版が固定されます。
+
+
+### 持ち込みAIから教材の下書きを作る
+
+サーバーに `FLAP_COURSE_AGENT_PRINCIPAL_ID`（同じProjectのOwnerまたはEditor）と
+`FLAP_COURSE_AGENT_TOKEN`（ローカル接続用の32文字以上の秘密値）を設定します。
+持ち込みAIには `node packages/self-host/mcp.mjs` を標準入出力のMCPサーバーとして登録し、
+同じ `FLAP_ORIGIN` と `FLAP_COURSE_AGENT_TOKEN` を環境変数で渡します。
+
+- `course_draft_save` に `projectId`、`artifactRef`、`course-document/v1` の `document`、
+  `idempotencyKey` を指定します。初回の版は1、講座の公開状態は `draft` とします。更新時は前の `course.pin` を
+  `prior` に指定して版番号を1つ進めます。
+- `course_draft_get` で版履歴を取得できます。版番号とダイジェストを一緒に指定すると、その固定版を取得できます。
+- 担当者は返された `openUrl` または `/training` の「公開前の教材」から内容を確認し、画面で公開します。
+  公開版が確定すると、研修の割当候補に表示されます。

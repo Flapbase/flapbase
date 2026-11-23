@@ -40,40 +40,160 @@ export function createCourseService({ pool, projectId }) {
     return member.workspace_id
   }
 
-  function release(actorId, input) {
+  const revisionConflict = () => new StoreError(409, 'REVISION_CONFLICT')
+  const digestPattern = /^sha256:[0-9a-f]{64}$/
+  const positive = value => Number.isSafeInteger(value) && value > 0
+  const asPin = (artifactRef, entry) => ({ artifactRef, revision: Number(entry.revision_number), digest: 'sha256:' + entry.content_digest })
+  function assertPin(pin, artifactRef) {
+    if (!pin || pin.artifactRef !== artifactRef || !positive(pin.revision) ||
+        typeof pin.digest !== 'string' || !digestPattern.test(pin.digest)) throw invalid()
+  }
+
+  async function lockCourse(db, workspaceId, artifactRef) {
+    await db.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))', [artifactRef])
+    await db.query(`
+      INSERT INTO artifact.artifacts(artifact_id,workspace_id,artifact_key,project_id,opaque_ref,media_type)
+      VALUES($1,$2,$1::uuid::text,$3,$1::uuid::text,'application/json') ON CONFLICT DO NOTHING
+    `, [artifactRef, workspaceId, projectId])
+    if (!await row(db, 'SELECT 1 FROM artifact.artifacts WHERE artifact_id=$1 AND workspace_id=$2 AND project_id=$3',
+      [artifactRef, workspaceId, projectId])) throw conflict()
+    return row(db, `
+      SELECT ar.artifact_revision_id,ar.revision_number,ar.content_digest,
+        ar.metadata #>> '{payload,document,course,status}' AS status,
+        ar.metadata #>> '{payload,document,course,creatorId}' AS creator_id,
+        ar.metadata #>> '{provenance,approvedDigest}' AS approved_digest
+      FROM artifact.artifact_revisions ar WHERE ar.artifact_id=$1 AND ${courseProfile}
+        AND ar.metadata #>> '{owner,projectRef}'=$2
+      ORDER BY ar.revision_number DESC LIMIT 1
+    `, [artifactRef, projectId])
+  }
+
+  async function append(db, { actorId, artifactRef, workspaceId, document, provenance = {}, digest = sha(JSON.stringify(document)) }) {
+    const artifactRevisionId = randomUUID()
+    await db.query(`
+      INSERT INTO artifact.artifact_revisions(artifact_revision_id,artifact_id,revision_number,opaque_ref,content_digest,metadata)
+      VALUES($1,$2,$3,$1::uuid::text,$4,$5)
+    `, [artifactRevisionId, artifactRef, document.revision, digest, {
+      owner: { projectRef: projectId, workspaceRef: workspaceId, createdByActorRef: actorId },
+      profile: { ref: 'course-document', version: '1' }, payload: { document }, provenance,
+    }])
+    return { artifactRevisionId, digest, revision: document.revision }
+  }
+
+  function validate(input, status) {
     let document
     try { document = validateCourseDocument(input) } catch { throw invalid() }
-    if (document.course.status !== 'published') throw invalid()
+    if (document.course.status !== status) throw invalid()
+    return document
+  }
+
+  function release(actorId, input) {
+    const document = validate(input, 'published')
     return run(async db => {
       const workspaceId = await membership(db, actorId, true)
       if (document.course.tenantId !== workspaceId) throw missing()
-      const courseId = document.course.courseId
-      await db.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))', [courseId])
-      await db.query(`
-        INSERT INTO artifact.artifacts(artifact_id,workspace_id,artifact_key,project_id,opaque_ref,media_type)
-        VALUES($1,$2,$1::uuid::text,$3,$1::uuid::text,'application/json') ON CONFLICT DO NOTHING
-      `, [courseId, workspaceId, projectId])
-      const artifact = await row(db, `
-        SELECT artifact_id FROM artifact.artifacts WHERE artifact_id=$1 AND workspace_id=$2 AND project_id=$3
-      `, [courseId, workspaceId, projectId])
-      if (!artifact) throw conflict()
+      const artifactRef = document.course.courseId
+      const previous = await lockCourse(db, workspaceId, artifactRef)
       const digest = sha(JSON.stringify(document))
-      const previous = await row(db, `
-        SELECT artifact_revision_id,revision_number,content_digest FROM artifact.artifact_revisions
-        WHERE artifact_id=$1 ORDER BY revision_number DESC LIMIT 1
-      `, [courseId])
       if (Number(previous?.revision_number) === document.revision && previous.content_digest === digest) {
         return { artifactRevisionId: previous.artifact_revision_id, digest, revision: document.revision }
       }
-      if (document.revision !== Number(previous?.revision_number ?? 0) + 1) throw conflict()
-      const artifactRevisionId = randomUUID()
+      if (previous?.status === 'draft' || document.revision !== Number(previous?.revision_number ?? 0) + 1) throw conflict()
+      return append(db, { actorId, artifactRef, workspaceId, document, digest })
+    })
+  }
+
+  async function readPinned(db, workspaceId, pin) {
+    const entry = await row(db, `
+      SELECT ar.artifact_revision_id,ar.metadata #> '{payload,document}' AS document
+      FROM artifact.artifact_revisions ar JOIN artifact.artifacts a USING(artifact_id)
+      WHERE a.artifact_id=$1 AND a.workspace_id=$2 AND a.project_id=$3
+        AND ${courseProfile} AND ar.metadata #>> '{owner,projectRef}'=$3::uuid::text
+        AND ar.revision_number=$4 AND ar.content_digest=$5
+    `, [pin.artifactRef, workspaceId, projectId, pin.revision, pin.digest.slice(7)])
+    if (!entry) throw missing()
+    return { pin, artifactRevisionId: entry.artifact_revision_id, document: entry.document }
+  }
+
+  function getDraft(actorId, { artifactRef, revision, digest, beforeRevision }) {
+    artifactRef = uuid(artifactRef)
+    const pinned = revision !== undefined || digest !== undefined
+    const pin = { artifactRef, revision, digest }
+    if (pinned) assertPin(pin, artifactRef)
+    if (beforeRevision !== undefined && (pinned || !positive(beforeRevision))) throw invalid()
+    return run(async db => {
+      const workspaceId = await membership(db, actorId, true)
+      if (pinned) return readPinned(db, workspaceId, pin)
+      const { rows } = await db.query(`
+        SELECT ar.revision_number,ar.content_digest,ar.created_at,ar.metadata->'owner' AS owner,
+          ar.metadata->'provenance' AS provenance
+        FROM artifact.artifact_revisions ar JOIN artifact.artifacts a USING(artifact_id)
+        WHERE a.artifact_id=$1 AND a.workspace_id=$2 AND a.project_id=$3
+          AND ${courseProfile} AND ar.metadata #>> '{owner,projectRef}'=$3::uuid::text
+          AND ($4::bigint IS NULL OR ar.revision_number < $4)
+        ORDER BY ar.revision_number DESC LIMIT 21
+      `, [artifactRef, workspaceId, projectId, beforeRevision ?? null])
+      return {
+        revisions: rows.slice(0, 20).map(entry => ({ pin: asPin(artifactRef, entry), createdAt: entry.created_at.toISOString(),
+          owner: { workspaceRef: workspaceId, projectRef: projectId, createdByActorRef: entry.owner?.createdByActorRef ?? actorId },
+          provenance: entry.provenance ?? {} })),
+        nextBeforeRevision: rows.length > 20 ? Number(rows[19].revision_number) : null,
+      }
+    })
+  }
+
+  function saveDraft(actorId, { artifactRef, document: input, prior, idempotencyKey }) {
+    artifactRef = uuid(artifactRef)
+    if (prior !== undefined) assertPin(prior, artifactRef)
+    if (!input || !input.course || input.course.courseId !== artifactRef ||
+        typeof idempotencyKey !== 'string' || !/^[^\u0000-\u0020\u007f]{1,128}$/.test(idempotencyKey)) throw invalid()
+    return run(async db => {
+      const workspaceId = await membership(db, actorId, true)
+      const document = validate({ ...input, course: { ...input.course,
+        tenantId: input.course.tenantId ?? workspaceId,
+        creatorId: input.course.creatorId ?? (prior === undefined ? actorId : undefined),
+      } }, 'draft')
+      if (document.course.tenantId !== workspaceId) throw missing()
+      const key = 'course-draft:' + sha(JSON.stringify([projectId, actorId, idempotencyKey]))
+      const requestDigest = sha(JSON.stringify([artifactRef, document, prior]))
+      await db.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))', [key])
+      const receipt = await row(db, 'SELECT request_digest,response FROM runtime.idempotency_keys WHERE workspace_id=$1 AND idempotency_key=$2', [workspaceId, key])
+      if (receipt) {
+        if (receipt.request_digest !== requestDigest) throw new StoreError(409, 'IDEMPOTENCY_CONFLICT')
+        return receipt.response
+      }
+      const previous = await lockCourse(db, workspaceId, artifactRef)
+      if (previous ? (!prior || prior.revision !== Number(previous.revision_number) ||
+          prior.digest !== 'sha256:' + previous.content_digest || document.course.creatorId !== previous.creator_id)
+        : (prior || document.course.creatorId !== actorId)) throw revisionConflict()
+      if (document.revision !== Number(previous?.revision_number ?? 0) + 1) throw revisionConflict()
+      const saved = await append(db, { actorId, artifactRef, workspaceId, document, provenance: { source: 'mcp' } })
+      const response = { pin: { artifactRef, revision: saved.revision, digest: 'sha256:' + saved.digest },
+        artifactRevisionId: saved.artifactRevisionId, receiptRef: randomUUID() }
       await db.query(`
-        INSERT INTO artifact.artifact_revisions(artifact_revision_id,artifact_id,revision_number,opaque_ref,content_digest,metadata)
-        VALUES($1,$2,$3,$1::uuid::text,$4,$5)
-      `, [artifactRevisionId, courseId, document.revision, digest, {
-        owner: { projectRef: projectId }, profile: { ref: 'course-document', version: '1' }, payload: { document },
-      }])
-      return { artifactRevisionId, digest, revision: document.revision }
+        INSERT INTO runtime.idempotency_keys(workspace_id,idempotency_key,request_digest,response_digest,response)
+        VALUES($1,$2,$3,$4,$5)
+      `, [workspaceId, key, requestDigest, sha(JSON.stringify(response)), response])
+      return response
+    })
+  }
+
+  function publishDraft(actorId, pin) {
+    const artifactRef = uuid(pin?.artifactRef)
+    assertPin(pin, artifactRef)
+    return run(async db => {
+      const workspaceId = await membership(db, actorId, true)
+      const { document: draft } = await readPinned(db, workspaceId, pin)
+      if (draft.course.status !== 'draft') throw invalid()
+      const previous = await lockCourse(db, workspaceId, artifactRef)
+      if (previous?.status === 'published' && Number(previous.revision_number) === pin.revision + 1 &&
+          previous.approved_digest === pin.digest) {
+        return { artifactRevisionId: previous.artifact_revision_id, digest: previous.content_digest, revision: Number(previous.revision_number) }
+      }
+      if (previous?.status !== 'draft' || pin.revision !== Number(previous.revision_number) ||
+          pin.digest !== 'sha256:' + previous.content_digest) throw revisionConflict()
+      const document = validate({ ...draft, revision: pin.revision + 1, course: { ...draft.course, status: 'published' } }, 'published')
+      return append(db, { actorId, artifactRef, workspaceId, document, provenance: { approvedDigest: pin.digest } })
     })
   }
 
@@ -187,6 +307,7 @@ export function createCourseService({ pool, projectId }) {
           SELECT ar.artifact_revision_id,ar.revision_number,ar.metadata
           FROM artifact.artifact_revisions ar WHERE ar.artifact_id=a.artifact_id
             AND ${courseProfile} AND ar.metadata #>> '{owner,projectRef}'=a.project_id::text
+            AND ar.metadata #>> '{payload,document,course,status}'='published'
           ORDER BY ar.revision_number DESC LIMIT 1
         ) latest ON true
         WHERE a.workspace_id=$1 AND a.project_id=$2 AND latest.metadata #>> '{payload,document,course,status}'='published'
@@ -201,7 +322,20 @@ export function createCourseService({ pool, projectId }) {
             WHERE wm.workspace_id=$2 AND wm.principal_id=m.principal_id AND wm.status<>'active')
         ORDER BY m.joined_at DESC LIMIT 50
       `, [projectId, workspaceId])).rows
-      return { workspaceId, courses, learners, assignments: await listAssignments(db, workspaceId) }
+      const drafts = (await db.query(`
+        SELECT a.artifact_id AS "artifactRef",latest.revision_number::int AS revision,
+          'sha256:' || latest.content_digest AS digest,latest.metadata #>> '{payload,document,course,title}' AS title
+        FROM artifact.artifacts a
+        JOIN LATERAL (
+          SELECT ar.revision_number,ar.content_digest,ar.metadata FROM artifact.artifact_revisions ar
+          WHERE ar.artifact_id=a.artifact_id AND ${courseProfile}
+            AND ar.metadata #>> '{owner,projectRef}'=a.project_id::text
+          ORDER BY ar.revision_number DESC LIMIT 1
+        ) latest ON true
+        WHERE a.workspace_id=$1 AND a.project_id=$2 AND latest.metadata #>> '{payload,document,course,status}'='draft'
+        ORDER BY a.created_at DESC LIMIT 50
+      `, [workspaceId, projectId])).rows
+      return { workspaceId, courses, drafts, learners, assignments: await listAssignments(db, workspaceId) }
     })
   }
 
@@ -292,5 +426,5 @@ export function createCourseService({ pool, projectId }) {
     })
   }
 
-  return { release, assign, learn, assignments, dashboard, learnerHome, invite, accept }
+  return { projectId, release, saveDraft, getDraft, publishDraft, assign, learn, assignments, dashboard, learnerHome, invite, accept }
 }
