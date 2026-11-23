@@ -4,6 +4,7 @@ import { promisify } from 'node:util'
 import { createHmac, randomUUID } from 'node:crypto'
 import { mkdtemp, readFile, rm } from 'node:fs/promises'
 import { createServer } from 'node:net'
+import { createServer as createHttpServer } from 'node:http'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
@@ -16,6 +17,7 @@ import { createStripePayment } from './payment.mjs'
 import { createStoreLifecycle } from './lifecycle.mjs'
 import { createFreeDownloadStore, sha } from './free-download.mjs'
 import { createSelfHostedServer } from './server.mjs'
+import { createLocalCourseGenerator } from './course-knowledge.mjs'
 import { createCourseService } from './course.mjs'
 import { renderProduct } from './store-http.mjs'
 import { setupProject } from './setup.mjs'
@@ -33,7 +35,7 @@ test('self-host completes the digital product and paid course flows through exte
   const db = await startArtifactTestPostgres({ encoding:'UTF8' })
   const pool = createSelfHostedAuthPool(db.connection)
   const directory = await mkdtemp(join(tmpdir(), 'flap-store-test-'))
-  let server, purchasedCoursePath
+  let server, modelServer, purchasedCoursePath
   try {
     const probe = createServer()
     const port = await listen(probe)
@@ -41,6 +43,20 @@ test('self-host completes the digital product and paid course flows through exte
     const origin = 'http://127.0.0.1:' + port
     const projectId = randomUUID()
     const course = createCourseService({ pool, projectId })
+    const modelCalls = []
+    modelServer = createHttpServer(async (request, response) => {
+      const chunks = []
+      for await (const chunk of request) chunks.push(chunk)
+      const data = JSON.parse(Buffer.concat(chunks).toString('utf8'))
+      const input = JSON.parse(data.messages[1].content)
+      modelCalls.push({ path: request.url, data, input })
+      const content = input.input.includes('比較不可') ? 'NO_EVIDENCE' : '根拠の教材を確認できます。'
+      response.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({ choices: [{ message: { content } }] }))
+    })
+    const modelPort = await listen(modelServer)
+    const courseGenerator = createLocalCourseGenerator({
+      endpoint: 'http://127.0.0.1:' + modelPort + '/v1/chat/completions', model: 'local-fixture',
+    })
     const store = await createFreeDownloadStore({ pool, projectId, directory, course,
       renderProduct: product => renderProduct({ ...product, leadEnabled: true }) })
     const emails = []
@@ -56,9 +72,10 @@ test('self-host completes the digital product and paid course flows through exte
     })
     const token = randomUUID() + randomUUID()
     const delegation = { tokenDigest: sha('Bearer ' + token) }
+    const courseDelegation = { tokenDigest: delegation.tokenDigest }
     const authOptions = { issuer:'urn:flapbase:self-host:free-test', secret:randomUUID() }
     const adapter = createBetterAuthAdapter(pool, { origin, ...authOptions })
-    server = createSelfHostedServer({ origin, pool, adapter, store, lifecycle, payment, delegation, course })
+    server = createSelfHostedServer({ origin, pool, adapter, store, lifecycle, payment, delegation, course, courseGenerator, courseDelegation })
     await listen(server, port)
     const get = (path, cookie) => fetch(origin + path, {headers:cookie ? {cookie} : {}})
     const post = (path, body, cookie, sender=origin) => fetch(origin + path, {
@@ -74,6 +91,7 @@ test('self-host completes the digital product and paid course flows through exte
     }
     const owner = await register('owner'), buyer = await register('buyer'), other = await register('other')
     delegation.principalId = owner.principalId
+    courseDelegation.principalId = owner.principalId
     const projectSetup = { ownerId:owner.principalId, projectId, name:'資料配布' }
     assert.equal(await setupProject(pool, projectSetup), projectId)
     assert.equal(await setupProject(pool, projectSetup), projectId)
@@ -236,13 +254,16 @@ test('self-host completes the digital product and paid course flows through exte
       assert.equal((await mcp.callTool({name:'support_reply_draft_save',arguments:{...draft,body:'古い版の返信'}})).isError,true)
       assert.match(await (await get('/store', owner.cookie)).text(), /最初にキット内の案内をご覧ください/)
       assert.deepEqual(await tool('operations_summary'), { projectId, leads: 1, followUps: 1, orders: 3, downloads: 3, supportPending: 0 })
-      const artifactRef = randomUUID(), chapterId = randomUUID(), lessonId = randomUUID()
+      const artifactRef = randomUUID(), chapterId = randomUUID(), lessonId = randomUUID(), lockedLessonId = randomUUID()
       const courseDocument = { contractVersion: 'course-document/v1', revision: 1,
         course: { tenantId: workspace, courseId: artifactRef, creatorId: owner.principalId, title: '初めての講座', description: '',
           status: 'published', opening: { kind: 'immediate' }, chapters: [{ id: chapterId, title: '導入', order: 1 }],
           lessons: [{ id: lessonId, chapterId, title: '最初の教材', order: 1, kind: 'material', status: 'published',
-            materials: [], required: true, delayDays: 0, requirePrevious: false }], assignments: [] },
-        lessonBodies: [{ lessonId, markdown: '購入者にだけ表示する初版' }] }
+            materials: [], required: true, delayDays: 0, requirePrevious: false },
+            { id: lockedLessonId, chapterId, title: '次の教材', order: 2, kind: 'material', status: 'published',
+              materials: [], required: true, delayDays: 0, requirePrevious: true }], assignments: [] },
+        lessonBodies: [{ lessonId, markdown: '購入者にだけ表示する初版。窯温度は180度です。' },
+          { lessonId: lockedLessonId, markdown: '限定数式の係数は42です。' }] }
       const courseRelease = await course.release(owner.principalId, courseDocument)
       const offerBody = { artifactRevisionId: courseRelease.artifactRevisionId, title: '購入して始める講座', description: '購入後に受講できます', amountMinor: 1500 }
       const offers = '/api/courses/v1/offers'
@@ -273,7 +294,8 @@ test('self-host completes the digital product and paid course flows through exte
         orderId: purchase.orderId, title: offerBody.title, paymentStatus: 'paid', downloadEligible: false, learningEligible: true, purchaseInquiryId: null,
       })
       const secondRevision = await course.release(owner.principalId, {
-        ...courseDocument, revision: 2, lessonBodies: [{ lessonId, markdown: '購入者にだけ表示する改訂版' }],
+        ...courseDocument, revision: 2,
+        lessonBodies: [{ lessonId, markdown: '購入者にだけ表示する改訂版。窯温度は200度です。' }, courseDocument.lessonBodies[1]],
       })
       const replacement = await (await post(offers, { ...offerBody, listingId: listing.listingId, artifactRevisionId: secondRevision.artifactRevisionId }, owner.cookie)).json()
       const secondPurchase = await (await checkout(replacement, other.cookie)).json()
@@ -281,6 +303,48 @@ test('self-host completes the digital product and paid course flows through exte
       assert.match(await (await get('/training/orders/' + secondPurchase.orderId, other.cookie)).text(), /購入者にだけ表示する改訂版/)
       assert.equal((await checkout(listing, buyer.cookie).then(response => response.json())).orderId, purchase.orderId)
       assert.match(await (await get(study, buyer.cookie)).text(), /購入者にだけ表示する初版/)
+      const ask = (text, cookie = buyer.cookie, requestId = randomUUID(), path = studyApi) =>
+        post(path + '/questions', { requestId, text }, cookie)
+      assert.equal((await ask('窯温度は何度ですか', other.cookie)).status, 404)
+      assert.deepEqual(await (await ask('限定数式について教えて')).json(), { outcome: 'no-evidence' })
+      assert.equal(modelCalls.length, 0)
+      const question = '窯温度を教えてください。連絡先は person@example.test'
+      const questionId = randomUUID()
+      const answer = await (await ask(question, buyer.cookie, questionId)).json()
+      assert.equal(answer.outcome, 'answer', JSON.stringify(answer))
+      assert.deepEqual(answer.sources, [{ lessonId, title: '最初の教材' }])
+      assert.equal(modelCalls[0].path, '/v1/chat/completions')
+      assert.equal(modelCalls[0].data.max_tokens, 768)
+      assert.match(modelCalls[0].input.references[0].excerpt, /180度/)
+      assert.doesNotMatch(JSON.stringify(modelCalls[0].input), /200度|限定数式|person@example.test/)
+      assert.deepEqual(await (await ask(question, buyer.cookie, questionId)).json(), answer)
+      assert.equal((await ask('異なる入力', buyer.cookie, questionId)).status, 409)
+      assert.equal(modelCalls.length, 1)
+      const laterApi = '/api/courses/v1/orders/' + secondPurchase.orderId
+      assert.equal((await (await ask('窯温度は何度ですか', other.cookie, randomUUID(), laterApi)).json()).outcome, 'answer')
+      assert.match(modelCalls.at(-1).input.references[0].excerpt, /200度/)
+      assert.deepEqual(await (await ask('窯温度の比較不可 test@example.test')).json(), { outcome: 'no-evidence' })
+      const queue = '/training/questions'
+      const queuePage = await get(queue, owner.cookie)
+      assert.equal(queuePage.status, 200)
+      const reviewText = await queuePage.text()
+      assert.match(reviewText, /限定数式/)
+      assert.match(reviewText, /窯温度の比較不可 \[連絡先\]/)
+      assert.doesNotMatch(reviewText, /test@example.test/)
+      assert.equal((await get(queue, buyer.cookie)).status, 403)
+      const reviewClient = new Client({ name: 'local-course-review-test', version: '1.0.0' })
+      try {
+        await reviewClient.connect(new StdioClientTransport({
+          command: process.execPath, args: [fileURLToPath(new URL('./mcp.mjs', import.meta.url))],
+          env: { FLAP_ORIGIN: origin, FLAP_COURSE_AGENT_TOKEN: token },
+        }))
+        const reviews = await reviewClient.callTool({ name: 'member_ai_reviews_list', arguments: { projectId } })
+        assert.equal(reviews.isError, undefined)
+        const items = JSON.parse(reviews.content[0].text).reviews
+        assert.equal(items.length, 2)
+        assert.deepEqual(Object.keys(items[0]).sort(), ['id', 'reason', 'receivedAt'])
+        assert.equal((await reviewClient.callTool({ name: 'member_ai_reviews_list', arguments: { projectId: randomUUID() } })).isError, true)
+      } finally { await reviewClient.close() }
       const progress = () => fetch(origin + studyApi + '/progress', {
         method: 'POST', headers: { origin, cookie: buyer.cookie, 'content-type': 'application/json', 'idempotency-key': 'paid-course-progress' },
         body: JSON.stringify({ lessonId, expectedVersion: 0, completed: true }),
@@ -313,7 +377,7 @@ test('self-host completes the digital product and paid course flows through exte
     })).status, 204)
     assert.equal((await fetch(restartOrigin + download, { headers })).status, 401)
   } finally {
-    try { if(server) await close(server); await pool.end() }
+    try { if(server) await close(server); if(modelServer) await close(modelServer); await pool.end() }
     finally { await db.close(); await rm(directory,{recursive:true,force:true}) }
   }
 })

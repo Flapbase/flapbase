@@ -20,7 +20,7 @@ ${leadEnabled ? `<section><h2>案内を受け取る</h2><form data-operation="le
 <label><span><input type="checkbox" name="consent" required> この商品に関する案内を受け取る</span></label>
 <button>登録する</button><p role="status"></p></form></section>` : ''}`)
 
-function renderDashboard({ orders, products }, operation, paymentAvailable) {
+function renderDashboard({ orders, products }, operation, paymentAvailable, courseKnowledge) {
   const options = products.filter(product => !product.isCourse).map(product => `<option value="${product.listing_id}">${escape(product.title)}</option>`).join('')
   const productLinks = products.map(product => `<li><a href="/products/${encodeURIComponent(product.listing_id)}">${escape(product.title)}</a></li>`).join('')
   const rows = orders.map(order => {
@@ -36,7 +36,8 @@ ${paymentAvailable ? '<label>価格（円） <input name="amountMinor" type="num
 <label>配布ファイル <input name="file" type="file" required></label>
 <button>公開する</button></form><p id="result" role="status"></p>
 ${productLinks ? `<section><h2>公開済みの商品</h2><ul>${productLinks}</ul></section>` : ''}
-<section><h2>注文</h2>${rows ? `<table><thead><tr><th scope="col">商品</th><th scope="col">種類</th><th scope="col">受付日時</th></tr></thead><tbody>${rows}</tbody></table>` : '<p>注文はまだありません</p>'}</section>${operation ? renderOperations(operation) : ''}`)
+<section><h2>注文</h2>${rows ? `<table><thead><tr><th scope="col">商品</th><th scope="col">種類</th><th scope="col">受付日時</th></tr></thead><tbody>${rows}</tbody></table>` : '<p>注文はまだありません</p>'}</section>${operation ? renderOperations(operation) : ''}
+${courseKnowledge ? '<p><a href="/training/questions">教材で答えられなかった質問</a></p>' : ''}`)
 }
 
 function renderOperations({ leads, requests, counts, followUpDraft, emailPreviewEnabled }) {
@@ -96,7 +97,7 @@ export function canCallAgent(req, delegation) {
   )
 }
 
-export async function handleStore(req, res, { route, origin, store, lifecycle, payment, delegation, resolveHuman }) {
+export async function handleStore(req, res, { route, origin, store, lifecycle, payment, delegation, courseKnowledge, resolveHuman }) {
   const path = route.pathname
   if (payment && path === '/api/store/payment/webhook' && req.method === 'POST') {
     const event = payment.verifyWebhook(await readBody(req, 128_000), req.headers['stripe-signature'])
@@ -156,7 +157,7 @@ export async function handleStore(req, res, { route, origin, store, lifecycle, p
   }
 
   if (manage) {
-    send(res, 200, renderDashboard(await store.dashboard(human.principalId), await lifecycle?.operatorSnapshot(human.principalId, true), !!payment))
+    send(res, 200, renderDashboard(await store.dashboard(human.principalId), await lifecycle?.operatorSnapshot(human.principalId, true), !!payment, courseKnowledge))
   } else if (checkout) {
     const body = await input(req, 4096)
     const order = await store.checkout(human.principalId, body.listingId, body.revisionId, !!payment)

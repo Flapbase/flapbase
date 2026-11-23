@@ -9,10 +9,11 @@ const schemaFiles = [
   'schema/000_schema-platform.sql', 'schema/020_workspaces-platform.sql',
   'schema/021_workspace_members-platform.sql', 'schema/050_projects-platform.sql',
   'schema/060_project_memberships-platform.sql', 'schema/080_app_installs-platform.sql', 'schema/090_app_revision_locks-platform.sql',
+  'schema/069_workflows-platform.sql',
   'schema/025_workspace_reviewer_invitations-platform.sql',
   'schema/000_schema-artifact.sql', 'schema/010_artifacts-artifact.sql', 'schema/020_revisions-artifact.sql',
   'schema/000_schema-vdb.sql', 'schema/010_schemas-vdb.sql', 'schema/020_records-vdb.sql', 'schema/040_mutation_receipts-vdb.sql',
-  'schema/000_schema-runtime.sql', 'schema/050_idempotency-runtime.sql', 'auth-schema.sql',
+  'schema/000_schema-runtime.sql', 'schema/010_runs-runtime.sql', 'schema/050_idempotency-runtime.sql', 'auth-schema.sql',
 ]
 
 export async function transaction(pool, run) {

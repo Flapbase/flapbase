@@ -10,7 +10,7 @@ async function refresh() {
   const next = new URLSearchParams(location.search).get('next')
   if (response.ok && /^\/training\/drafts\/[0-9a-f-]{36}\?revision=[1-9][0-9]*&digest=sha256%3A[0-9a-f]{64}$/.test(next ?? '')) location.replace(next)
   if (response.ok && next === '/training/join') location.replace(next + location.hash)
-  if (response.ok && (next === '/training' || next === '/training/my' || /^\/training\/(?:my|orders)\/[0-9a-f-]{36}$/.test(next ?? '') || next === '/store' || next === '/cases' || /^\/(?:cases|service\/portal)\/[0-9a-f-]{36}$/.test(next ?? '') || next === '/booking' || /^\/booking\/(?:offers|receipts)\/[0-9a-f-]{36}$/.test(next ?? '') || next === '/recruitment' || /^\/recruitment\/jobs\/[0-9a-f-]{36}$/.test(next ?? '') || /^\/(?:products|receive\/orders)\/[0-9a-f-]{36}$/.test(next ?? ''))) location.replace(next)
+  if (response.ok && (next === '/training' || next === '/training/questions' || next === '/training/my' || /^\/training\/(?:my|orders)\/[0-9a-f-]{36}$/.test(next ?? '') || next === '/store' || next === '/cases' || /^\/(?:cases|service\/portal)\/[0-9a-f-]{36}$/.test(next ?? '') || next === '/booking' || /^\/booking\/(?:offers|receipts)\/[0-9a-f-]{36}$/.test(next ?? '') || next === '/recruitment' || /^\/recruitment\/jobs\/[0-9a-f-]{36}$/.test(next ?? '') || /^\/(?:products|receive\/orders)\/[0-9a-f-]{36}$/.test(next ?? ''))) location.replace(next)
   status.textContent = response.ok ? 'ログイン中' : ''
 }
 

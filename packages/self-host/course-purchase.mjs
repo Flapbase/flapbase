@@ -18,10 +18,11 @@ export function createPurchasedCourse({ store, course }) {
     return { id: orderId, workspaceId, learnerId: buyerId, grantedAt, document, digest: pin.digest }
   }
 
-  function learn(buyerId, orderId, command, now = Date.now()) {
+  async function execute(db, buyerId, orderId, command, now) {
     if (!storeId(orderId)) throw missing()
-    return store.transaction(db => executeLearningAccess({
-      access: () => access(db, buyerId, orderId),
+    let granted
+    const learning = await executeLearningAccess({
+      access: async () => { granted = await access(db, buyerId, orderId); return granted },
       async progress(order) {
         const entry = await row(db, `
           SELECT r.data,r.version::int FROM vdb.records r JOIN vdb.schemas s USING(schema_id)
@@ -59,8 +60,17 @@ export function createPurchasedCourse({ store, course }) {
             `, [...key, prior.version])
         return result.rowCount === 1
       },
-    }, buyerId, orderId, command, now))
+    }, buyerId, orderId, command, now)
+    return { workspaceId: granted.workspaceId, learning }
   }
 
-  return { learn }
+  function learn(buyerId, orderId, command, now = Date.now()) {
+    return store.transaction(async db => (await execute(db, buyerId, orderId, command, now)).learning)
+  }
+
+  function withRead(buyerId, orderId, operation) {
+    return store.transaction(async db => operation(db, await execute(db, buyerId, orderId, { kind: 'read' }, Date.now())))
+  }
+
+  return { learn, withRead }
 }

@@ -17,6 +17,7 @@ import { handleBooking } from './booking-http.mjs'
 import { createCaseService } from './cases.mjs'
 import { createCasesPublication } from './cases-publication.mjs'
 import { handleCases } from './cases-http.mjs'
+import { createCourseKnowledge, createLocalCourseGenerator } from './course-knowledge.mjs'
 import { createPurchasedCourse } from './course-purchase.mjs'
 import { createCourseService } from './course.mjs'
 import { handleCourses } from './course-http.mjs'
@@ -33,7 +34,7 @@ const files = new Map([
   ['/store.css', ['store.css', 'text/css; charset=utf-8']],
 ])
 
-export function createSelfHostedServer({ origin, pool, adapter, store, lifecycle, payment, delegation, recruitment, recruitmentDelegation, booking, bookingDelegation, cases, casesDelegation, course, courseDelegation }) {
+export function createSelfHostedServer({ origin, pool, adapter, store, lifecycle, payment, delegation, recruitment, recruitmentDelegation, booking, bookingDelegation, cases, casesDelegation, course, courseDelegation, courseGenerator }) {
   const url = new URL(origin)
   if (url.origin !== origin || url.protocol !== 'http:' || !['localhost', '127.0.0.1'].includes(url.hostname)) {
     throw new Error('The password reference server requires an HTTP loopback origin')
@@ -41,6 +42,8 @@ export function createSelfHostedServer({ origin, pool, adapter, store, lifecycle
   const courseStore = course && store?.projectId === course.projectId ? store : undefined
   const courseShop = payment ? courseStore : undefined
   const purchases = courseStore ? createPurchasedCourse({ store: courseStore, course }) : undefined
+  const courseKnowledge = purchases
+    ? createCourseKnowledge({ store: courseStore, purchases, generate: courseGenerator }) : undefined
   const resolveHuman = createHumanSessionResolver(pool, adapter)
   const handleAuth = toNodeHandler(adapter.handle)
   return createServer(async (req, res) => {
@@ -67,7 +70,7 @@ export function createSelfHostedServer({ origin, pool, adapter, store, lifecycle
         res.writeHead(human ? 200 : 401, { 'content-type': 'application/json' }).end(JSON.stringify(human ?? { error: 'sign_in_required' }))
         return
       }
-      if (store && await handleStore(req, res, { route, origin, store, lifecycle, payment, delegation, resolveHuman: () => resolveHuman(fromNodeHeaders(req.headers)) })) return
+      if (store && await handleStore(req, res, { route, origin, store, lifecycle, payment, delegation, courseKnowledge, resolveHuman: () => resolveHuman(fromNodeHeaders(req.headers)) })) return
       if (recruitment && await handleRecruitment(req, res, {
         route, origin, recruitment, delegation: recruitmentDelegation,
         resolveHuman: () => resolveHuman(fromNodeHeaders(req.headers)),
@@ -79,7 +82,7 @@ export function createSelfHostedServer({ origin, pool, adapter, store, lifecycle
         route, origin, profile: cases, delegation: casesDelegation, resolveHuman: () => resolveHuman(fromNodeHeaders(req.headers)),
       })) return
       if (course && await handleCourses(req, res, {
-        route, origin, course, courseShop, purchases, delegation: courseDelegation, resolveHuman: options => resolveHuman(fromNodeHeaders(req.headers), options),
+        route, origin, course, courseShop, purchases, courseKnowledge, delegation: courseDelegation, resolveHuman: options => resolveHuman(fromNodeHeaders(req.headers), options),
       })) return
       const file = req.method === 'GET' ? files.get(route.pathname) : undefined
       if (!file) {
@@ -185,7 +188,10 @@ async function start() {
     const recruitment = recruitmentProject || recruitmentDirectory
       ? await createRecruitment({ pool, projectId: recruitmentProject, directory: recruitmentDirectory })
       : undefined
-    const server = createSelfHostedServer({ origin, pool, adapter, store, lifecycle, payment, delegation, recruitment, recruitmentDelegation, booking, bookingDelegation, cases, casesDelegation, course, courseDelegation })
+    const aiEndpoint = process.env.FLAP_COURSE_AI_ENDPOINT
+    const aiModel = process.env.FLAP_COURSE_AI_MODEL
+    const courseGenerator = aiEndpoint || aiModel ? createLocalCourseGenerator({ endpoint: aiEndpoint, model: aiModel }) : undefined
+    const server = createSelfHostedServer({ origin, pool, adapter, store, lifecycle, payment, delegation, recruitment, recruitmentDelegation, booking, bookingDelegation, cases, casesDelegation, course, courseDelegation, courseGenerator })
     await new Promise((resolve, reject) => {
       server.once('error', reject)
       server.listen(port, '127.0.0.1', resolve)

@@ -35,7 +35,7 @@ function dashboard({ workspaceId, courses, drafts, learners, assignments }, cour
     <section><h2>受講状況</h2>${rows ? '<table><thead><tr><th scope="col">受講者</th><th scope="col">教材</th><th scope="col">完了</th></tr></thead><tbody>' + rows + '</tbody></table>' : '<p>割当はまだありません。</p>'}</section>`)
 }
 
-function reading(id, { pin, document, completedLessonIds, version }, purchase = false) {
+function reading(id, { pin, document, completedLessonIds, version }, purchase = false, canAsk = false) {
   const lessons = new Map(document.course.lessons.map(lesson => [lesson.id, lesson.title]))
   const sections = document.lessonBodies.map(body => {
     const completed = completedLessonIds.includes(body.lessonId)
@@ -43,7 +43,11 @@ function reading(id, { pin, document, completedLessonIds, version }, purchase = 
       ? '<p>受講済み</p>'
       : form('progress', hidden('source', purchase ? 'orders' : 'assignments') + hidden('accessId', id) + hidden('lessonId', body.lessonId) + hidden('expectedVersion', version), '受講済みにする')}</section>`
   }).join('')
-  return page(document.course.title, `<p>${purchase ? `<a href="/receive/orders/${id}">注文の確認</a>` : '<a href="/training/my">自分の教材</a>'} · 第${pin.revision}版</p>${sections || '<p>現在読める教材はありません。</p>'}`)
+  return page(document.course.title, `<p>${purchase ? `<a href="/receive/orders/${id}">注文の確認</a>` : '<a href="/training/my">自分の教材</a>'} · 第${pin.revision}版</p>${sections || '<p>現在読める教材はありません。</p>'}
+    ${canAsk && sections ? `<section><h2>教材について聞く</h2>
+      ${form('ask', hidden('accessId', id) + '<label>質問 <textarea name="text" maxlength="4000" rows="3" required></textarea></label>', 'AIに質問する')}
+      <div id="course-answer" aria-live="polite"></div>
+    </section>` : ''}`)
 }
 
 function draftReview({ pin, document }) {
@@ -57,12 +61,13 @@ function draftReview({ pin, document }) {
     ${form('approve', fields, '確認した版を公開')}`)
 }
 
-export async function renderTraining(res, route, { course, courseShop, purchases, resolveHuman }) {
+export async function renderTraining(res, route, { course, courseShop, purchases, courseKnowledge, resolveHuman }) {
   const path = route.pathname
+  const reviewQueue = courseKnowledge && path === '/training/questions'
   const assignment = /^\/training\/my\/([^/]+)$/.exec(path)?.[1]
   const order = purchases && /^\/training\/orders\/([^/]+)$/.exec(path)?.[1]
   const draft = /^\/training\/drafts\/([^/]+)$/.exec(path)?.[1]
-  if (path !== '/training' && path !== '/training/join' && path !== '/training/my' && !assignment && !draft && !order) return false
+  if (path !== '/training' && path !== '/training/join' && path !== '/training/my' && !assignment && !draft && !order && !reviewQueue) return false
   if ((assignment && !storeId(assignment)) || (draft && !storeId(draft)) || (order && !storeId(order))) {
     res.writeHead(404).end()
     return true
@@ -80,12 +85,17 @@ export async function renderTraining(res, route, { course, courseShop, purchases
       send(res, 200, page('研修に参加', human.verifiedEmail
         ? form('accept', '', '招待を受ける')
         : '<p>招待されたメールアドレスを確認してください。</p>' + form('verify', '<label>メールアドレス <input name="email" type="email" required></label>', 'メール確認リンクを発行')))
+    } else if (reviewQueue) {
+      const { reviews } = await courseKnowledge.reviews(actor, true)
+      send(res, 200, page('教材で答えられなかった質問',
+        '<p><a href="/store">商品と注文へ</a></p>' + (reviews.map(entry =>
+          '<article><p class="description">' + escape(entry.text) + '</p></article>').join('') || '<p>未回答の質問はありません。</p>')))
     } else if (path === '/training') send(res, 200, dashboard(await course.dashboard(actor), courseShop))
     else if (draft) {
       const fixed = await course.getDraft(actor, { artifactRef: draft, revision: Number(route.searchParams.get('revision')), digest: route.searchParams.get('digest') })
       if (fixed.document.course.status !== 'draft') { res.writeHead(404).end(); return true }
       send(res, 200, draftReview(fixed))
-    } else if (order) send(res, 200, reading(order, await purchases.learn(actor, order, { kind: 'read' }), true))
+    } else if (order) send(res, 200, reading(order, await purchases.learn(actor, order, { kind: 'read' }), true, Boolean(courseKnowledge?.enabled)))
     else if (assignment) send(res, 200, reading(assignment, await course.learn(actor, assignment, { kind: 'read' })))
     else {
       const items = (await course.learnerHome(actor)).map(item => `<li><a href="${learnerLink(item.id)}">${escape(item.title)}</a></li>`).join('')

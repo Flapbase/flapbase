@@ -144,3 +144,15 @@ OwnerまたはEditorは `/training` から教材を公開し、招待リンク�
 APIで出品を更新する場合は `POST /api/courses/v1/offers` に既存の `listingId` と新しい公開版の
 `artifactRevisionId` を含めます。決済後に使用する受講APIは `/api/courses/v1/orders/{orderId}` と
 `/api/courses/v1/orders/{orderId}/progress` です。
+
+### 購入者向けの教材対話
+
+`pnpm --filter @flapbase/self-host setup` を再実行して実行履歴の保存先を追加します。
+`FLAP_COURSE_AI_ENDPOINT` に `http://127.0.0.1:11434/v1/chat/completions` のようなローカルの
+OpenAI互換エンドポイントを、`FLAP_COURSE_AI_MODEL` にそこで実行できるローカルモデル名を設定します。
+設定後、購入済み教材のページから質問できます。モデルの運用と選択はセルフホスト側が担当します。
+
+購入時の版で閲覧できる教材を根拠に回答し、参照したレッスンを表示します。根拠が見つからない質問は
+運営画面の「教材で答えられなかった質問」に表示されます。持ち込みAIの `member_ai_reviews_list` では
+記録ID、理由、受付日時を取得できます。質問と参照箇所は連絡先などをマスクします。
+ローカル試験用の上限は購入者1人につきUTC日付で20件です。

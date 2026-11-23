@@ -43,6 +43,7 @@ export const RECRUITMENT_TOOLS = [
 const courseDigest = { type: 'string', pattern: '^sha256:[a-f0-9]{64}$' }
 const courseRevision = { type: 'integer', minimum: 1 }
 export const COURSE_TOOLS = [
+  tool('member_ai_reviews_list', 'このProjectで教材から回答できなかった質問の記録IDと受信日時を返します。', true, { projectId: requestId }),
   tool('course_draft_get', '講座の版履歴または固定版の内容を読みます。', true, {
     projectId: requestId, artifactRef: requestId, revision: courseRevision, digest: courseDigest, beforeRevision: courseRevision,
   }, ['projectId', 'artifactRef']),

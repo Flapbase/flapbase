@@ -2,6 +2,8 @@ const api = '/api/courses/v1'
 const signIn = document.querySelector('#training-sign-in')
 signIn?.addEventListener('click', () => { signIn.hash = location.hash })
 const messages = {
+  course_ai_daily_limit: '本日の質問上限に達しました。',
+  course_ai_unavailable: 'ただいま回答できません。時間をおいてからお試しください。',
   forbidden: '招待されたメールアドレスのアカウントでログインしてください。',
   invitation_unavailable: 'この招待リンクは無効です。研修の担当者にご連絡ください。',
   email_verification_required: 'メールアドレスの確認を完了してください。',
@@ -36,6 +38,7 @@ for (const form of document.querySelectorAll('form[data-training]')) {
         case 'accept': path = api + '/invitations/accept'; body = { token: location.hash.slice(1) }; break
         case 'verify': path = '/api/auth/send-verification-email'; body = { email: fields.email, callbackURL: '/training/join' }; break
         case 'approve': path = api + '/draft-approval'; body = { ...fields, revision: Number(fields.revision) }; break
+        case 'ask': path = api + '/orders/' + encodeURIComponent(fields.accessId) + '/questions'; body = { text: fields.text, requestId: crypto.randomUUID() }; break
         case 'offer': path = api + '/offers'; body = { ...fields, amountMinor: Number(fields.amountMinor) }; break
         case 'assign': path = api + '/assignments'; body = { ...fields, assignmentId: crypto.randomUUID() }; break
         case 'release': {
@@ -57,6 +60,18 @@ for (const form of document.querySelectorAll('form[data-training]')) {
       if (!result.ok) {
         const detail = await result.json().catch(() => ({}))
         status.textContent = messages[detail.error] ?? '操作を完了できませんでした。'
+      } else if (operation === 'ask') {
+        const value = await result.json()
+        const target = document.querySelector('#course-answer')
+        const answer = document.createElement('p')
+        answer.className = 'description'
+        answer.textContent = value.outcome === 'answer' ? value.text : '教材では回答が見つかりませんでした。運営担当に共有しました。'
+        target.replaceChildren(answer)
+        if (value.sources?.length) {
+          const sources = document.createElement('p')
+          sources.textContent = '参照した教材　' + value.sources.map(source => source.title).join('、')
+          target.append(sources)
+        }
       } else if (operation === 'invite') {
         const output = document.querySelector('#invite-result')
         output.querySelector('input').value = (await result.json()).url

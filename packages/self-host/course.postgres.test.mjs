@@ -159,7 +159,7 @@ test('private training pins the published revision, protects progress, and stops
       command: process.execPath, args: [fileURLToPath(new URL('./mcp.mjs', import.meta.url))],
       env: { FLAP_ORIGIN: origin, FLAP_COURSE_AGENT_TOKEN: tokenForMcp },
     }))
-    assert.deepEqual((await mcp.listTools()).tools.map(tool => tool.name), ['course_draft_get', 'course_draft_save'])
+    assert.deepEqual((await mcp.listTools()).tools.map(tool => tool.name), ['member_ai_reviews_list', 'course_draft_get', 'course_draft_save'])
     const artifactRef = randomUUID()
     const draft = { ...first, course: { ...course, courseId: artifactRef, status: 'draft', title: 'エージェント作成の教材',
       tenantId: undefined, creatorId: undefined } }
